@@ -24,6 +24,8 @@
 ### PostgreSQL
 
 ### Redis
+* [redis基础](https://github.com/CoderLiLe/hello-java/blob/main/docs/database/redis/redis%E5%9F%BA%E7%A1%80.md)
+* [redis使用场景](https://github.com/CoderLiLe/hello-java/blob/main/docs/database/redis/redis%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.md)
 
 ### MongoDB
 
