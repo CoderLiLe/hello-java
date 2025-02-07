@@ -225,3 +225,47 @@ RDB和AOF各有自己的优缺点，如果对数据安全性要求较高，在�
 - 如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用 allkeys-random，随机选择淘汰。
 - 如果业务中有置顶的需求，可以使用 volatile-lru 策略，同时置顶数据不设置过期时间，这些数据就一直不被删除，会淘汰其他设置过期时间的数据。
 - 如果业务中有短时高频访问的数据，可以使用 allkeys-lfu 或 volatile-lfu 策略。
+
+## 9. redis分布式锁是如何实现的？
+在redis中提供了一个命令 <font color=red>SETNX</font> (SET if not exists)。由于redis是单线程的，用了这个命令之后，只能有一个客户端对某一个key设置值。在没有过期或删除key的时候，其他客户端是不能设置这个key的
+```text
+# 添加锁，NX是互斥、EX是设置超时时间
+SET lock value NX EX 10
+# 释放锁，删除即可
+DEL key
+```
+
+## 10. 那你如何控制Redis实现分布式锁的有效时长呢？
+redis的SETNX指令不好控制这个问题。我们当时采用的是redis的一个框架Redisson实现的。在Redisson中需要手动加锁，并且可以控制锁的失效时间和等待时间。当锁住的一个业务还没有执行完成的时候，Redisson会引入一个看门狗机制。就是说，每隔一段时间就检查当前业务是否还持有锁。如果持有，就增加加锁的持有时间。当业务执行完成之后，需要使用释放锁就可以了。还有一个好处就是，在高并发下，一个业务有可能会执行很快。客户1持有锁的时候，客户2来了以后并不会马上被拒绝。它会自旋不断尝试获取锁。如果客户1释放之后，客户2就可以马上持有锁，性能也得到了提升。
+
+Redisson实现的分布式锁-执行流程：
+![](assets/redis使用场景/10.1Redisson实现的分布式锁.png)
+
+Redisson实现的分布式锁-代码实现：
+```java
+public void redisLock() throws InterruptedException {
+    //获取锁（重入锁），执行锁的名称
+    RLock lock = redissonClient.getLock("heimalock");
+    try {
+        //尝试获取锁，参数分别是：获取锁的最大等待时间（期间会重试），锁自动释放时间，时间单位
+        //boolean isLock = lock.tryLock(10, 30, TimeUnit.SECONDS);
+        boolean isLock = lock.tryLock(10, TimeUnit.SECONDS);
+        //判断是否获取成功
+        if (isLock) {
+            System.out.println("执行业务...");
+        }
+    } finally {
+        //释放锁
+        lock.unlock();
+    }
+}
+```
+
+## 11. Redisson实现的分布式锁是可重入的吗？
+是可以重入的。这样做是为了避免死锁的产生。这个重入其实在内部就是判断是否是当前线程持有的锁，如果是当前线程持有的锁就会计数，如果释放锁就会在计数上减一。在存储数据的时候采用的hash结构，大key可以按照自己的业务进行定制，其中小key是当前线程的唯一标识，value是当前线程重入的次数。
+
+## 12. Redisson实现的分布式锁能解决主从一致性的问题吗？
+- 这个是不能的。比如，当线程1加锁成功后，master节点数据会异步复制到slave节点，此时如果当前持有Redis锁的master节点宕机，slave节点被提升为新的master节点，假如现在来了一个线程2，再次加锁，会在新的master节点上加锁成功，这个时候就会出现两个节点同时持有一把锁的问题。
+- 我们可以利用Redisson提供的红锁来解决这个问题，它的主要作用是，不能只在一个Redis实例上创建锁，应该是在多个Redis实例上创建锁，并且要求在大多数Redis节点上都成功创建锁，红锁中要求是Redis的节点数量要过半。这样就能避免线程1加锁成功后master节点宕机导致线程2成功加锁到新的master节点上的问题了。
+- 但是，如果使用了<font color=red>红锁</font>，因为需要同时在多个节点上都添加锁，<font color=red>性能就变得非常低</font>，并且运维维护成本也非常高，所以，我们一般在项目中也不会直接使用红锁，并且官方也暂时废弃了这个红锁。
+- 如果业务中非要<font color=red>保证数据的强一致性</font>，建议采用<font color=red>zookeeper</font>实现的分布式锁
