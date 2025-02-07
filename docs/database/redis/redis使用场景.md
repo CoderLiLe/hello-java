@@ -127,3 +127,65 @@ public void updateById(Integer id) {
 ![](assets/redis使用场景/5.6基于cancal的异步通知.png)
 > Tip：二进制日志（BINLOG）记录了所有的 DDL（数据定义语言）语句和 DML（数据操纵语言）语句，但不包括数据查询（SELECT、SHOW）语句。
 
+## 6. 能聊一聊Redis的持久化机制吗？
+### 6.1 RDB
+- RDB持久化：Redis默认的持久化方式，就是将内存中的数据保存到磁盘上，以二进制文件的形式保存，这种持久化方式比较简单，但是效率低，而且磁盘空间占用大。当Redis实例故障重启后，从磁盘读取快照文件，恢复数据。
+![](assets/redis使用场景/6.1RDB持久化命令.png)
+- Redis内部有触发RDB的机制，可以在redis.conf文件中找到，格式如下：
+```text
+# 900秒内，如果至少有1个key被修改，则执行bgsave 
+save 900 1  
+save 300 10  
+save 60 10000
+```
+- 执行原理：bgsave开始时会fork主进程得到子进程，子进程<font color=red>共享</font>主进程的内存数据。完成fork后读取内存数据并写入 RDB 文件。
+  - fork采用的是copy-on-write技术：
+    - 当主进程执行读操作时，访问的是共享内存
+    - 当主进程执行写操作时，会拷贝一份数据，执行写操作
+
+![](assets/redis使用场景/6.2RDB执行原理.png)
+### 6.2 AOF
+- AOF全称为Append Only File（追加文件）。Redis处理的每一个写命令都会记录在AOF文件，可以看做是命令日志文件。
+![](assets/redis使用场景/6.3AOF.png)
+- AOF默认是关闭的，需要修改redis.conf配置文件来开启AOF：
+```text
+# 是否开启AOF功能，默认是no
+appendonly yes
+# AOF文件的名称
+appendfilename "appendonly.aof"
+```
+- AOF的命令记录的频率也可以通过redis.conf文件来配：
+```text
+# 表示每执行一次写命令，立即记录到AOF文件
+appendfsync always 
+# 写命令执行完先放入AOF缓冲区，然后表示每隔1秒将缓冲区数据写到AOF文件，是默认方案
+appendfsync everysec 
+# 写命令执行完先放入AOF缓冲区，由操作系统决定何时将缓冲区内容写回磁盘
+appendfsync no
+```
+| 配置项      | 刷盘时机   | 优点   | 缺点      |
+|----------|--------|------|---------|
+| Always   | 同步刷盘   | 可靠性高，几乎不丢数据 | 性能影响大 |
+| everysec | 每秒刷盘   | 性能适中 | 最多丢失1秒数据|
+| no       | 操作系统控制 | 性能最好 | 可靠性较差，可能丢失大量数据 |
+- 因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但只有最后一次写操作才有意义。通过执行bgrewriteaof命令，可以让AOF文件执行重写功能，用最少的命令达到相同效果。
+![](assets/redis使用场景/6.4aofrewrite.png)
+- Redis也会在触发阈值时自动去重写AOF文件。阈值也可以在redis.conf中配置：
+```text
+# AOF文件比上次文件 增长超过多少百分比则触发重写
+auto-aof-rewrite-percentage 100
+# AOF文件体积最小多大以上才触发重写 
+auto-aof-rewrite-min-size 64mb 
+```
+### 6.3 持久化方式对比
+RDB和AOF各有自己的优缺点，如果对数据安全性要求较高，在实际开发中往往会<font color=red>结合</font>两者来使用。
+
+| 配置项  | RDB | AOF |
+|------|----|---|
+| 持久化方式 | 定时对整个内存做快照 | 记录每一次执行的命令 |
+| 数据完整性 | 不完整，两次备份之间会丢数据 | 相对完整，取决于刷盘策略 |
+| 文件大小 | 会有压缩，文件体积小 | 记录命令，文件体积大 |
+| 宕机恢复速度 | 很快 | 慢 |
+| 数据恢复优先级 | 低，因为数据完整性不如AOF | 高，因为数据完整性更高 |
+| 系统资源占用 | 高，大量CPU和内存消耗 | 低，主要是磁盘IO资源，但AOF重写时会占用大量CPU和内存资源 |
+| 使用场景 | 可以容忍数分钟的数据丢失，追求更快的启动速度 | 对数据安全性要求较高场景 |
