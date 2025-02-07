@@ -269,3 +269,65 @@ public void redisLock() throws InterruptedException {
 - 我们可以利用Redisson提供的红锁来解决这个问题，它的主要作用是，不能只在一个Redis实例上创建锁，应该是在多个Redis实例上创建锁，并且要求在大多数Redis节点上都成功创建锁，红锁中要求是Redis的节点数量要过半。这样就能避免线程1加锁成功后master节点宕机导致线程2成功加锁到新的master节点上的问题了。
 - 但是，如果使用了<font color=red>红锁</font>，因为需要同时在多个节点上都添加锁，<font color=red>性能就变得非常低</font>，并且运维维护成本也非常高，所以，我们一般在项目中也不会直接使用红锁，并且官方也暂时废弃了这个红锁。
 - 如果业务中非要<font color=red>保证数据的强一致性</font>，建议采用<font color=red>zookeeper</font>实现的分布式锁
+
+## 13. Redis的集群方案有哪些？
+### 13.1 主从复制
+单节点Redis的并发能力是有上限的，要进一步提高Redis的并发能力，就需要搭建主从集群，实现读写分离
+![](assets/redis使用场景/13.1主从复制.png)
+
+主从<font color=color>全量复制</font>： 
+> <font color=red>Replication Id</font>：简称replid，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid，slave则会继承master节点的replid
+
+> <font color=red>offset</font>：偏移量，随着记录在repl_baklog中的数据增多而逐渐增大。slave完成同步时也会记录当前同步的offset。如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。
+
+![](assets/redis使用场景/13.2主从全量复制.png)
+
+主从<font color=red>增量同步</font>(slave重启或后期数据变化)：
+
+![](assets/redis使用场景/13.3主从增量复制.png)
+
+### 13.2 哨兵模式
+Redis提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复
+- **监控**：Sentinel 会不断检查您的master和slave是否按预期工作
+- **自动故障恢复**：如果master故障，Sentinel会将一个slave提升为master。当故障实例恢复后也以新的master为主
+- **通知**：Sentinel充当Redis客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给Redis的客户端
+![](assets/redis使用场景/13.4哨兵模式.png)
+
+Sentinel基于心跳机制监测服务状态，<font color=red>每隔1秒</font>向集群的每个实例发送ping命令：
+- 主观下线：如果某sentinel节点发现某实例未在规定时间响应，则认为该实例**主观下线**。
+- 客观下线：若超过指定数量（quorum）的sentinel都认为该实例主观下线，则该实例**客观下线**。quorum值最好超过Sentinel实例数量的一半。
+![](assets/redis使用场景/13.5服务状态监控.png)
+
+**哨兵选主规则**
+- 首先判断主与从节点断开时间长短，如超过指定值就排除该从节点
+- 然后判断从节点的slave-priority值，越小优先级越高
+- <font color=red>如果slave-prority一样，则判断slave节点的offset值，越大优先级越高</font>
+- 最后是判断slave节点的运行id大小，越小优先级越高。
+
+**Redis哨兵模式脑裂**
+```text
+redis中有两个配置参数：
+min-replicas-to-write 1   表示最少的salve节点为1个
+min-replicas-max-lag 5  表示数据复制和同步的延迟不能超过5秒
+```
+![](assets/redis使用场景/13.6哨兵模式脑裂.png)
+![](assets/redis使用场景/13.7哨兵模式脑裂.png)
+![](assets/redis使用场景/13.8哨兵模式脑裂.png)
+
+### 13.3 分片集群
+主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决：
+- 海量数据存储问题
+- 高并发写的问题
+
+使用分片集群可以解决上述问题，分片集群特征：
+- 集群中有多个master，每个master保存不同数据
+- 每个master都可以有多个slave节点
+- master之间通过ping监测彼此健康状态
+- 客户端请求可以访问集群任意节点，最终都会被转发到正确节点
+![](assets/redis使用场景/13.9分片集群.png)
+
+**分片集群结构-数据读写**
+
+Redis 分片集群引入了哈希槽的概念，Redis 集群有 16384 个哈希槽，每个 key通过 CRC16 校验后对 16384 取模来决定放置哪个槽，集群的每个节点负责一部分 hash 槽。
+![](assets/redis使用场景/13.10分片集群结构-数据读写.png)
+
