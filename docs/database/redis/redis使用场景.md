@@ -201,6 +201,27 @@ RDB和AOF各有自己的优缺点，如果对数据安全性要求较高，在�
   - 优点：可以通过限制删除操作执行的时长和频率来减少删除操作对 CPU 的影响。另外定期删除，也能有效释放过期键占用的内存。
   - 缺点：难以确定删除操作执行的时长和频率。
   
-  **Redis的过期删除策略：<font color=red>惰性删除 + 定期删除</font>两种策略进行配合使用**
+**Redis的过期删除策略：<font color=red>惰性删除 + 定期删除</font>两种策略进行配合使用**
 
+## 8. 假如缓存过多，内存是有限的，内存被占满了怎么办？
+> 其实就是想问redis的数据淘汰策略是什么？
 
+**数据的淘汰策略**：当Redis中的内存不够用时，此时在向Redis中添加新的key，那么Redis就会按照某一种规则将内存中的数据删除掉，这种数据的删除规则被称之为内存的淘汰策略。
+- noeviction： 不淘汰任何key，但是内存满时不允许写入新数据，<font color=red>默认就是这种策略</font>。
+- volatile-ttl： 对设置了TTL的key，比较key的剩余TTL值，TTL越小越先被淘汰
+- allkeys-random：对全体key ，随机进行淘汰。
+- volatile-random：对设置了TTL的key ，随机进行淘汰。
+- allkeys-lru： 对全体key，基于LRU算法进行淘汰
+- volatile-lru： 对设置了TTL的key，基于LRU算法进行淘汰
+- allkeys-lfu： 对全体key，基于LFU算法进行淘汰
+- volatile-lfu： 对设置了TTL的key，基于LFU算法进行淘汰
+> LRU（Least Recently Used）最近最少使用。用当前时间减去最后一次访问时间，这个值越大则淘汰优先级越高。
+
+> LFU（Least Frequently Used）最少频率使用。会统计每个key的访问频率，值越小淘汰优先级越高。
+
+数据淘汰策略-使用建议
+
+- 优先使用 allkeys-lru 策略。充分利用 LRU 算法的优势，把最近最常访问的数据留在缓存中。如果业务有明显的冷热数据区分，建议使用。
+- 如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用 allkeys-random，随机选择淘汰。
+- 如果业务中有置顶的需求，可以使用 volatile-lru 策略，同时置顶数据不设置过期时间，这些数据就一直不被删除，会淘汰其他设置过期时间的数据。
+- 如果业务中有短时高频访问的数据，可以使用 allkeys-lfu 或 volatile-lfu 策略。
