@@ -51,4 +51,58 @@
 - undo log ：记录的是逻辑日志，当事务回滚时，通过逆操作恢复原来的数据
 - redo log保证了事务的持久性，undo log保证了事务的原子性和一致性
 
+## 4. 那事务中的隔离性是如何保证的？
+事务的隔离性通过锁和多版本并发控制（MVCC）来保证。MVCC通过维护数据的多个版本来避免读写冲突。底层实现包括隐藏字段、undo log和read view。隐藏字段包括trx_id和roll_pointer。undo log记录了不同版本的数据，通过roll_pointer形成版本链。read view定义了不同隔离级别下的快照读，决定了事务访问哪个版本的数据
+### 4.1 MVCC
+全称 <font color=red>M</font>ulti-<font color=red>V</font>ersion <font color=red>C</font>oncurrency <font =color=red>C</font>ontrol，多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突
+MVCC的具体实现，主要依赖于数据库记录中的<font color=red>隐式字段</font>、<font color=red>undo log日志</font>、<font color=red>readView</font>。
+- 隐式字段
+
+| 隐藏字段 | 含义  |
+|--------|-----|
+|DB_TRX_ID|最近修改事务ID，记录插入这条记录或最后一次修改该记录的事务ID。|
+|DB_ROLL_PTR|回滚指针，指向这条记录的上一个版本，用于配合undo log，指向上一个版本。|
+|DB_ROW_ID|隐藏主键，如果表结构没有指定主键，将会生成该隐藏字段。|
+
+- undo log 
+  - 回滚日志，在insert、update、delete的时候产生的便于数据回滚的日志。
+  - 当insert的时候，产生的undo log日志只在回滚时需要，在事务提交后，可被立即删除。
+  - 而update、delete的时候，产生的undo log日志不仅在回滚时需要，mvcc版本访问也需要，不会立即被删除。
+
+- undo log 版本链
+![](asserts/mysql事务/4.1.1undo-log版本链.png)
+![](asserts/mysql事务/4.1.2undo-log版本链.png)
+![](asserts/mysql事务/4.1.3undo-log版本链.png)
+  > 不同事务或相同事务对同一条记录进行修改，会导致该记录的undolog生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。
+ 
+- ReadView
+
+  | 字段 | 含义  |
+  |------|-----|
+  |m_ids|前活跃的事务ID集合|
+  |min_trx_id|最小活跃事务ID|
+  |max_trx_id|预分配事务ID，当前最大事务ID+1（因为事务ID是自增的）|
+  |creator_trx_id|ReadView创建者的事务ID|
+  
+  **版本链数据访问规则**
+  
+  trx_id：代表是当前事务ID
+
+  | 条件 | 访问情况 | 说明 |
+  |----|------|----|
+  |trx_id  == creator_trx_id|<font color=green>可以访问该版本</font>|成立，说明数据是当前这个事务更改的|
+  |trx_id < min_trx_id|<font color=green>可以访问该版本</font>|成立，说明数据已经提交了。|
+  |trx_id > max_trx_id|<font color=red>不可以访问该版本</font>|成立，说明该事务是在ReadView生成后才开启。|
+  |min_trx_id <= trx_id <= max_trx_id|如果trx_id不在m_ids中是<font color=green>可以访问</font>该版本的|成立，说明数据已经提交。|
+
+  不同的隔离级别，生成ReadView的时机不同：
+  - READ COMMITTED ：在事务中每一次执行快照读时生成ReadView。
+  - REPEATABLE READ：仅在事务中第一次执行快照读时生成ReadView，后续复用该ReadView。
+
+  ![](asserts/mysql事务/4.1.4mvcc.png)
+
+
+
+
+
 
