@@ -26,6 +26,7 @@
 | Read committed 已提交读 | × | √ | √ |
 | Repeatable read(<font color=red>默认</font>) 可重复读 | × | × | √ |
 | Serializable 可串行化 | × | × | × |
+
 ⚠️事务隔离级别越高，数据越安全，但是性能越低。
 
 ## 3. undo log和redo log的区别？
