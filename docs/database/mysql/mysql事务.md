@@ -27,3 +27,28 @@
 | Repeatable read(<font color=red>默认</font>) 可重复读 | × | × | √ |
 | Serializable 可串行化 | × | × | × |
 ⚠️事务隔离级别越高，数据越安全，但是性能越低。
+
+## 3. undo log和redo log的区别？
+- **缓冲池（buffer pool）**:主内存中的一个区域，里面可以缓存磁盘上经常操作的真实数据，在执行增删改查操作时，先操作缓冲池中的数据（若缓冲池没有数据，则从磁盘加载并缓存），以一定频率刷新到磁盘，从而减少磁盘IO，加快处理速度
+- **数据页（page）**:是InnoDB 存储引擎磁盘管理的最小单元，每个页的大小默认为 16KB。页中存储的是行数据
+![](asserts/mysql事务/3.1缓冲池和数据页.png)
+### 3.1 redo log
+重做日志，记录的是事务提交时数据页的物理修改，是<font color=red>用来实现事务的持久性</font>。
+
+该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file）,前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中, 用于在刷新脏页到磁盘,发生错误时, 进行数据恢复使用。
+
+![](asserts/mysql事务/3.2redo-log.png)
+
+### 3.2 undo log
+回滚日志，用于记录数据被修改前的信息 , 作用包含两个 : <font color=red>提供回滚</font> 和 <font color=red>MVCC(多版本并发控制)</font> 。undo log和redo log记录物理日志不一样，它是<font color=red>逻辑日志</font>。
+- 可以认为当delete一条记录时，undo log中会记录一条对应的insert记录，反之亦然，
+- 当update一条记录时，它记录一条对应相反的update记录。当执行rollback时，就可以从undo log中的逻辑记录读取到相应的内容并进行回滚。
+
+<font color=red>undo log可以实现事务的一致性和原子性</font>
+
+### 3.3 小结
+- redo log: 记录的是数据页的物理变化，服务宕机可用来同步数据
+- undo log ：记录的是逻辑日志，当事务回滚时，通过逆操作恢复原来的数据
+- redo log保证了事务的持久性，undo log保证了事务的原子性和一致性
+
+
