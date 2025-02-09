@@ -19,8 +19,7 @@
 
 ### MySQL
 * [mysql基础](https://github.com/CoderLiLe/hello-java/blob/main/docs/database/mysql/mysql%E5%9F%BA%E7%A1%80.md)
-* [mysql使用场景](https://github.com/CoderLiLe/hello-java/blob/main/docs/database/mysql/mysql%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.md)
-
+* [mysql优化](https://github.com/CoderLiLe/hello-java/blob/main/docs/database/mysql/mysql%E4%BC%98%E5%8C%96.md)
 #### ShardingJDBC
 
 ### PostgreSQL
