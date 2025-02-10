@@ -76,32 +76,47 @@ MVCC的具体实现，主要依赖于数据库记录中的<font color=red>隐式
 ![](asserts/mysql事务/4.1.3undo-log版本链.png)
   > 不同事务或相同事务对同一条记录进行修改，会导致该记录的undolog生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。
  
-- ReadView
+### 4.2 ReadView
+#### 4.2.1 快照读和当前读
+快照读：读取的是快照数据，即快照生成那一刻的数据，<font color=red>普通的SELECT语句在不加锁情况下就是快照读</font>，如：
 
-  | 字段 | 含义  |
-  |------|-----|
-  |m_ids|前活跃的事务ID集合|
-  |min_trx_id|最小活跃事务ID|
-  |max_trx_id|预分配事务ID，当前最大事务ID+1（因为事务ID是自增的）|
-  |creator_trx_id|ReadView创建者的事务ID|
+```sql
+SELECT * FROM t_xx WHERE ...;
+```
+
+当前读：读取最新数据，<font color=red>加锁的SELECT或者对数据进行增删改都会进行当前读</font>，如：
+```sql
+SELECT * FROM t_xx LOCK IN SHARE MODE;;
+SELECT * FROM t_xx FOR UPDATE;
+INSERT INTO t_xx ...;
+DELETE FROM t_xx WHERE ...;
+UPDATE t_xx SET ... WHERE ...;
+```
+
+不同的隔离级别，生成ReadView的时机不同：
+- READ COMMITTED ：在事务中每一次执行快照读时生成ReadView。
+- REPEATABLE READ：仅在事务中第一次执行快照读时生成ReadView，后续复用该ReadView。
+
+#### 4.2.2 ReadView四个核心字段
+| 字段 | 含义  |
+|------|-----|
+|m_ids|前活跃的事务ID集合|
+|min_trx_id|最小活跃事务ID|
+|max_trx_id|预分配事务ID，当前最大事务ID+1（因为事务ID是自增的）|
+|creator_trx_id|ReadView创建者的事务ID|
   
-  **版本链数据访问规则**
+#### 4.2.3 版本链数据访问规则
   
-  trx_id：代表是当前事务ID
+trx_id：代表是当前事务ID
 
-  | 条件 | 访问情况 | 说明 |
-  |----|------|----|
-  |trx_id  == creator_trx_id|<font color=green>可以访问该版本</font>|成立，说明数据是当前这个事务更改的|
-  |trx_id < min_trx_id|<font color=green>可以访问该版本</font>|成立，说明数据已经提交了。|
-  |trx_id > max_trx_id|<font color=red>不可以访问该版本</font>|成立，说明该事务是在ReadView生成后才开启。|
-  |min_trx_id <= trx_id <= max_trx_id|如果trx_id不在m_ids中是<font color=green>可以访问</font>该版本的|成立，说明数据已经提交。|
+| 条件 | 访问情况 | 说明 |
+|----|------|----|
+|trx_id  == creator_trx_id|<font color=green>可以访问该版本</font>|成立，说明数据是当前这个事务更改的|
+|trx_id < min_trx_id|<font color=green>可以访问该版本</font>|成立，说明数据已经提交了。|
+|trx_id > max_trx_id|<font color=red>不可以访问该版本</font>|成立，说明该事务是在ReadView生成后才开启。|
+|min_trx_id <= trx_id <= max_trx_id|如果trx_id不在m_ids中是<font color=green>可以访问</font>该版本的|成立，说明数据已经提交。|
 
-  不同的隔离级别，生成ReadView的时机不同：
-  - READ COMMITTED ：在事务中每一次执行快照读时生成ReadView。
-  - REPEATABLE READ：仅在事务中第一次执行快照读时生成ReadView，后续复用该ReadView。
-
-  ![](asserts/mysql事务/4.1.4mvcc.png)
-
+![](asserts/mysql事务/4.1.4mvcc.png)
 
 
 
