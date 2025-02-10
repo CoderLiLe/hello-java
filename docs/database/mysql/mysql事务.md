@@ -118,7 +118,12 @@ trx_id：代表是当前事务ID
 
 ![](asserts/mysql事务/4.1.4mvcc.png)
 
+## 5. 谈一谈MySQL事务的两阶段提交
+Mysql的二阶段提交发生在redolog和binlog的日志写入阶段，也就是把日志写入和日志提交拆分为两个阶段，来确保redolog和binlog写入数据的一致性；
 
+- 第一阶段：prepare阶段
+  >Mysql会把事务操作记录到redolog中并标记为prepare状态
 
+- 第二阶段: commit阶段
 
-
+  >当事务提交时，Mysql会将事务操作记录到binlog中，然后把redolog的日志设置为commit状态
