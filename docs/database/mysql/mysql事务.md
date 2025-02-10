@@ -55,7 +55,7 @@
 ## 4. 那事务中的隔离性是如何保证的？
 事务的隔离性通过锁和多版本并发控制（MVCC）来保证。MVCC通过维护数据的多个版本来避免读写冲突。底层实现包括隐藏字段、undo log和read view。隐藏字段包括trx_id和roll_pointer。undo log记录了不同版本的数据，通过roll_pointer形成版本链。read view定义了不同隔离级别下的快照读，决定了事务访问哪个版本的数据
 ### 4.1 MVCC
-全称 <font color=red>M</font>ulti-<font color=red>V</font>ersion <font color=red>C</font>oncurrency <font =color=red>C</font>ontrol，多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突
+全称 <font color=red>M</font>ulti-<font color=red>V</font>ersion <font color=red>C</font>oncurrency <font color=red>C</font>ontrol，多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突
 MVCC的具体实现，主要依赖于数据库记录中的<font color=red>隐式字段</font>、<font color=red>undo log日志</font>、<font color=red>readView</font>。
 - 隐式字段
 
