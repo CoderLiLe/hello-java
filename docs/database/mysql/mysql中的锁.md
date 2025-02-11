@@ -56,6 +56,39 @@ MYISAM引擎时，通常我们不需要手动加锁，因为MYISAM引擎会针�
 - 更新语句（update、delete、insert）：会自动给涉及的表加写锁。
 
 ## 写锁
+写锁，排他锁/X锁/exclusive locks。  
+写锁的阻塞性比读锁要严格的多，一个事务对数据添加写锁之后，其他的事务对该数据，既不能读取也不能更改。
+
+与读锁加锁的范围相同，写锁既可以加在记录上，也可以加在表上。
+
+### 在记录上加写锁
+在记录上加写锁，引擎需要使用InnoDB。 通常普通的select语句是不会加锁的（隔离级别为Serializable除外），想要在查询时添加排他锁需要使用以下语句： 
+- 查询时加写锁：
+```sql
+select * from {tableName} where {condition} for update;
+```
+- 更新时加写锁：
+```sql
+insert/update/delete语句，会自动在该记录上加排它锁
+```
+
+### 在表上加写锁
+显示给表加写锁的语句为：
+```sql
+# 加表写锁
+lock table {tableName} write;
+  
+# 释放表读锁
+unlock tables;
+```
+
+> 当引擎选择myisam时，insert/update/delete语句，会自动给该表加上排他锁
+
+### 读写锁兼容性
+- 读锁是共享的，它不会阻塞其他读锁，但会阻塞其他的写锁；
+- 写锁是排他的，它会阻塞其他读锁和写锁；
+- 总结：<font color=red>读读不互斥，读写互斥，写写互斥</font>
+
 ## 意向锁
 ## 自增锁
 
