@@ -268,3 +268,307 @@ bean 的生命周期从调用 beanFactory 的 getBean 开始，到这个 bean �
     * 优先后处理器销毁，即 @PreDestroy
     * 其次 DisposableBean 接口销毁
     * 最后 destroyMethod 销毁（包括自定义名称，推断名称，AutoCloseable 接口 多选一）
+
+## 3. Spring bean 循环依赖
+
+**要求**
+
+* 掌握单例 set 方式循环依赖的原理
+* 掌握其它循环依赖的解决方法
+
+**循环依赖的产生**
+
+* 首先要明白，bean 的创建要遵循一定的步骤，必须是创建、注入、初始化三步，这些顺序不能乱
+
+<img src="asserts/spring基础/3.1bean创建的三步.png" alt="bean创建的三步" style="zoom:50%;" />
+
+* set 方法（包括成员变量）的循环依赖如图所示
+
+  * 可以在【a 创建】和【a set 注入 b】之间加入 b 的整个流程来解决
+  * 【b set 注入 a】 时可以成功，因为之前 a 的实例已经创建完毕
+
+  * a 的顺序，及 b 的顺序都能得到保障
+
+<img src="asserts/spring基础/3.2set方法的循环依赖.png" alt="set方法的循环依赖" style="zoom: 33%;" />
+
+* 构造方法的循环依赖如图所示，显然无法用前面的方法解决
+
+<img src="asserts/spring基础/3.3构造方法的循环依赖.png" alt="构造方法的循环依赖" style="zoom: 50%;" />
+
+**构造循环依赖的解决**
+
+* 思路1
+  * a 注入 b 的代理对象，这样能够保证 a 的流程走通
+  * 后续需要用到 b 的真实对象时，可以通过代理间接访问
+  
+  <img src="asserts/spring基础/3.4构造循环依赖的解决.png" alt="4构造循环依赖的解决" style="zoom: 50%;" />
+
+* 思路2
+  * a 注入 b 的工厂对象，让 b 的实例创建被推迟，这样能够保证 a 的流程先走通
+  * 后续需要用到 b 的真实对象时，再通过 ObjectFactory 工厂间接访问
+    
+  <img src="asserts/spring基础/3.5构造循环依赖的解决.png" alt="构造循环依赖的解决" style="zoom:50%;" />
+
+* 示例1：用 @Lazy 为构造方法参数生成代理
+
+```java
+public class App60_1 {
+
+    static class A {
+        private static final Logger log = LoggerFactory.getLogger("A");
+        private B b;
+
+        public A(@Lazy B b) {
+            log.debug("A(B b) {}", b.getClass());
+            this.b = b;
+        }
+
+        @PostConstruct
+        public void init() {
+            log.debug("init()");
+        }
+    }
+
+    static class B {
+        private static final Logger log = LoggerFactory.getLogger("B");
+        private A a;
+
+        public B(A a) {
+            log.debug("B({})", a);
+            this.a = a;
+        }
+
+        @PostConstruct
+        public void init() {
+            log.debug("init()");
+        }
+    }
+    
+    public static void main(String[] args) {
+        GenericApplicationContext context = new GenericApplicationContext();
+        context.registerBean("a", A.class);
+        context.registerBean("b", B.class);
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(context.getDefaultListableBeanFactory());
+        context.refresh();
+        System.out.println();
+    }
+}
+```
+
+* 示例2：用 ObjectProvider 延迟依赖对象的创建
+```java
+public class App60_2 {
+
+    static class A {
+        private static final Logger log = LoggerFactory.getLogger("A");
+        private ObjectProvider<B> b;
+
+        public A(ObjectProvider<B> b) {
+            log.debug("A({})", b);
+            this.b = b;
+        }
+
+        @PostConstruct
+        public void init() {
+            log.debug("init()");
+        }
+    }
+
+    static class B {
+        private static final Logger log = LoggerFactory.getLogger("B");
+        private A a;
+
+        public B(A a) {
+            log.debug("B({})", a);
+            this.a = a;
+        }
+
+        @PostConstruct
+        public void init() {
+            log.debug("init()");
+        }
+    }
+
+    public static void main(String[] args) {
+        GenericApplicationContext context = new GenericApplicationContext();
+        context.registerBean("a", A.class);
+        context.registerBean("b", B.class);
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(context.getDefaultListableBeanFactory());
+        context.refresh();
+
+        System.out.println(context.getBean(A.class).b.getObject());
+        System.out.println(context.getBean(B.class));
+    }
+}
+```
+
+* 示例3：用 @Scope 产生代理
+```java
+public class App60_3 {
+
+    public static void main(String[] args) {
+        GenericApplicationContext context = new GenericApplicationContext();
+        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context.getDefaultListableBeanFactory());
+        scanner.scan("com.itheima.app60.sub");
+        context.refresh();
+        System.out.println();
+    }
+}
+```
+
+```java
+@Component
+class A {
+    private static final Logger log = LoggerFactory.getLogger("A");
+    private B b;
+
+    public A(B b) {
+        log.debug("A(B b) {}", b.getClass());
+        this.b = b;
+    }
+
+    @PostConstruct
+    public void init() {
+        log.debug("init()");
+    }
+}
+```
+
+```java
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Component
+class B {
+    private static final Logger log = LoggerFactory.getLogger("B");
+    private A a;
+
+    public B(A a) {
+        log.debug("B({})", a);
+        this.a = a;
+    }
+
+    @PostConstruct
+    public void init() {
+        log.debug("init()");
+    }
+}
+```
+
+* 示例4：用 Provider 接口解决，原理上与 ObjectProvider 一样，Provider 接口是独立的 jar 包，需要加入依赖
+
+```xml
+<dependency>
+    <groupId>javax.inject</groupId>
+    <artifactId>javax.inject</artifactId>
+    <version>1</version>
+</dependency>
+```
+
+```java
+public class App60_4 {
+
+    static class A {
+        private static final Logger log = LoggerFactory.getLogger("A");
+        private Provider<B> b;
+
+        public A(Provider<B> b) {
+            log.debug("A({}})", b);
+            this.b = b;
+        }
+
+        @PostConstruct
+        public void init() {
+            log.debug("init()");
+        }
+    }
+
+    static class B {
+        private static final Logger log = LoggerFactory.getLogger("B");
+        private A a;
+
+        public B(A a) {
+            log.debug("B({}})", a);
+            this.a = a;
+        }
+
+        @PostConstruct
+        public void init() {
+            log.debug("init()");
+        }
+    }
+
+    public static void main(String[] args) {
+        GenericApplicationContext context = new GenericApplicationContext();
+        context.registerBean("a", A.class);
+        context.registerBean("b", B.class);
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(context.getDefaultListableBeanFactory());
+        context.refresh();
+
+        System.out.println(context.getBean(A.class).b.get());
+        System.out.println(context.getBean(B.class));
+    }
+}
+```
+
+### 解决 set 循环依赖的原理
+
+**一级缓存**
+<img src="asserts/spring基础/3.6一级缓存.png" alt="一级缓存" style="zoom:80%;" />
+
+作用是保证单例对象仅被创建一次
+
+* 第一次走 `getBean("a")` 流程后，最后会将成品 a 放入 singletonObjects 一级缓存
+* 后续再走 `getBean("a")` 流程时，先从一级缓存中找，这时已经有成品 a，就无需再次创建
+
+**一级缓存与循环依赖**
+
+<img src="asserts/spring基础/3.7一级缓存与循环依赖.png" alt="一级缓存与循环依赖" style="zoom:80%;" />
+
+一级缓存无法解决循环依赖问题，分析如下
+
+* 无论是获取 bean a 还是获取 bean b，走的方法都是同一个 getBean 方法，假设先走 `getBean("a")`
+* 当 a 的实例对象创建，接下来执行 `a.setB()` 时，需要走 `getBean("b")` 流程，红色箭头 1
+* 当 b 的实例对象创建，接下来执行 `b.setA()` 时，又回到了 `getBean("a")` 的流程，红色箭头 2
+* 但此时 singletonObjects 一级缓存内没有成品的 a，陷入了死循环
+
+**二级缓存**
+
+<img src="asserts/spring基础/3.8二级缓存.png" alt="二级缓存" style="zoom:80%;" />
+
+解决思路如下：
+
+* 再增加一个 singletonFactories 缓存
+* 在依赖注入前，即 `a.setB()` 以及 `b.setA()` 将 a 及 b 的半成品对象（未完成依赖注入和初始化）放入此缓存
+* 执行依赖注入时，先看看 singletonFactories 缓存中是否有半成品的对象，如果有拿来注入，顺利走完流程
+
+对于上面的图
+
+* `a = new A()` 执行之后就会把这个半成品的 a 放入 singletonFactories 缓存，即 `factories.put(a)`
+* 接下来执行 `a.setB()`，走入 `getBean("b")` 流程，红色箭头 3
+* 这回再执行到 `b.setA()` 时，需要一个 a 对象，有没有呢？有！
+* `factories.get()` 在 singletonFactories  缓存中就可以找到，红色箭头 4 和 5
+* b 的流程能够顺利走完，将 b 成品放入 singletonObject 一级缓存，返回到 a 的依赖注入流程，红色箭头 6
+
+**二级缓存与创建代理**
+
+<img src="asserts/spring基础/3.9二级缓存与创建代理.png" alt="二级缓存与创建代理" style="zoom:80%;" />
+
+二级缓存无法正确处理循环依赖并且包含有代理创建的场景，分析如下
+
+* spring 默认要求，在 `a.init` 完成之后才能创建代理 `pa = proxy(a)`
+* 由于 a 的代理创建时机靠后，在执行 `factories.put(a)` 向 singletonFactories 中放入的还是原始对象
+* 接下来箭头 3、4、5 这几步 b 对象拿到和注入的都是原始对象
+
+**三级缓存**
+
+![三级缓存](asserts/spring基础/3.10三级缓存.png)
+
+简单分析的话，只需要将代理的创建时机放在依赖注入之前即可，但 spring 仍然希望代理的创建时机在 init 之后，只有出现循环依赖时，才会将代理的创建时机提前。所以解决思路稍显复杂：
+
+* 图中 `factories.put(fa)` 放入的既不是原始对象，也不是代理对象而是工厂对象 fa
+* 当检查出发生循环依赖时，fa 的产品就是代理 pa，没有发生循环依赖，fa 的产品是原始对象 a
+* 假设出现了循环依赖，拿到了 singletonFactories 中的工厂对象，通过在依赖注入前获得了 pa，红色箭头 5
+* 这回 `b.setA()` 注入的就是代理对象，保证了正确性，红色箭头 7
+* 还需要把 pa 存入新加的 earlySingletonObjects 缓存，红色箭头 6
+* `a.init` 完成后，无需二次创建代理，从哪儿找到 pa 呢？earlySingletonObjects 已经缓存，蓝色箭头 9
+
+当成品对象产生，放入 singletonObject 后，singletonFactories 和 earlySingletonObjects 就中的对象就没有用处，清除即可
