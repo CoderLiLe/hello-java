@@ -88,3 +88,87 @@ public ConfigurableApplicationContext run(String... args) {
 >（2）ConfigurableEnviroment 配置环境模块和监听
 > 
 >（3）ConfigurableApplicationContext配置应用上下文
+
+
+## 4. SpringBoot如何做优雅停机？
+
+> 优雅停机（Graceful Shutdown） 是指在服务器需要关闭或重启时，能够先处理完当前正在进行的请求，然后再停止服务的操作。优雅停机的实现步骤主要分为以下几步：
+> - 停止接收新的请求：首先，系统会停止接受新的请求，这样就不会有新的任务被添加到任务队列中。
+> - 处理当前请求：系统会继续处理当前已经在处理中的请求，确保这些请求能够正常完成。这通常涉及到等待正在执行的任务完成，如处理HTTP请求、数据库操作等。
+> - 释放资源：在请求处理完成后，系统会释放所有已分配的资源，如关闭数据库连接、断开网络连接等。
+> - 关闭服务：最后，当所有请求都处理完毕且资源都已释放后，系统会安全地关闭服务。
+
+优雅停机的实现步骤分为以下两步：
+- 使用合理的 kill 命令，给 Spring Boot 项目发送优雅停机指令。
+- 开启 Spring Boot 优雅停机/自定义 Spring Boot 优雅停机的实现。
+
+### 4.1 合理杀死进程
+
+在 Linux 中 kill 杀死进程的常用命令有以下这些：
+- **kill -2 pid**：向指定 pid 发送 SIGINT 中断信号，等同于 ctrl+c。也就说，不仅当前进程会收到该信号，而且它的子进程也会收到终止的命令。
+- **kill -9 pid**：向指定 pid 发送 SIGKILL 立即终止信号。程序不能捕获该信号，最粗暴最快速结束程序的方法。
+- **kill -15 pid**：向指定 pid 发送 SIGTERM 终止信号。信号会被当前进程接收到，但它的子进程不会收到，如果当前进程被 kill 掉，它的的子进程的父进程将变成 init 进程 (init 进程是那个 pid 为 1 的进程)。
+- **kill pid**：等同于 kill 15 pid。
+
+因此，在以上命令中，我们**不能使用“kill -9”来杀死进程，使用“kill”杀死进程即可**。
+
+### 4.2 设置SpringBoot优雅停机
+在 Spring Boot 2.3.0 之后，可以通过配置设置开启 Spring Boot 的优雅停机功能，如下所示：
+```text
+# 开启优雅停机，默认值：immediate 为立即关闭
+server.shutdown=graceful
+
+# 设置缓冲期，最大等待时间，默认：30秒
+spring.lifecycle.timeout-per-shutdown-phase=60s
+```
+此时，应用在关闭时，Web 服务器将不再接受新请求，并等待正在进行的请求完成的缓冲时间。
+
+然而，如果是 Spring Boot 2.3.0 之前，就需要自行扩展（线程池）来实现优雅停机了。它的核心实现实现是在系统关闭时会调用 ShutdownHook，然后在 ShutdownHook 中阻塞 Web 容器的线程池，直到所有请求都处理完毕再关闭程序，这样就实现自定义优雅线下了。
+
+但是，不同的 Web 容器（Tomcat、Jetty、Undertow）有不同的自定义优雅停机的方法，以 Tomcat 为例，它的自定义优雅停机实现如下。
+
+#### Tomcat 容器关闭代码
+```java
+public class TomcatGracefulShutdown implements TomcatConnectorCustomizer, ApplicationListener<ContextClosedEvent> {
+    private volatile Connector connector;
+
+    public void customize(Connector connector) {
+        this.connector = connector;
+    }
+
+    public void onApplicationEvent(ContextClosedEvent contextClosedEvent) {
+        this.connector.pause();
+        Executor executor = this.connector.getProtocolHandler().getExecutor();
+        if (executor instanceof ThreadPoolExecutor) {
+            try {
+                log.info("Start to shutdown tomcat thread pool");
+                ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
+                threadPoolExecutor.shutdown();
+                if (!threadPoolExecutor.awaitTermination(20, TimeUnit.SECONDS)) {
+                    log.warn("Tomcat thread pool did not shutdown gracefully within 20 seconds. ");
+                }
+            } catch (InterruptedException e) {
+                log.warn("Fail to shut down tomcat thread pool ", e);
+            }
+        }
+    }
+}
+```
+#### 设置 Tomcat 自动装配
+```java
+@Configuration
+@ConditionalOnClass({Servlet.class, Tomcat.class})
+public static class TomcatConfiguration {
+    @Bean
+    public TomcatGracefulShutdown tomcatGracefulShutdown() {
+        return new TomcatGracefulShutdown();
+    }
+
+    @Bean
+    public EmbeddedServletContainerFactory tomcatEmbeddedServletContainerFactory(TomcatGracefulShutdown gracefulShutdown) {
+        TomcatEmbeddedServletContainerFactory tomcatFactory = new TomcatEmbeddedServletContainerFactory();
+        tomcatFactory.addConnectorCustomizers(gracefulShutdown);
+        return tomcatFactory;
+    }
+}
+```
