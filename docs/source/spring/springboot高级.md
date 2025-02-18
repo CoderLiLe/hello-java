@@ -9,11 +9,11 @@ SpringBoot是一个快速开发框架，它提供了一系列的starter，通过
 - <font color="red">@ComponentScan</font>：组件扫描，默认扫描当前引导类所在包及其子包。
 - <font color="red">@EnableAutoConfiguration</font>：SpringBoot实现自动化配置的核心注解。
 
-![](asserts/springboot/2.1.png)
+![](asserts/springboot高级/2.1.png)
 
-![](asserts/springboot/2.2.png)
+![](asserts/springboot高级/2.2.png)
 
-![](asserts/springboot/2.3.png)
+![](asserts/springboot高级/2.3.png)
 
 > 1,  在Spring Boot项目中的引导类上有一个注解@SpringBootApplication，这个注解是对三个注解进行了封装，分别是：
 > - @SpringBootConfiguration
