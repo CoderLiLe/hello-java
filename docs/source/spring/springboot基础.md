@@ -54,4 +54,18 @@ Spring Boot 建立在 Spring Framework 的基础上，可以无缝集成 Spring 
 > 
 > 它极大地提高了开发效率、降低了开发成本，并且在行业中得到了广泛的认可和应用。
 
+## 3. Spring Boot 的常用注解有哪些？
+|注解|说明|
+|-|--|
+|@SpringBootConfiguration|组合了- @Configuration注解，实现配置文件的功能|
+|@EnableAutoConfiguration|打开自动配置的功能，也可以关闭某个自动配置的选项|
+|@ComponentScan|Spring组件扫描|
+|@RequestMapping|用于映射请求路径，可以定义在类上和方法上。用于类上，则表示类中的所有的方法都是以该地址作为父路径|
+|@RequestBody|注解实现接收 http 请求的 json 数据，将 json 转换为 java 对象|
+|@RequestParam|指定请求参数的名称|
+|@PathVariable|从请求路径下中获取请求参数 (/user/{id})，传递给方法的形式参数|
+|@ResponseBody|注解实现将 controller 方法返回对象转化为 json 对象响应给客户端|
+|@RequestHeader|获取指定的请求头数据|
+|@RestController|@Controller + @ResponseBody|
+
 
