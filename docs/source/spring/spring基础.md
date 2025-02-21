@@ -168,6 +168,9 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
 
 bean 的生命周期从调用 beanFactory 的 getBean 开始，到这个 bean 被销毁，可以总结为以下七个阶段：
 
+![](asserts/spring基础/2.1Bean生命周期流程图.png)
+![](asserts/spring基础/2.2Bean生命周期流程图.png)
+
 1. 处理名称，检查缓存
 2. 处理父子容器
 3. 处理 dependsOn
