@@ -57,3 +57,63 @@
 
 * 堆内存中：当一个**类加载器对象**，这个类加载器对象加载的所有**类对象**，这些类对象对应的所有**实例对象**都没人引用时，GC 时就会对它们占用的对内存进行释放
 * 元空间中：内存释放**以类加载器为单位**，当堆中类加载器内存释放时，对应的元空间中的类元信息也会释放
+
+## 2. JVM 内存参数
+
+**要求**
+* 熟悉常见的 JVM 参数，尤其和大小相关的
+
+**堆内存，按大小设置**
+
+![image-20210831173130717](asserts/image-20210831173130717.png)
+
+解释：
+
+* -Xms 最小堆内存（包括新生代和老年代）
+* -Xmx 最大对内存（包括新生代和老年代）
+* 通常建议将 -Xms 与 -Xmx 设置为大小相等，即不需要保留内存，不需要从小到大增长，这样性能较好
+* -XX:NewSize 与 -XX:MaxNewSize 设置新生代的最小与最大值，但一般不建议设置，由 JVM 自己控制
+* -Xmn 设置新生代大小，相当于同时设置了 -XX:NewSize 与 -XX:MaxNewSize 并且取值相等
+* 保留是指，一开始不会占用那么多内存，随着使用内存越来越多，会逐步使用这部分保留内存。下同
+
+**堆内存，按比例设置**
+
+![image-20210831173045700](asserts/image-20210831173045700.png)
+
+解释：
+* -XX:NewRatio=2:1 表示老年代占两份，新生代占一份
+* -XX:SurvivorRatio=4:1 表示新生代分成六份，伊甸园占四份，from 和 to 各占一份
+
+**元空间内存设置**
+
+![image-20210831173118634](asserts/image-20210831173118634.png)
+
+解释：
+
+* class space 存储类的基本信息，最大值受 -XX:CompressedClassSpaceSize 控制
+* non-class space 存储除类的基本信息以外的其它信息（如方法字节码、注解等）
+* class space 和 non-class space 总大小受 -XX:MaxMetaspaceSize 控制
+
+注意：
+
+* 这里 -XX:CompressedClassSpaceSize 这段空间还与是否开启了指针压缩有关，这里暂不深入展开，可以简单认为指针压缩默认开启
+
+**代码缓存内存设置**
+
+![image-20210831173148816](asserts/image-20210831173148816.png)
+
+解释：
+
+* 如果 -XX:ReservedCodeCacheSize < 240m，所有优化机器代码不加区分存在一起
+* 否则，分成三个区域（图中笔误 mthod 拼写错误，少一个 e）
+  * non-nmethods - JVM 自己用的代码
+  * profiled nmethods - 部分优化的机器码
+  * non-profiled nmethods - 完全优化的机器码
+
+**线程内存设置**
+
+![image-20210831173155481](asserts/image-20210831173155481.png)
+
+> ***官方参考文档***
+>
+> * https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE
