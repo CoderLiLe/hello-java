@@ -163,3 +163,84 @@ native 用来修饰方法，用 native 声明的方法表示告知 JVM 调用，
 // 构造一个Object类的对象。
 Object obj = new Object();
 ```
+
+## equals 方法
+
+- 面试： equals() 方法和 == 运算符的区别？
+- 思考：有没有重写过equals？
+- 思考：为何重写equals() 就得重写hashCode方法？
+  
+Object 类中的equals 方法：
+```java
+public boolean equals(Object obj) {
+     
+     return (this == obj);
+ }
+```
+
+**结论：**
+
+- 在 Object 类中，== 运算符和 equals 方法是等价的，都是比较两个对象的引用是否相等，从另一方面来讲，如果两个对象的引用相等，那么这两个对象一定是相等的
+- 对于我们自定义的一个对象，如果不重写 equals 方法，那么在比较对象的时候就是调用 Object 类的 equals 方法，也就是用 == 运算符比较两个对象
+
+测试程序：
+```java
+public class JDKTest{
+    
+    public static void main(String[] args) {
+        String test1 = new String("test");
+        String test2 = new String("test");
+
+        System.out.println(test1.equals(test2));
+    }
+}
+```
+
+String类重写equals方法：
+```java
+public boolean equals(Object anObject) {     
+    //如果内存地址相等，那必须equal
+    if (this == anObject) {
+        return true;
+    }
+     
+    //如果对象是String类型 
+    if (anObject instanceof String) {
+        String anotherString = (String)anObject;
+        // 获取调用方的字符串长度赋值给n
+        int n = value.length;
+        //判断长度相等
+        if (n == anotherString.value.length) {
+            char v1[] = value;
+            char v2[] = anotherString.value;
+            int i = 0;
+            //那我们就逐个字符的比较
+            while (n-- != 0) {
+                //从前往后，任意一个字符不匹配，直接返回false
+                if (v1[i] != v2[i])
+                    return false;
+                i++;
+            }
+            //全部匹配结束，返回true
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+String 是引用类型，比较时不能比较引用是否相等，重点是字符串的内容是否相等。所以 String 类定义两个对象相等的标准是**字符串内容都相同**。
+
+在Java规范中，对 equals 方法的使用必须遵循以下几个原则：
+
+> ① 自反性：对于任何非空引用值 x，x.equals(x) 都应返回 true。
+>
+> ② 对称性：对于任何非空引用值 x 和 y，当且仅当 y.equals(x) 返回 true 时，x.equals(y) 才应返回 true。
+>
+> ③ 传递性：对于任何非空引用值 x、y 和 z，如果 x.equals(y) 返回 true，并且 y.equals(z) 返回 true，那么 x.equals(z) 应返回 true。
+>
+>④ 一致性：对于任何非空引用值 x 和 y，多次调用 x.equals(y) 始终返回 true 或始终返回 false，前提是对象上 equals 比较中所用的信息没有被修改
+>
+>⑤ 对于任何非空引用值 x，x.equals(null) 都应返回 false。
+
+<font color="red" size=4>注意：无论何时重写此方法，通常都必须重写hashCode方法，以维护hashCode方法的一般约定，该方法声明相等对象必须具有相同的哈希代码</font>
