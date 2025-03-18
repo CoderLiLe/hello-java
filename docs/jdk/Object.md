@@ -155,3 +155,11 @@ public class Object {
 ![](./asserts/1.3.png)
 
 native 用来修饰方法，用 native 声明的方法表示告知 JVM 调用，该方法在外部定义，我们可以用任何语言去实现它。 简单地讲，一个native Method就是一个 Java 调用非 Java 代码的接口。
+
+## 类构造器
+
+一个类必须要有一个构造器的存在，如果没有显示声明，那么系统会默认创造一个无参构造器，在JDK的Object类源码中，是看不到构造器的，系统会自动添加一个无参构造器。我们可以通过：
+```java
+// 构造一个Object类的对象。
+Object obj = new Object();
+```
