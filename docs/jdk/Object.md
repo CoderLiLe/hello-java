@@ -274,3 +274,31 @@ HashCode的存在主要是为了查找的快捷性，HashCode是用来在散列�
 ② 如果这个位置上已经有元素了，就调用它的equals方法与新元素进行比较，相同的话就不存了；
 
 ③ 不相同的话，也就是发生了Hash key相同导致冲突的情况，那么就在这个Hash key的地方产生一个链表，将所有产生相同HashCode的对象放到这个单链表
+
+## HashCode是如何产生的？
+思考：hashCode到底是什么？是不是对象的内存地址？
+```java
+public class HashCodeTest {
+    //目标：只要发生重复，说明hashcode不是内存地址，但还需要证明（JVM代码证明）
+    public static void main(String[] args) {
+        List<Integer> integerList = new ArrayList<Integer>();
+        int num = 0;
+        for (int i = 0; i < 150000; i++) {
+            //创建新的对象
+            Object object = new Object();
+            if (integerList.contains(object.hashCode())) {
+                num++;//发生重复（内存地址肯定不会重复）
+            } else {
+                integerList.add(object.hashCode());//没有重复
+            }
+        }
+        System.out.println(num + "个hashcode发生重复");
+        System.out.println("List合计大小" + integerList.size() + "个");
+
+    }
+}
+```
+15万个循环，发生了重复，说明hashCode不是内存地址（严格的说，肯定不是直接取的内存地址）
+![](./asserts/1.5.png)
+
+### HashCode存储位置
