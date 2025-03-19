@@ -320,3 +320,60 @@ Mark Word用于存储对象自身的运行时数据，如：哈希码（HashCode
 ![](./asserts/1.7.png)
 
 ![](./asserts/1.8.png)
+
+### HashCode生成时机
+```java
+@Test
+public void test2() {
+    Object_Test object_test = new Object_Test();
+    // jvm的信息
+    System.out.println(VM.current().details());
+    System.out.println("-------------------------");
+    // 调用之前打印object_test对象的头信息
+    // 以表格的形式打印对象布局
+    System.out.println(ClassLayout.parseInstance(object_test).toPrintable());
+
+    System.out.println("-------------------------");
+    // 调用后再打印object_test对象的hashcode值
+    System.out.println(Integer.toHexString(object_test.hashCode()));
+    System.out.println(ClassLayout.parseInstance(object_test).toPrintable());
+
+    System.out.println("-------------------------");
+    // 有线程加重量级锁的时候，再来看对象头
+    new Thread(()->{
+        try {
+            synchronized (object_test){
+                Thread.sleep(5000);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }).start();
+    new Thread(()->{
+        try {
+            synchronized (object_test){
+                Thread.sleep(5000);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }).start();
+    System.out.println(Integer.toHexString(object_test.hashCode()));
+    System.out.println(ClassLayout.parseInstance(object_test).toPrintable());
+}
+```
+
+结果：
+
+对象的内存结构（无锁状态、未调用HashCode）：
+
+![](./asserts/1.9.png)
+
+调用对象的HashCode方法后：
+
+![](./asserts/1.10.png)
+
+加锁，产生线程竞争后：
+
+![](./asserts/1.11.png)
+
