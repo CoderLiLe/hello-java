@@ -377,3 +377,153 @@ public void test2() {
 
 ![](./asserts/1.11.png)
 
+## HashCode如何生成的？
+源码：
+```java
+public native int hashCode();
+```
+
+1）先从Object.c开始找hashCode映射
+
+src\share\native\java\lang\Object.c
+
+```c
+JNIEXPORT void JNICALL//jni调用
+//全路径：java_lang_Object_registerNatives是java对应的包下方法
+Java_java_lang_Object_registerNatives(JNIEnv *env, jclass cls)
+{
+     //jni环境调用；下面的参数methods对应的java方法
+    (*env)->RegisterNatives(env, cls,
+                            methods, sizeof(methods)/sizeof(methods[0]));
+}
+```
+
+JAVA--------------------->C++函数对应
+```cpp
+//JAVA方法（返回值）----->C++函数对象
+static JNINativeMethod methods[] = {
+    //JAVA方法        返回值  （参数）                          c++函数
+    {"hashCode",    "()I",                    (void *)&JVM_IHashCode},
+    {"wait",        "(J)V",                   (void *)&JVM_MonitorWait},
+    {"notify",      "()V",                    (void *)&JVM_MonitorNotify},
+    {"notifyAll",   "()V",                    (void *)&JVM_MonitorNotifyAll},
+    {"clone",       "()Ljava/lang/Object;",   (void *)&JVM_Clone},
+};
+```
+
+2）全局检索JVM_IHashCode
+
+完全搜不到这个方法名，只有这个还凑合有点像，那这是个啥呢？
+![](./asserts/1.12.png)
+
+src\share\vm\prims\jvm.cpp
+
+```cpp
+/*
+JVM_ENTRY is a preprocessor macro that
+adds some boilerplate code that is common for all functions of HotSpot JVM API.
+This API is a connection layer between the native code of JDK class library and the JVM.
+
+JVM_ENTRY是一个预加载宏，增加一些样板代码到jvm的所有function中
+这个api是位于本地方法与jdk之间的一个连接层。
+
+所以，此处才是生成hashCode的逻辑！
+*/
+JVM_ENTRY(jint, JVM_IHashCode(JNIEnv* env, jobject handle))
+  JVMWrapper("JVM_IHashCode");
+  //调用了ObjectSynchronizer对象的FastHashCode
+ return handle == NULL ? 0 : ObjectSynchronizer::FastHashCode (THREAD, JNIHandles::resolve_non_null(handle)) ;
+JVM_END
+```
+
+3）继续，ObjectSynchronizer::FastHashCode
+![](./asserts/1.13.png)
+
+先说生成流程，留个印象：
+
+![](./asserts/1.14.jpg)
+```cpp
+intptr_t ObjectSynchronizer::FastHashCode (Thread * Self, oop obj) {
+    //是否开启了偏向锁(Biased：偏向，倾向)
+  if (UseBiasedLocking) {
+    //如果当前对象处于偏向锁状态
+    if (obj->mark()->has_bias_pattern()) {
+      Handle hobj (Self, obj) ;
+      assert (Universe::verify_in_progress() ||
+              !SafepointSynchronize::is_at_safepoint(),
+             "biases should not be seen by VM thread here");
+            //那么就撤销偏向锁（达到无锁状态，revoke：废除）
+      BiasedLocking::revoke_and_rebias(hobj, false, JavaThread::current());
+      obj = hobj() ;
+        //断言下，看看是否撤销成功（撤销后为无锁状态）
+      assert(!obj->mark()->has_bias_pattern(), "biases should be revoked by now");
+    }
+  }
+
+  // ……
+
+  ObjectMonitor* monitor = NULL;
+  markOop temp, test;
+  intptr_t hash;
+  //读出一个稳定的mark;防止对象obj处于膨胀状态；
+  //如果正在膨胀，就等他膨胀完毕再读出来
+  markOop mark = ReadStableMark (obj);
+
+    //是否撤销了偏向锁（也就是无锁状态）（neutral：中立，不偏不斜的）
+  if (mark->is_neutral()) {
+    //从mark头上取hash值
+    hash = mark->hash(); 
+    //如果有，直接返回这个hashcode（xor）
+    if (hash) {                       // if it has hash, just return it
+      return hash;
+    }
+        //如果没有就新生成一个(get_next_hash)
+    hash = get_next_hash(Self, obj);  // allocate a new hash code
+    //生成后，原子性设置，将hash放在对象头里去，这样下次就可以直接取了
+    temp = mark->copy_set_hash(hash); // merge the hash code into header
+    // use (machine word version) atomic operation to install the hash
+    test = (markOop) Atomic::cmpxchg_ptr(temp, obj->mark_addr(), mark);
+    if (test == mark) {
+      return hash;
+    }
+    // If atomic operation failed, we must inflate the header
+    // into heavy weight monitor. We could add more code here
+    // for fast path, but it does not worth the complexity.
+    //如果已经升级成了重量级锁，那么找到它的monitor
+    //也就是我们所说的内置锁(objectMonitor)，这是c里的数据类型
+    //因为锁升级后，mark里的bit位已经不再存储hashcode，而是指向monitor的地址
+    //而升级的markword呢？被移到了c的monitor里
+  } else if (mark->has_monitor()) {
+    //沿着monitor找header，也就是对象头
+    monitor = mark->monitor();
+    temp = monitor->header();
+    assert (temp->is_neutral(), "invariant") ;
+    //找到header后取hash返回
+    hash = temp->hash();
+    if (hash) {
+      return hash;
+    }
+    // Skip to the following code to reduce code size
+  } else if (Self->is_lock_owned((address)mark->locker())) {
+    //轻量级锁的话，也是从java对象头移到了c里，叫helper
+    temp = mark->displaced_mark_helper(); // this is a lightweight monitor owned
+    assert (temp->is_neutral(), "invariant") ;
+    hash = temp->hash();              // by current thread, check if the displaced
+    //找到，返回
+    if (hash) {                       // header contains hash code
+      return hash;
+    }
+  }
+    
+  
+  // ……
+```
+
+问：
+
+为什么要先撤销偏向锁到无锁状态，再来生成hashcode呢？这跟锁有什么关系？
+
+答：
+
+mark word里，hashcode存储的字节位置被偏向锁给占了！偏向锁存储了锁持有者的线程id
+
