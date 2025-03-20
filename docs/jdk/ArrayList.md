@@ -51,3 +51,91 @@ transient Object[] elementData;
 // 表示集合的长度
 private int size;
 ```
+
+## 类构造器
+
+### 无参构造
+```java
+public ArrayList() {
+    this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+```
+此无参构造函数将创建一个 DEFAULTCAPACITY_EMPTY_ELEMENTDATA 声明的数组，注意此时初始容量是0，而不是大家以为的 10。
+
+**注意：根据默认构造函数创建的集合，ArrayList list = new ArrayList();此时集合长度是0.**
+
+### 重载：有参构造ArrayList(int initialCapacity)
+```java
+public ArrayList(int initialCapacity) {
+    if (initialCapacity > 0) {
+        this.elementData = new Object[initialCapacity];
+    } else if (initialCapacity == 0) {
+        this.elementData = EMPTY_ELEMENTDATA;
+    } else {
+        throw new IllegalArgumentException("Illegal Capacity: "+ initialCapacity);
+    }
+}
+```
+
+初始化集合大小创建 ArrayList 集合。当大于0时，给定多少那就创建多大的数组；当等于0时，创建一个空数组；当小于0时，抛出异常。
+
+### 重载：ArrayList(Collection<? extends E> c)
+
+```java
+public ArrayList(Collection<? extends E> c) {
+    elementData = c.toArray();
+    if ((size = elementData.length) != 0) {
+        // c.toArray might (incorrectly) not return Object[] (see 6260652)
+        if (elementData.getClass() != Object[].class)
+                elementData = Arrays.copyOf(elementData, size, Object[].class);
+    } else {
+        // replace with empty array.
+        this.elementData = EMPTY_ELEMENTDATA;
+    }
+}
+```
+
+将已有的集合复制到 ArrayList 集合中
+
+### 思考：无参构造和0长度构造有什么区别
+```java
+@Test
+public void test(){
+    // 两种方式构建list，有什么区别？
+    ArrayList list1 = new ArrayList();
+    ArrayList list2 = new ArrayList(0);
+
+    // 打印对象头
+    System.out.println(ClassLayout.parseInstance(list1).toPrintable());
+    System.out.println(ClassLayout.parseInstance(list2).toPrintable());
+
+    System.out.println("========");
+
+    // add一个元素之后再来打印试试
+    list1.add(1);
+    list2.add(1);
+
+    System.out.println(ClassLayout.parseInstance(list1).toPrintable());
+    System.out.println(ClassLayout.parseInstance(list2).toPrintable());
+}
+```
+
+![](./asserts/2.3.png)
+
+原理：
+
+```java
+// calculateCapacity
+// 每次元素变动，比如add，会调用该函数判断容量情况
+private static int calculateCapacity(Object[] elementData, int minCapacity) {
+    // 定义default empty数组的意义就在这里！用于扩容时判断当初采用的是哪种构造函数
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        // 如果是无参的构造函数，用的就是该default empty
+        // 那么第一次add时候，容量取default和min中较大者
+        return Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+    // 如果是另外两个构造函数，比如指定容量为5，或者初始参数collection为5
+    // 那就直接返回5，一定程度上，节约了内存空间
+    return minCapacity;
+}
+```
