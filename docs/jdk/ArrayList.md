@@ -279,3 +279,31 @@ public static native void arraycopy(Object src,  int  srcPos,
                                     Object dest, int destPos,
                                     int length);
 ```
+
+## 修改元素
+
+通过调用 set(int index, E element) 方法在指定索引 index 处的元素替换为 element。并返回原数组的元素。
+
+```java
+public E set(int index, E element) {
+    // 判断索引合法性
+    rangeCheck(index);
+
+    // 获得原数组指定索引的元素
+    E oldValue = elementData(index);
+    // 将指定所引处的元素替换为 element
+    elementData[index] = element;
+    // 返回原数组索引元素
+    return oldValue;
+}
+```
+
+通过调用 rangeCheck(index) 来检查索引合法性
+```java
+private void rangeCheck(int index) {
+    if (index >= size)
+        throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+}
+```
+
+当索引为负数时，会抛出 java.lang.ArrayIndexOutOfBoundsException 异常。当索引大于集合长度时，会抛出 IndexOutOfBoundsException 异常。
