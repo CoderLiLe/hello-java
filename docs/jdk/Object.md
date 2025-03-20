@@ -527,3 +527,79 @@ intptr_t ObjectSynchronizer::FastHashCode (Thread * Self, oop obj) {
 
 mark word里，hashcode存储的字节位置被偏向锁给占了！偏向锁存储了锁持有者的线程id
 
+### 扩展：关于hashCode的生成算法（了解）
+```java
+// hashCode() generation :
+// 涉及到c++算法领域，感兴趣的同学自行研究
+// Possibilities:
+// * MD5Digest of {obj,stwRandom}
+// * CRC32 of {obj,stwRandom} or any linear-feedback shift register function.
+// * A DES- or AES-style SBox[] mechanism
+// * One of the Phi-based schemes, such as:
+//   2654435761 = 2^32 * Phi (golden ratio)
+//   HashCodeValue = ((uintptr_t(obj) >> 3) * 2654435761) ^ GVars.stwRandom ;
+// * A variation of Marsaglia's shift-xor RNG scheme.
+// * (obj ^ stwRandom) is appealing, but can result
+//   in undesirable regularity in the hashCode values of adjacent objects
+//   (objects allocated back-to-back, in particular).  This could potentially
+//   result in hashtable collisions and reduced hashtable efficiency.
+//   There are simple ways to "diffuse" the middle address bits over the
+//   generated hashCode values:
+//
+static inline intptr_t get_next_hash(Thread * Self, oop obj) {
+    intptr_t value = 0;
+    if (hashCode == 0) {
+        // This form uses an unguarded global Park-Miller RNG,
+        // so it's possible for two threads to race and generate the same RNG.
+        // On MP system we'll have lots of RW access to a global, so the
+        // mechanism induces lots of coherency traffic.
+        value = os::random ();//返回随机数
+    } else if (hashCode == 1) {
+        // This variation has the property of being stable (idempotent)
+        // between STW operations.  This can be useful in some of the 1-0
+        // synchronization schemes.
+        //和地址相关，但不是地址；右移+异或算法
+        intptr_t addrBits = cast_from_oop < intptr_t > (obj) >> 3;
+        value = addrBits ^ (addrBits >> 5) ^ GVars.stwRandom;//随机数位移异或计算
+    } else if (hashCode == 2) {
+        value = 1;            // 返回1
+    } else if (hashCode == 3) {
+        value = ++GVars.hcSequence;//返回一个Sequence序列号
+    } else if (hashCode == 4) {
+        value = cast_from_oop < intptr_t > (obj);//也不是地址
+    } else {
+        //常用
+        // Marsaglia's xor-shift scheme with thread-specific state
+        // This is probably the best overall implementation -- we'll
+        // likely make this the default in future releases.
+        //马萨利亚教授写的xor-shift 随机数算法（异或随机算法)
+        unsigned t = Self -> _hashStateX;
+        t ^= (t << 11);
+        Self -> _hashStateX = Self -> _hashStateY;
+        Self -> _hashStateY = Self -> _hashStateZ;
+        Self -> _hashStateZ = Self -> _hashStateW;
+        unsigned v = Self -> _hashStateW;
+        v = (v ^ (v >> 19)) ^ (t ^ (t >> 8));
+        Self -> _hashStateW = v;
+        value = v;
+    }
+}
+```
+
+![](./asserts/1.15.png)
+
+可以通过参数 -XX: hashcode=1进行修改 （JDK8默认使用最后一种）
+
+### 总结
+通过分析虚拟机源码我们证明了hashCode不是直接用的内存地址，而是采取一定的算法来生成
+
+hashcode值的存储在mark word里，与锁共用一段bit位，这就造成了跟锁状态相关性
+
+如果是偏向锁：
+一旦调用hashcode，偏向锁将被撤销，hashcode被保存占位mark word，对象被打回无锁状态
+
+那偏偏这会就是有线程硬性使用对象的锁呢？
+对象再也回不到偏向锁状态而是升级为重量级锁。hash code跟随mark word被移动到c的object monitor，从那里取
+
+
+
