@@ -628,6 +628,16 @@ public String toString() {
 - getClass().getName()是返回对象的全类名（包含包名）,Integer.toHexString(hashCode()) 是以16进制无符号整数形式返回此哈希码的字符串表示形式。
 - 打印某个对象时，默认是调用 toString 方法，比如 System.out.println(person),等价于 System.out.println(person.toString())
 
+## clone方法
+```java
+/**
+ * 本地clone方法,用于对象的复制
+ */
+protected native Object clone() throws CloneNotSupportedException;
+```
+
+保护方法，实现对象的浅拷贝，只有实现了Cloneable接口才可以调用该方法，否则抛出CloneNotSupportedException异常。
+
 
 
 
