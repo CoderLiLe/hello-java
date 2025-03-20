@@ -307,3 +307,15 @@ private void rangeCheck(int index) {
 ```
 
 当索引为负数时，会抛出 java.lang.ArrayIndexOutOfBoundsException 异常。当索引大于集合长度时，会抛出 IndexOutOfBoundsException 异常。
+
+## 查找元素
+
+```java
+public E get(int index) {
+    rangeCheck(index);
+
+    return elementData(index);
+}
+```
+
+同理，首先还是判断给定索引的合理性，然后直接返回处于该下标位置的数组元素。
