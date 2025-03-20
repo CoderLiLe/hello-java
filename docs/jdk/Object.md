@@ -618,6 +618,20 @@ public final native Class<?> getClass();
 
 这里我们要知道用 native 修饰的方法我们不用考虑，由操作系统帮我们实现，该方法的作用是返回一个对象的运行时类，通过这个类对象我们可以获取该运行时类的相关属性和方法
 
+## toString 方法
+```java
+public String toString() {
+    return getClass().getName() + "@" + Integer.toHexString(hashCode());
+}
+```
+
+- getClass().getName()是返回对象的全类名（包含包名）,Integer.toHexString(hashCode()) 是以16进制无符号整数形式返回此哈希码的字符串表示形式。
+- 打印某个对象时，默认是调用 toString 方法，比如 System.out.println(person),等价于 System.out.println(person.toString())
+
+
+
+
+
 
 
 
