@@ -638,6 +638,20 @@ protected native Object clone() throws CloneNotSupportedException;
 
 保护方法，实现对象的浅拷贝，只有实现了Cloneable接口才可以调用该方法，否则抛出CloneNotSupportedException异常。
 
+## finalize 方法
+```java
+protected void finalize() throws Throwable { 
+    
+}
+```
+
+当 GC 确定不再有对该对象的引用时，GC 会调用对象的 finalize() 方法来清除回收。
+
+Java VM 会确保一个对象的 finalize() 方法只被调用一次，而且程序中不能直接调用 finalize() 方法。
+
+finalize() 方法通常也不可预测，而且很危险，一般情况下，不必要覆盖 finalize() 方法。
+
+
 
 
 
