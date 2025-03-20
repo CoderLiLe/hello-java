@@ -651,7 +651,20 @@ Java VM 会确保一个对象的 finalize() 方法只被调用一次，而且程
 
 finalize() 方法通常也不可预测，而且很危险，一般情况下，不必要覆盖 finalize() 方法。
 
+## registerNatives 方法
+```java
+private static native void registerNatives();
+```
 
+这是一个本地方法，我们要知道一个类定义了本地方法后，想要调用操作系统的实现，**必须还要装载本地库**
+
+```java
+static {
+    registerNatives();
+}
+```
+
+静态代码块就是一个类在初始化过程中必定会执行的内容，所以在类加载的时候是会执行该方法的，通过该方法来注册本地方法。
 
 
 
