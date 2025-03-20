@@ -234,3 +234,48 @@ list.add(null);
 list.add(1);
 System.out.println(list.size()); // 2
 ```
+
+## 删除元素
+
+```java
+public E remove(int index) {
+    // 判断给定索引的范围，超过集合大小则抛出异常
+    rangeCheck(index);
+
+    modCount++;
+    // 得到索引处的删除元素
+    E oldValue = elementData(index);
+
+    int numMoved = size - index - 1;
+    // size-index-1 > 0 表示 0<= index < (size-1),即索引不是最后一个元素
+    if (numMoved > 0)
+        // 通过 System.arraycopy()将数组elementData 的下标index+1之后长度为 numMoved的元素拷贝到从index开始的位置
+        System.arraycopy(elementData, index+1, elementData, index,
+                             numMoved);
+
+    // 将数组最后一个元素置为 null，便于垃圾回收
+    elementData[--size] = null; 
+
+    return oldValue;
+}
+```
+
+remove(int index) 方法表示删除索引index处的元素，首先通过 rangeCheck(index) 方法判断给定索引的范围，超过集合大小则抛出异常；接着通过 System.arraycopy 方法对数组进行自身拷贝
+
+![](./asserts/2.4.png)
+
+附：
+
+```java
+/*
+ *　src:源数组
+　　srcPos:源数组要复制的起始位置
+　　dest:目的数组
+　　destPos:目的数组放置的起始位置
+　　length:复制的长度
+　　注意：src 和 dest都必须是同类型或者可以进行转换类型的数组。
+*/
+public static native void arraycopy(Object src,  int  srcPos,
+                                    Object dest, int destPos,
+                                    int length);
+```
