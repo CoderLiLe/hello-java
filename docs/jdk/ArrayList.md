@@ -139,3 +139,98 @@ private static int calculateCapacity(Object[] elementData, int minCapacity) {
     return minCapacity;
 }
 ```
+
+## 添加元素
+```java
+// 思考：List集合底层是数组，为什么能添加到任意多个元素？
+list1.add(1);
+```
+
+源码：
+```java
+public boolean add(E e) {
+    ensureCapacityInternal(size + 1);  // 添加元素之前，首先要确定集合的大小(是否需要扩容)
+    elementData[size++] = e;
+    return true;
+}
+```
+
+如上所示，在通过调用 add 方法添加元素之前，我们要首先调用 ensureCapacityInternal 方法来确定集合的大小，如果集合满了，则要进行扩容操作。
+
+```java
+// 这里的minCapacity 是集合当前大小+1
+private void ensureCapacityInternal(int minCapacity) {
+    // elementData 是实际用来存储元素的数组，注意数组的大小和集合的大小不是相等的，前面的size是指集合大小
+    ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+} 
+
+private static int calculateCapacity(Object[] elementData, int minCapacity) {
+    // 如果数组为空，则从size+1的值和默认值10中取最大的
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        return Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+    return minCapacity;//不为空，则返回size+1
+}
+
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;
+
+    // overflow-conscious code
+    if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+}
+```
+
+在 ensureExplicitCapacity 方法中，首先对修改次数modCount加一，这里的modCount给ArrayList的迭代器使用的，在并发操作被修改时，提供快速失败行为（保证modCount在迭代期间不变，否则抛出ConcurrentModificationException异常，可以查看源码865行），接着判断minCapacity是否大于当前ArrayList内部数组长度，大于的话调用grow方法对内部数组elementData扩容，grow方法代码如下：
+
+```java
+private void grow(int minCapacity) {
+    // 得到原始数组的长度
+    int oldCapacity = elementData.length;
+    // 新数组的长度等于原数组长度的1.5倍
+    int newCapacity = oldCapacity + (oldCapacity >> 1);
+    // 当新数组长度仍然比minCapacity小，则为保证最小长度，新数组等于minCapacity
+    if (newCapacity - minCapacity < 0)
+        newCapacity = minCapacity;
+    // MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8 = 2147483639
+    // 当得到的新数组长度比 MAX_ARRAY_SIZE 大时，调用 hugeCapacity 处理大数组
+    if (newCapacity - MAX_ARRAY_SIZE > 0)
+        newCapacity = hugeCapacity(minCapacity);
+    // 调用 Arrays.copyOf 将原数组拷贝到一个大小为newCapacity的新数组（注意是拷贝引用）
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+
+private static int hugeCapacity(int minCapacity) {
+    if (minCapacity < 0) //
+        throw new OutOfMemoryError();
+    // minCapacity > MAX_ARRAY_SIZE,则新数组大小为Integer.MAX_VALUE
+    return (minCapacity > MAX_ARRAY_SIZE) ? Integer.MAX_VALUE : MAX_ARRAY_SIZE;
+}
+```
+
+扩容的核心方法就是调用前面我们讲过的Arrays.copyOf 方法，创建一个更大的数组，然后将原数组元素拷贝过去即可
+
+对于 ArrayList 集合添加元素，总结一下：
+
+① 当通过 ArrayList() 构造一个空集合，初始长度是为0的，第 1 次添加元素，会创建一个长度为10的数组，并将该元素赋值到数组的第一个位置。
+
+② 第 2 次添加元素，集合不为空，而且由于集合的长度size+1是小于数组的长度10，所以直接添加元素到数组的第二个位置，不用扩容。
+
+③ 第 11 次添加元素，此时 size+1 = 11，而数组长度是10，这时候创建一个长度为10+10*0.5 = 15 的数组（扩容1.5倍），然后将原数组元素引用拷贝到新数组。并将第 11 次添加的元素赋值到新数组下标为10的位置。
+
+④ 第 Integer.MAX_VALUE - 8 = 2147483639，然后 2147483639%1.5=1431655759（这个数是要进行扩容） 次添加元素，为了防止溢出，此时会直接创建一个 1431655759+1 大小的数组，这样一直，每次添加一个元素，都只扩大一个范围。
+
+⑤ 第 Integer.MAX_VALUE - 7 次添加元素时，创建一个大小为 Integer.MAX_VALUE 的数组，在进行元素添加。
+
+⑥ 第 Integer.MAX_VALUE + 1 次添加元素时，抛出 OutOfMemoryError 异常。
+
+注意：能向集合中添加 null 的，因为数组可以有 null 值存在。
+
+```java
+Object[] obj = {null,1};
+
+ArrayList list = new ArrayList();
+list.add(null);
+list.add(1);
+System.out.println(list.size()); // 2
+```
