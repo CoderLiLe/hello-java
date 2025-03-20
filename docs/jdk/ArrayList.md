@@ -35,3 +35,19 @@ Cloneable 和 RandomAccess 接口一样也是一个标记接口，接口内无�
 这个接口是 List 类集合的上层接口，定义了实现该接口的类都必须要实现的一组方法
 
 ![](./asserts/2.2.png)
+
+## 字段属性
+```java
+// 集合的默认大小 
+private static final int DEFAULT_CAPACITY = 10;
+// 空的数组实例 
+private static final Object[] EMPTY_ELEMENTDATA = {};
+// 这也是一个空的数组实例，和EMPTY_ELEMENTDATA空数组相比是用于了解添加元素时数组膨胀多少
+private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+// 存储 ArrayList集合的元素，集合的长度即这个数组的长度
+// 1、当 elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA 时将会清空 ArrayList
+// 2、当添加第一个元素时，elementData 长度会扩展为 DEFAULT_CAPACITY=10
+transient Object[] elementData;
+// 表示集合的长度
+private int size;
+```
