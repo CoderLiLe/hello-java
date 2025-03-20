@@ -601,5 +601,26 @@ hashcode值的存储在mark word里，与锁共用一段bit位，这就造成了
 那偏偏这会就是有线程硬性使用对象的锁呢？
 对象再也回不到偏向锁状态而是升级为重量级锁。hash code跟随mark word被移动到c的object monitor，从那里取
 
+## getClass 方法
+
+getClass()在 Object 类中如下，作用是返回对象的运行时类。
+
+```java
+public final native Class<?> getClass();
+```
+
+这是一个用 native 关键字修饰的方法
+
+>native 用来修饰方法，用 native 声明的方法表示告知 JVM 调用，该方法在外部定义，我们可以用任何语言去实现它。
+>
+>简单地讲，一个native Method就是一个 Java 调用非 Java 代码的接口。
+
+
+这里我们要知道用 native 修饰的方法我们不用考虑，由操作系统帮我们实现，该方法的作用是返回一个对象的运行时类，通过这个类对象我们可以获取该运行时类的相关属性和方法
+
+
+
+
+
 
 
