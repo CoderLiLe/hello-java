@@ -319,3 +319,176 @@ public E get(int index) {
 ```
 
 同理，首先还是判断给定索引的合理性，然后直接返回处于该下标位置的数组元素。
+
+## 遍历集合
+
+### 普通 for 循环遍历
+
+前面我们介绍查找元素时，知道可以通过get(int index)方法，根据索引查找元素，那么遍历同理：
+
+```java
+ArrayList list = new ArrayList();
+list.add("a");
+list.add("b");
+list.add("c");
+for(int i = 0 ; i < list.size() ; i++){
+    System.out.print(list.get(i)+" ");
+}
+```
+
+### 迭代器 iterator
+
+```java
+ArrayList<String> list = new ArrayList<>();
+list.add("a");
+list.add("b");
+list.add("c");
+Iterator<String> it = list.iterator();
+while(it.hasNext()){
+    String str = it.next();
+    System.out.print(str+" ");
+}
+```
+
+在介绍 ArrayList 时，我们知道该类实现了 List 接口，而 List 接口又继承了 Collection 接口，Collection 接口又继承了 Iterable 接口，该接口有个 Iterator iterator() 方法，能获取 Iterator 对象，能用该对象进行集合遍历，为什么能用该对象进行集合遍历？我们再看看 ArrayList 类中的该方法实现：
+
+```java
+public Iterator<E> iterator() {
+    return new Itr();
+}
+```
+
+该方法是返回一个 Itr 对象，这个类是 ArrayList 的内部类。
+
+```java
+private class Itr implements Iterator<E> {
+    int cursor;       // 游标， 下一个要返回的元素的索引
+    int lastRet = -1; // 返回最后一个元素的索引; 如果没有这样的话返回-1.
+    int expectedModCount = modCount;
+
+    // 通过 cursor ！= size 判断是否还有下一个元素
+    public boolean hasNext() {
+        return cursor != size;
+    }
+
+    @SuppressWarnings("unchecked")
+    public E next() {
+        checkForComodification();//迭代器进行元素迭代时同时进行增加和删除操作，会抛出异常
+        int i = cursor;
+        if (i >= size)
+            throw new NoSuchElementException();
+        Object[] elementData = ArrayList.this.elementData;
+        if (i >= elementData.length)
+            throw new ConcurrentModificationException();
+        cursor = i + 1;//游标向后移动一位
+        return (E) elementData[lastRet = i];//返回索引为i处的元素，并将 lastRet赋值为i
+    }
+
+    public void remove() {
+        if (lastRet < 0)
+            throw new IllegalStateException();
+        checkForComodification();
+
+        try {
+            ArrayList.this.remove(lastRet);//调用ArrayList的remove方法删除元素
+            cursor = lastRet;//游标指向删除元素的位置，本来是lastRet+1的，这里删除一个元素，然后游标就不变了
+            lastRet = -1;//lastRet恢复默认值-1
+            expectedModCount = modCount;//expectedModCount值和modCount同步，因为进行add和remove操作，modCount会加1
+        } catch (IndexOutOfBoundsException ex) {
+            throw new ConcurrentModificationException();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void forEachRemaining(Consumer<? super E> consumer) {//便于进行forEach循环
+        Objects.requireNonNull(consumer);
+        final int size = ArrayList.this.size;
+        int i = cursor;
+        if (i >= size) {
+            return;
+        }
+        final Object[] elementData = ArrayList.this.elementData;
+        if (i >= elementData.length) {
+            throw new ConcurrentModificationException();
+        }
+        while (i != size && modCount == expectedModCount) {
+            consumer.accept((E) elementData[i++]);
+        }
+        // update once at end of iteration to reduce heap write traffic
+        cursor = i;
+        lastRet = i - 1;
+        checkForComodification();
+    }
+
+    // 前面在新增元素add() 和 删除元素 remove() 时，我们可以看到 modCount++。修改set() 是没有的
+    // 也就是说不能在迭代器进行元素迭代时进行增加和删除操作，否则抛出异常
+    final void checkForComodification() {
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+    }
+}
+```
+
+注意在进行 next() 方法调用的时候，会进行 checkForComodification() 调用，该方法表示迭代器进行元素迭代时，如果同时进行增加和删除操作，会抛出 ConcurrentModificationException 异常。比如：
+
+```java
+ArrayList<String> list = new ArrayList<>();
+list.add("a");
+list.add("b");
+list.add("c");
+Iterator<String> it = list.iterator();
+while(it.hasNext()){
+    String str = it.next();
+    System.out.print(str+" ");
+    list.remove(str);//集合遍历时进行删除或者新增操作，都会抛出 ConcurrentModificationException 异常
+    //list.add(str);
+    list.set(0, str);//修改操作不会造成异常
+}
+```
+
+![](./asserts/2.5.png)
+
+解决办法是不调用 ArrayList.remove() 方法，转而调用 迭代器的 remove() 方法：
+
+```java
+Iterator<String> it = list.iterator();
+while (it.hasNext()) {
+    String str = it.next();
+    System.out.print(str+" ");
+    // list.remove(str);//集合遍历时进行删除或者新增操作，都会抛出 ConcurrentModificationException 异常
+    it.remove();
+}
+```
+
+**注意：迭代器只能向后遍历，不能向前遍历，能够删除元素，但是不能新增元素。**
+
+### 迭代器的变种 forEach
+
+```java
+ArrayList<String> list = new ArrayList<>();
+ list.add("a");
+ list.add("b");
+ list.add("c");
+for(String str : list){
+    System.out.print(str + " ");
+}
+```
+
+这种语法可以看成是 JDK 的一种语法糖，通过反编译 class 文件，我们可以看到生成的 java 文件，其具体实现还是通过调用 Iterator 迭代器进行遍历的。如下：
+
+```java
+ArrayList list = new ArrayList();
+list.add("a"); 
+list.add("b");
+list.add("c");
+String str;
+for (Iterator iterator1 = list.iterator(); iterator1.hasNext(); System.out.print((new StringBuilder(String.valueOf(str))).append(" ").toString()))
+    str = (String)iterator1.next();
+```
+
+总结：
+- arrayList可以存放null。
+- arrayList本质上就是一个elementData数组。
+- arrayList区别于数组的地方在于能够自动扩展大小，其中关键的方法就是gorw()方法。
+- arrayList由于本质是数组，所以它在数据的查询方面会很快，而在插入删除这些方面，性能下降很多，有移动很多数据才能达到应有的效果
