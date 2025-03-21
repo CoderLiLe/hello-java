@@ -467,9 +467,9 @@ while (it.hasNext()) {
 
 ```java
 ArrayList<String> list = new ArrayList<>();
- list.add("a");
- list.add("b");
- list.add("c");
+list.add("a");
+list.add("b");
+list.add("c");
 for(String str : list){
     System.out.print(str + " ");
 }
