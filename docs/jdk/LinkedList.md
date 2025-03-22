@@ -201,6 +201,21 @@ void linkBefore(E e, Node<E> succ) {
 
 addAll有两个重载函数，addAll(Collection<? extends E>)型和addAll(int, Collection<? extends E>)型，我们平时习惯调用的addAll(Collection<? extends E>)型会转化为addAll(int, Collection<? extends E>)型
 
+## 修改元素
+
+通过调用 set(int index, E element) 方法，用指定的元素替换此列表中指定位置的元素。
+
+```java
+public E set(int index, E element) {
+    // 判断索引 index >= 0 && index <= size中时抛出IndexOutOfBoundsException异常
+    checkElementIndex(index);
+    Node<E> x = node(index); // 获取指定索引处的元素
+    E oldVal = x.item;
+    x.item = element; // 将指定位置的元素替换成要修改的元素
+    return oldVal; // 返回指定索引位置原来的元素
+}
+```
+
 ```java
 // 按照指定集合的••迭代器返回的顺序，将指定集合中的所有元素追加到此列表的末尾。
 public boolean addAll(Collection<? extends E> c) {     
