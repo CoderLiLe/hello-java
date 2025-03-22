@@ -383,3 +383,111 @@ public int indexOf(Object o) {
     return -1; // 找不到返回-1
 }
 ```
+
+## 删除元素
+
+删除元素和添加元素一样，也是通过更改指向上一个节点和指向下一个节点的引用即可
+
+### remove()和removeFirst()
+
+**从此列表中移除并返回第一个元素**
+
+```java
+// 从此列表中移除并返回第一个元素
+public E remove() {
+    return removeFirst();
+}
+
+// 从此列表中移除并返回第一个元素
+public E removeFirst() {     
+    final Node<E> f = first; // f设为头结点
+    if (f == null)
+        throw new NoSuchElementException(); // 如果头结点为空，则抛出异常
+    return unlinkFirst(f);
+}
+
+private E unlinkFirst(Node<E> f) {     
+    // assert f == first && f != null;
+    final E element = f.item;
+    final Node<E> next = f.next; // next 为头结点的下一个节点
+    f.item = null;
+    f.next = null; // 将节点的元素以及引用都设为 null，便于垃圾回收
+    first = next; // 修改头结点为第二个节点
+    if (next == null) // 如果第二个节点为空（当前链表只存在第一个元素）
+        last = null; // 那么尾节点也置为 null
+    else
+        next.prev = null; // 如果第二个节点不为空，那么将第二个节点的上一个引用置为 null
+    size--;
+    modCount++;
+    return element;
+}
+```
+
+### removeLast()
+
+**从该列表中删除并返回最后一个元素**
+
+```java
+// 从该列表中删除并返回最后一个元素
+public E removeLast() {     
+    final Node<E> l = last;
+    if (l == null)//如果尾节点为空，表示当前集合为空，抛出异常
+        throw new NoSuchElementException();
+    return unlinkLast(l);
+}
+
+private E unlinkLast(Node<E> l) {
+    // assert l == last && l != null;
+    final E element = l.item;
+    final Node<E> prev = l.prev;
+    l.item = null;
+    l.prev = null; // 将节点的元素以及引用都设为 null，便于垃圾回收
+    last = prev; // 尾节点为倒数第二个节点
+    if (prev == null) // 如果倒数第二个节点为null
+        first = null; // 那么将节点也置为 null
+    else
+        prev.next = null; // 如果倒数第二个节点不为空，那么将倒数第二个节点的下一个引用置为 null
+    size--;
+    modCount++;
+    return element;
+}
+```
+
+### remove(int index)
+
+**删除此列表中指定位置的元素**
+
+```java
+// 删除此列表中指定位置的元素
+public E remove(int index) {     
+    // 判断索引 index >= 0 && index <= size中时抛出IndexOutOfBoundsException异常
+    checkElementIndex(index);
+    return unlink(node(index));
+}
+
+E unlink(Node<E> x) {
+    // assert x != null;
+    final E element = x.item;
+    final Node<E> next = x.next;
+    final Node<E> prev = x.prev;
+
+    if (prev == null) { // 如果删除节点位置的上一个节点引用为null（表示删除第一个元素）
+        first = next; // 将头结点置为第一个元素的下一个节点
+    } else { // 如果删除节点位置的上一个节点引用不为null
+        prev.next = next; // 将删除节点的上一个节点的下一个节点引用指向删除节点的下一个节点（去掉删除节点）
+        x.prev = null; // 删除节点的上一个节点引用置为null
+    }
+
+    if (next == null) { // 如果删除节点的下一个节点引用为null（表示删除最后一个节点）
+        last = prev; // 将尾节点置为删除节点的上一个节点
+    } else { // 不是删除尾节点
+        next.prev = prev; // 将删除节点的下一个节点的上一个节点的引用指向删除节点的上一个节点
+        x.next = null; // 将删除节点的下一个节点引用置为null
+    }
+
+    x.item = null; // 删除节点内容置为null，便于垃圾回收
+    size--;
+    modCount++;
+    return element;
+}
+```
