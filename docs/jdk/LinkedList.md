@@ -194,3 +194,97 @@ void linkBefore(E e, Node<E> succ) {
     modCount++;
     }
 ```
+
+### addAll(Collection<? extends E> c)
+
+**按照指定集合的迭代器返回的顺序，将指定集合中的所有元素追加到此列表的末尾**
+
+addAll有两个重载函数，addAll(Collection<? extends E>)型和addAll(int, Collection<? extends E>)型，我们平时习惯调用的addAll(Collection<? extends E>)型会转化为addAll(int, Collection<? extends E>)型
+
+```java
+// 按照指定集合的••迭代器返回的顺序，将指定集合中的所有元素追加到此列表的末尾。
+public boolean addAll(Collection<? extends E> c) {     
+    return addAll(size, c);
+}
+
+// 真正核心的地方就是这里了，记得我们传过来的是size，c
+public boolean addAll(int index, Collection<? extends E> c) {
+    // 检查index这个是否为合理。这个很简单，自己点进去看下就明白了。
+    checkPositionIndex(index);
+    // 将集合c转换为Object数组 a
+    Object[] a = c.toArray();
+    // 数组a的长度numNew，也就是由多少个元素
+    int numNew = a.length;
+    if (numNew == 0)
+        // 集合c是个空的，直接返回false，什么也不做。
+        return false;
+    // 集合c是非空的，定义两个节点(内部类)，每个节点都有三个属性，item、next、prev。
+    Node<E> pred, succ;
+    // 构造方法中传过来的就是index==size
+    if (index == size) {
+        // linkedList中三个属性：size、first、last。 size：链表中的元素个数。 first：头节点  last：尾节点，就两种情况能进来这里
+
+        // 情况一、：构造方法创建的一个空的链表，那么size=0，last、和first都为null。linkedList中是空的。什么节点都没有。succ=null、pred=last=null
+        // 情况二、：链表中有节点，size就不是为0，first和last都分别指向第一个节点，和最后一个节点，在最后一个节点之后追加元素，就得记录一下最后一个节点是什么，所以把last保存到pred临时节点中。
+        succ = null;
+        pred = last;
+    } else {
+        // 情况三、index！=size，说明不是前面两种情况，而是在链表中间插入元素，那么就得知道index上的节点是谁，保存到succ临时节点中，然后将succ的前一个节点保存到pred中，这样保存了这两个节点，就能够准确的插入节点了
+        // 举个简单的例子，有2个位置，1、2、如果想插数据到第二个位置，双向链表中，就需要知道第一个位置是谁，原位置也就是第二个位置上是谁，然后才能将自己插到第二个位置上。如果这里还不明白，先看一下开头对于各种链表的删除，add操作是怎么实现的。
+        succ = node(index);
+        pred = succ.prev;
+    }
+    
+    // 前面的准备工作做完了，将遍历数组a中的元素，封装为一个个节点。
+    for (Object o : a) {
+        @SuppressWarnings("unchecked") E e = (E) o;
+        // pred就是之前所构建好的，可能为null、也可能不为null，为null的话就是属于情况一、不为null则可能是情况二、或者情况三
+        Node<E> newNode = new Node<>(pred, e, null);
+        // 如果pred==null，说明是情况一，构造方法，是刚创建的一个空链表，此时的newNode就当作第一个节点，所以把newNode给first头节点
+        if (pred == null)
+            first = newNode;
+        else
+            // 如果pred！=null，说明可能是情况2或者情况3，如果是情况2，pred就是last，那么在最后一个节点之后追加到newNode，如果是情况3，在中间插入，pred为原index节点之前的一个节点，将它的next指向插入的节点，也是对的
+            pred.next = newNode;
+        // 然后将pred换成newNode，注意，这个不在else之中，请看清楚了。
+        pred = newNode;
+    }
+    if (succ == null) {
+        // 如果succ==null，说明是情况一或者情况二，
+        // 情况一、构造方法，也就是刚创建的一个空链表，pred已经是newNode了，last=newNode，所以linkedList的first、last都指向第一个节点。
+        // 情况二、在最后节后之后追加节点，那么原先的last就应该指向现在的最后一个节点了，就是newNode。
+        last = pred;
+    } else {
+        // 如果succ！=null，说明可能是情况三、在中间插入节点，举例说明这几个参数的意义，有1、2两个节点，现在想在第二个位置插入节点newNode，根据前面的代码，pred=newNode，succ=2，并且1.next=newNode，1已经构建好了，pred.next=succ，相当于在newNode.next = 2； succ.prev = pred，相当于 2.prev = newNode， 这样一来，这种指向关系就完成了。first和last不用变，因为头节点和尾节点没变
+        pred.next = succ;
+        succ.prev = pred;
+    }
+    // 增加了几个元素，就把 size = size +numNew 就可以了
+    size += numNew;
+    modCount++;
+    return true;
+}
+```
+
+说明：参数中的index表示在索引下标为index的结点（实际上是第index + 1个结点）的前面插入。　　　　　
+
+　　在addAll函数中，addAll函数中还会调用到node函数，get函数也会调用到node函数，此函数是根据索引下标找到该结点并返回，具体代码如下：
+
+```java
+Node<E> node(int index) {
+    // 判断插入的位置在链表前半段或者是后半段
+    if (index < (size >> 1)) { // 插入位置在前半段
+        Node<E> x = first; 
+        for (int i = 0; i < index; i++) // 从头结点开始正向遍历
+            x = x.next;
+        return x; // 返回该结点
+    } else { // 插入位置在后半段
+        Node<E> x = last; 
+        for (int i = size - 1; i > index; i--) // 从尾结点开始反向遍历
+            x = x.prev;
+        return x; // 返回该结点
+    }
+}
+```
+
+说明：在根据索引查找结点时，会有一个小优化，结点在前半段则从头开始遍历，在后半段则从尾开始遍历，这样就保证了只需要遍历最多一半结点就可以找到指定索引的结点。
