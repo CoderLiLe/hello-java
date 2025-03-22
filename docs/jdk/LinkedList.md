@@ -491,3 +491,115 @@ E unlink(Node<E> x) {
     return element;
 }
 ```
+
+## 遍历集合
+### 普通 for 循环
+```java
+LinkedList<String> linkedList = new LinkedList<>();
+    linkedList.add("A");
+    linkedList.add("B");
+    linkedList.add("C");
+    linkedList.add("D");
+
+for(int i = 0 ; i < linkedList.size() ; i++){
+    System.out.print(linkedList.get(i)+" ");//A B C D
+}
+```
+
+分析：
+
+利用 LinkedList 的 get(int index) 方法，遍历出所有的元素。
+
+但是需要注意的是， get(int index) 方法每次都要遍历该索引之前的所有元素
+
+### 迭代器
+
+在LinkedList中除了有一个Node的内部类外，应该还能看到另外两个内部类，那就是ListItr，还有一个是DescendingIterator。
+
+**ListItr内部类**
+
+```java
+private class ListItr implements ListIterator<E>
+```
+
+看一下他的继承结构，发现只继承了一个ListIterator，到ListIterator中一看：
+
+![](./asserts/3.5.png)
+
+看到方法名之后，就发现不止有向后迭代的方法，还有向前迭代的方法，所以我们就知道了这个ListItr这个内部类干嘛用的了，就是能让linkedList不光能像后迭代，也能向前迭代。
+
+看一下ListItr中的方法，可以发现，在迭代的过程中，还能移除、修改、添加值得操作。
+
+![](./asserts/3.6.png)
+
+DescendingIterator内部类　
+
+```java
+/**
+ * Adapter to provide descending iterators via ListItr.previous
+    
+　 看一下这个类，还是调用的ListItr，作用是封装一下Itr中几个方法，让使用者以正常的思维去写代码，例如，在从后往前遍历的时候，也是跟从前往后遍历一样，使用next等操作，而不用使用特殊的previous。
+*/
+private class DescendingIterator implements Iterator<E> {
+    private final ListItr itr = new ListItr(size());
+    public boolean hasNext() {
+        return itr.hasPrevious();
+    }
+    public E next() {
+        return itr.previous();
+    }
+    public void remove() {
+        itr.remove();
+    }
+}
+```
+
+如下为迭代器使用方法：
+```java
+LinkedList<String> linkedList = new LinkedList<>();
+linkedList.add("A");
+linkedList.add("B");
+linkedList.add("C");
+linkedList.add("D");
+
+
+Iterator<String> listIt = linkedList.listIterator();
+while(listIt.hasNext()){
+    System.out.print(listIt.next()+" ");//A B C D
+}
+
+//通过适配器模式实现的接口，作用是倒叙打印链表
+Iterator<String> it = linkedList.descendingIterator();
+while(it.hasNext()){
+    System.out.print(it.next()+" ");//D C B A
+}
+```
+
+### 迭代器和for循环效率差异
+
+```java
+LinkedList<Integer> linkedList = new LinkedList<>();
+for (int i = 0 ; i < 10000; i++) { // 向链表中添加一万个元素
+    linkedList.add(i);
+}
+
+long beginTimeFor = System.currentTimeMillis();
+for (int i = 0 ; i < 10000; i++) {
+    System.out.print(linkedList.get(i));
+}
+long endTimeFor = System.currentTimeMillis();
+System.out.println("使用普通for循环遍历10000个元素需要的时间：" + (endTimeFor - beginTimeFor));
+
+
+long beginTimeIte = System.currentTimeMillis();
+Iterator<Integer> it = linkedList.listIterator();
+while (it.hasNext()) {
+    System.out.print(it.next() + " ");
+}
+long endTimeIte = System.currentTimeMillis();
+System.out.println("使用迭代器遍历10000个元素需要的时间：" + (endTimeIte - beginTimeIte));
+```
+
+![](./asserts/3.7.png)
+
+一万个元素两者之间都相差一倍多的时间，如果是十万，百万个元素，那么两者之间相差的速度会越来越大
