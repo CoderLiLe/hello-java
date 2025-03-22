@@ -303,3 +303,83 @@ public E set(int index, E element) {
     return oldVal; // 返回指定索引位置原来的元素
 }
 ```
+
+## 查找元素
+
+### getFirst()
+**返回此列表中的第一个元素**
+```java
+public E getFirst() {
+    final Node<E> f = first;
+    if (f == null)
+        throw new NoSuchElementException();
+    return f.item;
+}
+```
+
+### getLast()
+
+**返回此列表中的最后一个元素**
+
+```java
+public E getLast() {
+    final Node<E> l = last;
+    if (l == null)
+        throw new NoSuchElementException();
+    return l.item;
+}
+```
+
+### get(int index)
+
+**返回指定索引处的元素**
+
+```java
+public E get(int index) {     
+    checkElementIndex(index);
+    return node(index).item;
+}
+
+// 这里查询使用的是先从中间分一半查找
+Node<E> node(int index) {
+    // assert isElementIndex(index);
+    // "<<":*2的几次方 “>>”:/2的几次方，例如：size<<1：size*2的1次方，
+    // 这个if中就是查询前半部分
+    if (index < (size >> 1)) { // index < size/2
+        Node<E> x = first;
+        for (int i = 0; i < index; i++)
+            x = x.next;
+        return x;
+    } else { // 前半部分没找到，所以找后半部分
+        Node<E> x = last;
+        for (int i = size - 1; i > index; i--)
+            x = x.prev;
+        return x;
+    }
+}
+```
+
+### indexOf(Object o)
+
+**返回此列表中指定元素第一次出现的索引，如果此列表不包含元素，则返回-1。**
+
+```java
+// 返回此列表中指定元素第一次出现的索引，如果此列表不包含元素，则返回-1。
+public int indexOf(Object o) {     
+    int index = 0;
+    if (o == null) { // 如果查找的元素为null(LinkedList可以允许null值)
+        for (Node<E> x = first; x != null; x = x.next) {//从头结点开始不断向下一个节点进行遍历
+            if (x.item == null)
+                return index;
+            index++;
+        }
+    } else { // 如果查找的元素不为null
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item))
+                return index;
+            index++;
+        }
+    }
+    return -1; // 找不到返回-1
+}
+```
