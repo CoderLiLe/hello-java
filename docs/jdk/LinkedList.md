@@ -30,3 +30,43 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
 和 ArrayList 集合一样，LinkedList 集合也实现了Cloneable接口和Serializable接口，分别用来支持克隆以及支持序列化。List 接口也不用多说，定义了一套 List 集合类型的方法规范。
 
 注意，相对于 ArrayList 集合，LinkedList 集合多实现了一个 Deque 接口，这是一个双向队列接口，双向队列就是两端都可以进行增加和删除操作。
+
+## 字段属性
+```java
+// 链表元素（节点）的个数
+transient int size = 0;
+
+/**
+ *指向第一个节点的指针
+ */
+transient Node<E> first;
+ 
+/**  
+ *指向最后一个节点的指针
+ */
+transient Node<E> last;
+```
+
+![](./asserts/3.3.png)
+
+注意这里出现了一个 Node 类，这是 LinkedList 类中的一个内部类，其中每一个元素就代表一个 Node 类对象，LinkedList 集合就是由许多个 Node 对象类似于手拉着手构成。
+
+```java
+private static class Node<E> {
+    
+    E item; // 实际存储的元素
+    Node<E> next; // 指向上一个节点的引用
+    Node<E> prev; // 指向下一个节点的引用
+
+    // 构造函数
+    Node(Node<E> prev, E element, Node<E> next) {
+        this.item = element;
+        this.next = next;
+        this.prev = prev;
+    }
+}
+```
+![](./asserts/3.4.png)
+
+上图的 LinkedList 是有四个元素，也就是由 4 个 Node 对象组成，size=4，head 指向第一个elementA,tail指向最后一个节点elementD。
+
