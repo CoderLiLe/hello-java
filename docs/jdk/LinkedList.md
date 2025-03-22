@@ -70,3 +70,19 @@ private static class Node<E> {
 
 上图的 LinkedList 是有四个元素，也就是由 4 个 Node 对象组成，size=4，head 指向第一个elementA,tail指向最后一个节点elementD。
 
+## 类构造器
+
+```java
+public LinkedList() {
+
+}
+
+public LinkedList(Collection<? extends E> c) {
+    this();
+    addAll(c);
+}
+```
+
+LinkedList 有两个构造函数，第一个是默认的空的构造函数，第二个是将已有元素的集合Collection 的实例添加到 LinkedList 中，调用的是 addAll() 方法
+
+注意：LinkedList 是没有初始化链表大小的构造函数，因为链表不像数组，一个定义好的数组是必须要有确定的大小，然后去分配内存空间，而链表不一样，它没有确定的大小，通过指针的移动来指向下一个内存地址的分配。
