@@ -128,3 +128,49 @@ final float loadFactor;
 ④ **threshold**
 
 计算公式：capacity * loadFactor。这个值是当前已占用数组长度的最大值。过这个数目就重新resize(扩容)，扩容后的 HashMap 容量是之前容量的两倍
+
+## 构造函数
+### 默认无参构造函数
+```java
+/**
+ * 默认构造函数，初始化加载因子loadFactor = 0.75
+ */
+public HashMap() {     
+    this.loadFactor = DEFAULT_LOAD_FACTOR; 
+}
+```
+
+### 指定初始容量的构造函数
+```java
+/**
+ *
+ * @param initialCapacity 指定初始化容量
+ * @param loadFactor 加载因子 0.75
+ */
+public HashMap(int initialCapacity, float loadFactor) {     
+    // 初始化容量不能小于 0 ，否则抛出异常
+    if (initialCapacity < 0)
+        throw new IllegalArgumentException("Illegal initial capacity: " + initialCapacity);
+    // 如果初始化容量大于2的30次方，则初始化容量都为2的30次方
+    if (initialCapacity > MAXIMUM_CAPACITY)
+        initialCapacity = MAXIMUM_CAPACITY;
+    // 如果加载因子小于0，或者加载因子是一个非数值，抛出异常
+    if (loadFactor <= 0 || Float.isNaN(loadFactor))
+        throw new IllegalArgumentException("Illegal load factor: " + loadFactor);
+    this.loadFactor = loadFactor;
+    this.threshold = tableSizeFor(initialCapacity);
+}
+
+// 返回大于等于initialCapacity的最小的二次幂数值。 
+// >>> 操作符表示无符号右移，高位取0。
+// | 按位或运算 
+static final int tableSizeFor(int cap) {
+    int n = cap - 1;
+    n |= n >>> 1;
+    n |= n >>> 2;
+    n |= n >>> 4;
+    n |= n >>> 8;
+    n |= n >>> 16;
+    return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+}
+```
