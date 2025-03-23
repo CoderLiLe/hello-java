@@ -41,3 +41,18 @@ Hash表也称为散列表，也有直接译作哈希表，Hash表是一种根据
 - 桶中的结构可能是链表，也可能是红黑树，当链表长度大于阈值(或者红黑树的边界值，默认为8)并且当前数组的长度大于64时，此时此索引位置上的所有数据改为使用红黑树存储。
 
 ![](./asserts/4.4.png)
+
+## 类构造器
+
+```java
+public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable, Serializable {
+```
+
+![](./asserts/4.5.png)
+
+JDK 为我们提供了一个抽象类 AbstractMap ，该抽象类继承 Map 接口，所以如果我们不想实现所有的 Map 接口方法，就可以选择继承抽象类 AbstractMap 。
+
+HashMap 集合实现了 Cloneable 接口以及 Serializable 接口，分别用来进行对象克隆以及将对象进行序列化。
+
+注意：HashMap 类即继承了 AbstractMap 接口，也实现了 Map 接口，这样做难道不是多此一举？
+> 据 java 集合框架的创始人Josh Bloch描述，这样的写法是一个失误。在java集合框架中，类似这样的写法很多，最开始写java集合框架的时候，他认为这样写，在某些地方可能是有价值的，直到他意识到错了。显然的，JDK的维护者，后来不认为这个小小的失误值得去修改，所以就这样存在下来了。
