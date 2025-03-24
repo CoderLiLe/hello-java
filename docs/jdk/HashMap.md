@@ -214,3 +214,91 @@ HashMap 使用的方法很巧妙，它通过 hash & (table.length -1)来得到�
 下面举例说明下，n为table的长度：
 
 ![](./asserts/4.6.png)
+
+## 添加元素
+```java
+//hash(key)就是上面讲的hash方法，对其进行了第一步和第二步处理
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+
+/**
+ *
+ * @param hash 索引的位置
+ * @param key  键
+ * @param value  值
+ * @param onlyIfAbsent true 表示不要更改现有值
+ * @param evict false表示table处于创建模式
+ * @return
+ */
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+     Node<K,V>[] tab; Node<K,V> p; int n, i;
+     // 如果table为null或者长度为0，则进行初始化
+     // resize()方法本来是用于扩容，由于初始化没有实际分配空间，这里用该方法进行空间分配，后面会详细讲解该方法
+     if ((tab = table) == null || (n = tab.length) == 0)
+         n = (tab = resize()).length;
+     // 注意：这里用到了前面讲解获得key的hash码的第三步，取模运算，下面的if-else分别是 tab[i] 为null和不为null
+     if ((p = tab[i = (n - 1) & hash]) == null)
+         // tab[i] 为null，直接将新的key-value插入到计算的索引i位置
+         tab[i] = newNode(hash, key, value, null); 
+     else { // tab[i] 不为null，表示该位置已经有值了
+         Node<K,V> e; K k;
+         if (p.hash == hash &&
+             ((k = p.key) == key || (key != null && key.equals(k))))
+             // 节点key已经有值了，直接用新值覆盖
+             e = p;
+         // 该链是红黑树
+         else if (p instanceof TreeNode)
+             e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+         // 该链是链表
+         else {
+             for (int binCount = 0; ; ++binCount) {
+                 if ((e = p.next) == null) {
+                     p.next = newNode(hash, key, value, null);
+                     // 链表长度大于8，转换成红黑树
+                     if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                         treeifyBin(tab, hash);
+                     break;
+                 }
+                 // key已经存在直接覆盖value
+                 if (e.hash == hash &&
+                     ((k = e.key) == key || (key != null && key.equals(k))))
+                     break;
+                 p = e;
+             }
+         }
+         if (e != null) { // existing mapping for key
+             V oldValue = e.value;
+             if (!onlyIfAbsent || oldValue == null)
+                 e.value = value;
+             afterNodeAccess(e);
+             return oldValue;
+         }
+     }
+     // 用作修改和新增快速失败
+     ++modCount;
+     // 超过最大容量，进行扩容
+     if (++size > threshold)
+         resize();
+     afterNodeInsertion(evict);
+     return null;
+}
+```
+
+①、判断键值对数组 table 是否为空或为null，否则执行resize()进行扩容；
+
+②、根据键值key计算hash值得到插入的数组索引i，如果table[i]==null，直接新建节点添加，转向⑥，如果table[i]不为空，转向③；
+
+③、判断table[i]的首个元素是否和key一样，如果相同直接覆盖value，否则转向④，这里的相同指的是hashCode以及equals；
+
+④、判断table[i] 是否为treeNode，即table[i] 是否是红黑树，如果是红黑树，则直接在树中插入键值对，否则转向⑤；
+
+⑤、遍历table[i]，判断链表长度是否大于8，大于8的话把链表转换为红黑树，在红黑树中执行插入操作，否则进行链表的插入操作；遍历过程中若发现key已经存在直接覆盖value即可；
+
+⑥、插入成功后，判断实际存在的键值对数量size是否超过了最大容量threshold，如果超过，进行扩容。
+
+⑦、如果新插入的key不存在，则返回null，如果新插入的key存在，则返回原key对应的value值（注意新插入的value会覆盖原value值）
+
+**思考：数组上有5个元素，而某个链表上有3个元素，问此HashMap的 size 是多大？**
+
+我们分析代码，很容易知道，**只要是调用put() 方法添加元素，那么就会调用 ++size(这里有个例外是插入重复key的键值对，不会调用，但是重复key元素不会影响size),所以，上面的答案是 7。**
