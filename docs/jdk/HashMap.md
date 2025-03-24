@@ -471,3 +471,46 @@ final Node<K,V> getNode(int hash, Object key) {
 }
 ```
 
+## 查找元素
+①、通过 key 查找 value
+
+首先通过 key 找到计算索引，找到桶位置，先检查第一个节点，如果是则返回，如果不是，则遍历其后面的链表或者红黑树。其余情况全部返回 null。
+```java
+public V get(Object key) {
+    Node<K,V> e;
+    return (e = getNode(hash(key), key)) == null ? null : e.value;
+}
+
+final Node<K,V> getNode(int hash, Object key) {
+    Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+            (first = tab[(n - 1) & hash]) != null) {
+        // 根据key计算的索引检查第一个索引
+        if (first.hash == hash && // always check first node
+                ((k = first.key) == key || (key != null && key.equals(k))))
+            return first;
+        // 不是第一个节点
+        if ((e = first.next) != null) {
+            if (first instanceof TreeNode) // 遍历树查找元素
+                return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+            do {
+                // 遍历链表查找元素
+                if (e.hash == hash &&
+                        ((k = e.key) == key || (key != null && key.equals(k))))
+                    return e;
+            } while ((e = e.next) != null);
+        }
+    }
+    return null;
+}
+```
+
+总结
+
+①、基于JDK1.8的HashMap是由数组+链表+红黑树组成，当链表长度超过 8 时会自动转换成红黑树，当红黑树节点个数小于 6 时，又会转化成链表。相对于早期版本的 JDK HashMap 实现，新增了红黑树作为底层数据结构，在数据量较大且哈希碰撞较多时，能够极大的增加检索的效率。
+
+②、允许 key 和 value 都为 null。key 重复会被覆盖，value 允许重复。
+
+③、非线程安全
+
+④、无序（遍历HashMap得到元素的顺序不是按照插入的顺序）
