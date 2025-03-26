@@ -1,0 +1,5 @@
+# ConcurrentHashMap
+
+思考：HashTable是线程安全的，为什么不推荐使用？
+
+HashTable是一个线程安全的类，它使用synchronized来锁住整张Hash表来实现线程安全，即每次锁住整张表让线程独占，相当于所有线程进行读写时都去竞争一把锁，导致效率非常低下。
