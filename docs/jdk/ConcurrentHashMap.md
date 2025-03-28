@@ -184,3 +184,78 @@ private Segment<K,V> ensureSegment(int k) {
 - 自旋判断计算得到的指定位置的 Segment 是否为null，使用 CAS 在这个位置赋值为 Segment.
 
 3、Segment.put 插入 key,value 值。
+
+最后一行的 Segment 的 put 方法源码：
+```java
+final V put(K key, int hash, V value, boolean onlyIfAbsent) {
+    // 获取 ReentrantLock 独占锁，获取不到，scanAndLockForPut 获取。
+    HashEntry<K,V> node = tryLock() ? null : scanAndLockForPut(key, hash, value);
+    V oldValue;
+    try {
+        HashEntry<K,V>[] tab = table;
+        // 计算要put的数据位置
+        int index = (tab.length - 1) & hash;
+        // CAS 获取 index 坐标的值
+        HashEntry<K,V> first = entryAt(tab, index);
+        for (HashEntry<K,V> e = first;;) {
+            if (e != null) {
+                // 检查是否 key 已经存在，如果存在，则遍历链表寻找位置，找到后替换 value
+                K k;
+                if ((k = e.key) == key ||
+                    (e.hash == hash && key.equals(k))) {
+                    oldValue = e.value;
+                    if (!onlyIfAbsent) {
+                        e.value = value;
+                        ++modCount;
+                    }
+                    break;
+                }
+                e = e.next;
+            }
+            else {
+                // first 有值没说明 index 位置已经有值了，有冲突，链表头插法。
+                if (node != null)
+                    node.setNext(first);
+                else
+                    node = new HashEntry<K,V>(hash, key, value, first);
+                int c = count + 1;
+                // 容量大于扩容阀值，小于最大容量，进行扩容
+                if (c > threshold && tab.length < MAXIMUM_CAPACITY)
+                    rehash(node);
+                else
+                    // index 位置赋值 node，node 可能是一个元素，也可能是一个链表的表头
+                    setEntryAt(tab, index, node);
+                ++modCount;
+                count = c;
+                oldValue = null;
+                break;
+            }
+        }
+    } finally {
+        unlock();
+    }
+    return oldValue;
+}
+```
+
+由于 Segment 继承了 ReentrantLock，所以 Segment 内部可以很方便的获取锁，put 流程就用到了这个功能。
+
+1、tryLock() 获取锁，获取不到使用 scanAndLockForPut 方法继续获取。
+
+2、计算 put 的数据要放入的 index 位置，然后获取这个位置上的 HashEntry 。
+
+3、遍历 put 新元素，为什么要遍历？因为这里获取的 HashEntry 可能是一个空元素，也可能是链表已存在，所以要区别对待。
+
+如果这个位置上的 HashEntry 不存在：
+- 如果当前容量大于扩容阀值，小于最大容量，进行扩容。
+- 直接头插法插入。
+
+如果这个位置上的 HashEntry 存在：
+
+- 判断链表当前元素 Key 和 hash 值是否和要 put 的 key 和 hash 值一致。一致则替换值
+
+- 不一致，获取链表下一个节点，直到发现相同进行值替换，或者链表表里完毕没有相同的。
+  - 如果当前容量大于扩容阀值，小于最大容量，进行扩容。
+  - 直接链表头插法插入。
+
+4、如果要插入的位置之前已经存在，替换后返回旧值，否则返回 null.
