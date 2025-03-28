@@ -114,3 +114,73 @@ public ConcurrentHashMap(int initialCapacity,float loadFactor, int concurrencyLe
 5、记录 segmentMask，默认是 ssize - 1 = 16 -1 = 15.
 
 6、初始化 segments[0]，默认大小为 2，负载因子 0.75，扩容阀值是 2*0.75=1.5，插入第二个值时才会进行扩容。
+
+## put
+```java
+public V put(K key, V value) {
+    Segment<K,V> s;
+    if (value == null)
+        throw new NullPointerException();
+    int hash = hash(key);
+    // hash 值无符号右移 28位（初始化时获得），然后与 segmentMask=15 做与运算
+    // 其实也就是把高4位与segmentMask（1111）做与运算
+  
+    // this.segmentMask = ssize - 1;
+    // 对hash值进行右移segmentShift位，计算元素对应segment中数组下表的位置
+    // 把hash右移segmentShift，相当于只要hash值的高32-segmentShift位，右移的目的是保留了hash值的高位。然后和segmentMask与操作计算元素在segment数组中的下表
+    int j = (hash >>> segmentShift) & segmentMask;
+    // 使用unsafe对象获取数组中第j个位置的值，后面加上的是偏移量
+    if ((s = (Segment<K,V>)UNSAFE.getObject          // nonvolatile; recheck
+         (segments, (j << SSHIFT) + SBASE)) == null) //  in ensureSegment
+        // 如果查找到的 Segment 为空，初始化
+        s = ensureSegment(j);
+    // 插入segment对象
+    return s.put(key, hash, value, false);
+}
+
+@SuppressWarnings("unchecked")
+private Segment<K,V> ensureSegment(int k) {
+    final Segment<K,V>[] ss = this.segments;
+    long u = (k << SSHIFT) + SBASE; // raw offset
+    Segment<K,V> seg;
+    // 判断 u 位置的 Segment 是否为null
+    if ((seg = (Segment<K,V>)UNSAFE.getObjectVolatile(ss, u)) == null) {
+        Segment<K,V> proto = ss[0]; // use segment 0 as prototype
+        // 获取0号 segment 里的 HashEntry<K,V> 初始化长度
+        int cap = proto.table.length;
+        // 获取0号 segment 里的 hash 表里的扩容负载因子，所有的 segment 的 loadFactor 是相同的
+        float lf = proto.loadFactor;
+        // 计算扩容阀值
+        int threshold = (int)(cap * lf);
+        // 创建一个 cap 容量的 HashEntry 数组
+        HashEntry<K,V>[] tab = (HashEntry<K,V>[])new HashEntry[cap];
+        if ((seg = (Segment<K,V>)UNSAFE.getObjectVolatile(ss, u)) == null) { // recheck
+            // 再次检查 u 位置的 Segment 是否为null，因为这时可能有其他线程进行了操作
+            Segment<K,V> s = new Segment<K,V>(lf, threshold, tab);
+            // 自旋检查 u 位置的 Segment 是否为null
+            while ((seg = (Segment<K,V>)UNSAFE.getObjectVolatile(ss, u))
+                   == null) {
+                // 使用CAS 赋值，只会成功一次
+                if (UNSAFE.compareAndSwapObject(ss, u, null, seg = s))
+                    break;
+            }
+        }
+    }
+    return seg;
+}
+```
+下面梳理下具体流程：
+
+1、计算要 put 的 key 的位置，获取指定位置的 Segment。
+
+2、如果指定位置的 Segment 为空，则初始化这个 Segment.
+
+初始化 Segment 流程：
+
+- 检查计算得到的位置的 Segment 是否为null.
+- 为 null 继续初始化，使用 Segment[0] 的容量和负载因子创建一个 HashEntry 数组。
+- 再次检查计算得到的指定位置的 Segment 是否为null.
+- 使用创建的 HashEntry 数组初始化这个 Segment.
+- 自旋判断计算得到的指定位置的 Segment 是否为null，使用 CAS 在这个位置赋值为 Segment.
+
+3、Segment.put 插入 key,value 值。
