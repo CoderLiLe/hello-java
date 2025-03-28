@@ -296,3 +296,66 @@ private HashEntry<K,V> scanAndLockForPut(K key, int hash, V value) {
     return node;
 }
 ```
+
+## 扩容 rehash
+ConcurrentHashMap 的扩容只会扩容到原来的两倍。老数组里的数据移动到新的数组时，位置要么不变，要么变为 index+ oldSize，参数里的 node 会在扩容之后使用链表**头插法**插入到指定位置。
+
+```java
+private void rehash(HashEntry<K,V> node) {
+    HashEntry<K,V>[] oldTable = table;
+    // 老容量
+    int oldCapacity = oldTable.length;
+    // 新容量，扩大两倍
+    int newCapacity = oldCapacity << 1;
+    // 新的扩容阀值 
+    threshold = (int)(newCapacity * loadFactor);
+    // 创建新的数组
+    HashEntry<K,V>[] newTable = (HashEntry<K,V>[]) new HashEntry[newCapacity];
+    // 新的掩码，默认2扩容后是4，-1是3，二进制就是11。
+    int sizeMask = newCapacity - 1;
+    for (int i = 0; i < oldCapacity ; i++) {
+        // 遍历老数组
+        HashEntry<K,V> e = oldTable[i];
+        if (e != null) {
+            HashEntry<K,V> next = e.next;
+            // 计算新的位置，新的位置只可能是不便或者是老的位置+老的容量。
+            int idx = e.hash & sizeMask;
+            if (next == null)   //  Single node on list
+                // 如果当前位置还不是链表，只是一个元素，直接赋值
+                newTable[idx] = e;
+            else { // Reuse consecutive sequence at same slot
+                // 如果是链表了
+                HashEntry<K,V> lastRun = e;
+                int lastIdx = idx;
+                // 新的位置只可能是不便或者是老的位置+老的容量。
+                // 遍历结束后，lastRun 后面的元素位置都是相同的
+                for (HashEntry<K,V> last = next; last != null; last = last.next) {
+                    int k = last.hash & sizeMask;
+                    if (k != lastIdx) {
+                        lastIdx = k;
+                        lastRun = last;
+                    }
+                }
+                // ，lastRun 后面的元素位置都是相同的，直接作为链表赋值到新位置。
+                newTable[lastIdx] = lastRun;
+                // Clone remaining nodes
+                for (HashEntry<K,V> p = e; p != lastRun; p = p.next) {
+                    // 遍历剩余元素，头插法到指定 k 位置。
+                    V v = p.value;
+                    int h = p.hash;
+                    int k = h & sizeMask;
+                    HashEntry<K,V> n = newTable[k];
+                    newTable[k] = new HashEntry<K,V>(h, p.key, v, n);
+                }
+            }
+        }
+    }
+    // 头插法插入新的节点
+    int nodeIndex = node.hash & sizeMask; // add the new node
+    node.setNext(newTable[nodeIndex]);
+    newTable[nodeIndex] = node;
+    table = newTable;
+}
+```
+
+这里第一个 for 是为了寻找这样一个节点，这个节点后面的所有 next 节点的新位置都是相同的。然后把这个作为一个链表赋值到新位置。第二个 for 循环是为了把剩余的元素通过头插法插入到指定位置链表。这样实现的原因可能是基于概率统计
