@@ -522,3 +522,40 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
 5、如果都不满足，则利用 synchronized 锁写入数据。
 
 6、如果数量大于 TREEIFY_THRESHOLD 则要转换为红黑树。
+
+## get
+
+```java
+public V get(Object key) {
+    Node<K,V>[] tab; Node<K,V> e, p; int n, eh; K ek;
+    // key 所在的 hash 位置
+    int h = spread(key.hashCode());
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (e = tabAt(tab, (n - 1) & h)) != null) {
+        // 如果指定位置元素存在，头结点hash值相同
+        if ((eh = e.hash) == h) {
+            if ((ek = e.key) == key || (ek != null && key.equals(ek)))
+                // key hash 值相等，key值相同，直接返回元素 value
+                return e.val;
+        }
+        else if (eh < 0)
+            // 头结点hash值小于0，说明正在扩容或者是红黑树，find查找
+            return (p = e.find(h, key)) != null ? p.val : null;
+        while ((e = e.next) != null) {
+            // 是链表，遍历查找
+            if (e.hash == h &&
+                ((ek = e.key) == key || (ek != null && key.equals(ek))))
+                return e.val;
+        }
+    }
+    return null;
+}
+```
+
+1、根据 hash 值计算位置。
+
+2、查找到指定位置，如果头节点就是要找的，直接返回它的 value.
+
+3、如果头节点 hash 值小于 0 ，说明正在扩容或者是红黑树，查找之。
+
+4、如果是链表，遍历查找之。
