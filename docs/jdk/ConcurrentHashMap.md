@@ -388,3 +388,10 @@ public V get(Object key) {
     return null;
 }
 ```
+
+# ConcurrentHashMap 1.8
+## 存储结构
+
+![](./asserts/6.3.png)
+
+可以发现 Java8 的 ConcurrentHashMap 相对于 Java7 来说变化比较大，不再是之前的** Segment 数组 + HashEntry 数组 + 链表**，而是 **Node 数组 + 链表 / 红黑树**。当冲突链表达到一定长度时，链表会转换成红黑树。
