@@ -210,3 +210,75 @@ show master status;
 ![](./asserts/1.3.png)
 
 
+### 2、配置slave从服务
+
+下一步，我们来配置从服务mysqls。 我们打开mysqls的配置文件my.cnf，修改配置文件：
+
+```ini
+[mysqld]
+#主库和从库需要不一致
+server-id=02
+#打开MySQL中继日志
+relay-log-index=slave-relay-bin.index
+relay-log=slave-relay-bin
+#打开从服务二进制日志
+log-bin=mysql-bin
+#使得更新的数据写进二进制日志中
+log-slave-updates=1
+# 设置3306端口
+port=3306
+# 设置mysql的安装目录
+basedir=/usr/local/mysql
+# 设置mysql数据库的数据的存放目录
+datadir=/usr/local/mysql/mysql-files
+# 允许最大连接数
+max_connections=200
+# 允许连接失败的次数。
+max_connect_errors=10
+# 服务端使用的字符集默认为UTF8
+character-set-server=utf8
+# 创建新表时将使用的默认存储引擎
+default-storage-engine=INNODB
+# 默认使用“mysql_native_password”插件认证
+#mysql_native_password
+default_authentication_plugin=mysql_native_password
+```
+
+> 配置说明：主要需要关注的几个属性：
+>
+> server-id：服务节点的唯一标识
+>
+> relay-log：打开从服务的relay-log日志。
+>
+> log-bin：打开从服务的bin-log日志记录。
+
+然后我们启动mysqls的服务，并设置他的主节点同步状态。
+
+```shell
+#登录从服务
+mysql -u root -p;
+#设置同步主节点：
+CHANGE MASTER TO
+MASTER_HOST='192.168.232.128',
+MASTER_PORT=3306,
+MASTER_USER='root',
+MASTER_PASSWORD='root',
+MASTER_LOG_FILE='master-bin.000004',
+MASTER_LOG_POS=156,
+GET_MASTER_PUBLIC_KEY=1;
+#开启slave
+start slave;
+#查看主从同步状态
+show slave status;
+或者用 show slave status \G; 这样查看比较简洁
+```
+
+> 注意，CHANGE MASTER指令中需要指定的MASTER\_LOG\_FILE和MASTER\_LOG\_POS必须与主服务中查到的保持一致。
+>
+> 并且后续如果要检查主从架构是否成功，也可以通过检查主服务与从服务之间的File和Position这两个属性是否一致来确定。
+
+![](./asserts/1.4.png)
+
+我们重点关注其中红色方框的两个属性，与主节点保持一致，就表示这个主从同步搭建是成功的。
+
+> 从这个指令的结果能够看到，有很多Replicate\_开头的属性，这些属性指定了两个服务之间要同步哪些数据库、哪些表的配置。只是在我们这个示例中全都没有进行配置，就标识是全库进行同步。后面我们会补充如何配置需要同步的库和表。
