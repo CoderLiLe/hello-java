@@ -36,4 +36,109 @@ MySQL的BinLog日志能够比较实时的记录主库上的所有日志操作，
 
 然后在两台服务器上均安装MySQL服务，MySQL版本采用mysql-8.0.20版本。
 
+## 2、安装MySQL服务
+
+### 1、初始化MySQL
+
+MySQL的安装有很多种方式，具体可以参考官网手册：<https://dev.mysql.com/doc/refman/8.0/en/binary-installation.html>
+
+我们这里采用对系统环境依赖最低，出问题的可能性最小的tar包方式来安装。
+
+上传mysql压缩包到worker2机器的root用户工作目录/root下，然后按照下面的指令，解压安装mysql
+
+```shell
+groupadd mysql
+useradd -r -g mysql -s /bin/false mysql  #这里是创建一个mysql用户用于承载mysql服务，但是不需要登录权限。
+tar -zxvf mysql-8.0.20-el7-x86_64.tar.gz #解压
+ln -s mysql-8.0.20-el7-x86_64 mysql #建立软链接
+cd mysql
+mkdir mysql-files
+chown mysql:mysql mysql-files
+chmod 750 mysql-files
+bin/mysqld --initialize --user=mysql #初始化mysql数据文件 注意点1
+bin/mysql_ssl_rsa_setup
+bin/mysqld_safe --user=mysql 
+
+cp support-files/mysql.server /etc/init.d/mysql.server
+```
+
+> **注意点：**
+>
+> 1、初始化过程中会初始化一些mysql的数据文件，经常会出现一些文件或者文件夹权限不足的问题。如果有文件权限不足的问题，需要根据他的报错信息，创建对应的文件或者文件夹，并配置对应的文件权限。
+>
+> 2、初始化过程如果正常完成，日志中会打印出一个root用户的默认密码。这个密码需要记录下来。
+>
+>     2025-04-30T020:05:28.948043Z 6 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: P6kigsT6Lg>=
+
+### 2、启动mysql
+
+```shell
+bin/mysqld --user=mysql
+```
+
+> **注意点：**
+>
+> 1、这个启动过程会独占当前命令行窗口，如果要后台执行可以在后面添加一个 &。但是一般第一次启动mysql服务时，经常会出现一些错误，所以建议用独占窗口的模式跟踪下日志。
+>
+> Linux上安装软件经常会出现各种各样的环境问题，很难全部概括。大部分的问题，需要查百度，根据别人的经验来修改。如果安装有困难的同学，可以改为在Windows上安装MySQL，整个过程会简单很多，不会影响后续ShardingSpehre的学习。
+
+### 3、连接MySQL
+
+MySQL服务启动完成后，默认是只能从本机登录，远程是无法访问的。所以需要用root用户登录下，配置远程访问的权限。
+
+```shell
+cd /root/mysql
+bin/mysql -uroot -p #然后用之前记录的默认密码登录
+```
+
+> **注意点：**
+>
+> 1、如果有同学遇到  **ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/tmp/mysql.sock' (2)**  这个报错信息，可以参照下面的配置，修改下/etc/my.cnf配置文件，来配置下socket连接文件的地址。主要是下面client部分。
+>
+>     [mysqld]
+>     datadir=/var/lib/mysql
+>     socket=/var/lib/mysql/mysql.sock
+>     user=mysql
+>     # Disabling symbolic-links is recommended to prevent assorted security risks
+>     symbolic-links=0
+>     # Settings user and group are ignored when systemd is used.
+>     # If you need to run mysqld under a different user or group,
+>     # customize your systemd unit file for mariadb according to the
+>     # instructions in http://fedoraproject.org/wiki/Systemd
+>
+>     [mysqld_safe]
+>     log-error=/var/log/mariadb/mariadb.log
+>     pid-file=/var/run/mariadb/mariadb.pid
+>
+>     #
+>     # include all files from the config directory
+>     #
+>     !includedir /etc/my.cnf.d
+>
+>     [client]
+>     port=3306
+>     socket=/var/lib/mysql/mysql.sock
+
+登录进去后，需要配置远程登录权限：
+
+```sql
+alter user 'root'@'localhost' identified by '123456'; #修改root用户的密码
+use mysql;
+update user set host='%' where user='root';
+flush privileges;
+```
+
+这样，Linux机器上的MySQL服务就搭建完成了。可以使用navicat等连接工具远程访问MySQL服务了。
+
+> 如果安装MySQL确实有问题的话，推荐使用宝塔面板。<https://www.bt.cn/> 。使用这个工具可以图形化安装以及管理MySQL，非常方便。
+>
+> 另外，对于熟悉Docker和K8s，可以用这些虚拟化的方式来搭建，也非常简单高效。
+
+这里需要注意下的是，搭建主从集群的多个服务，有两个必要的条件。
+
+1、MySQL版本必须一致。
+
+2、集群中各个服务器的时间需要同步。
+
+
 
