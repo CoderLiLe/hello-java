@@ -282,3 +282,58 @@ show slave status;
 我们重点关注其中红色方框的两个属性，与主节点保持一致，就表示这个主从同步搭建是成功的。
 
 > 从这个指令的结果能够看到，有很多Replicate\_开头的属性，这些属性指定了两个服务之间要同步哪些数据库、哪些表的配置。只是在我们这个示例中全都没有进行配置，就标识是全库进行同步。后面我们会补充如何配置需要同步的库和表。
+
+### 3、主从集群测试
+
+测试时，我们先用showdatabases，查看下两个MySQL服务中的数据库情况
+
+![](./asserts/1.5.png)
+
+然后我们在主服务器上创建一个数据库
+
+```sql
+mysql> create database syncdemo;
+Query OK, 1 row affected (0.00 sec)
+```
+
+然后我们再用show databases，来看下这个syncdemo的数据库是不是已经同步到了从服务。
+
+![](./asserts/1.6.png)
+
+接下来我们继续在syncdemo这个数据库中创建一个表，并插入一条数据。
+
+```sql
+mysql> use syncdemo;
+Database changed
+mysql> create table demoTable(id int not null);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> insert into demoTable value(1);
+Query OK, 1 row affected (0.01 sec)
+```
+
+然后我们也同样到主服务与从服务上都来查一下这个demoTable是否同步到了从服务。
+
+![](./asserts/1.7.png)
+
+从上面的实验过程看到，我们在主服务中进行的数据操作，就都已经同步到了从服务上。这样，我们一个主从集群就搭建完成了。
+
+> 另外，这个主从架构是有可能失败的，如果在slave从服务上查看slave状态，发现Slave\_SQL\_Running=no，就表示主从同步失败了。这有可能是因为在从数据库上进行了写操作，与同步过来的SQL操作冲突了，也有可能是slave从服务重启后有事务回滚了。
+>
+> 如果是因为slave从服务事务回滚的原因，可以按照以下方式重启主从同步：
+>
+> ```sql
+> mysql> stop slave ;
+> mysql> set GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+> mysql> start slave ;
+> ```
+>
+> 而另一种解决方式就是重新记录主节点的binlog文件消息
+>
+> ```sql
+> mysql> stop slave ;
+> mysql> change master to .....
+> mysql> start slave ;
+> ```
+>
+> 但是这种方式要注意binlog的文件和位置，如果修改后和之前的同步接不上，那就会丢失部分数据。所以不太常用。
