@@ -140,5 +140,73 @@ flush privileges;
 
 2、集群中各个服务器的时间需要同步。
 
+## 3、搭建主从集群
+
+接下来在这两个MySQL服务基础上，搭建一个主从集群。
+
+### 1、配置master主服务
+
+首先，配置主节点的mysql配置文件： /etc/my.cnf(没有的话就手动创建一个)
+
+这一步需要对master进行配置，主要是需要打开binlog日志，以及指定severId。我们打开MySQL主服务的my.cnf文件，在文件中一行server-id以及一个关闭域名解析的配置。然后重启服务。
+
+```ini
+[mysqld]
+server-id=01
+#开启binlog
+log_bin=master-bin
+log_bin-index=master-bin.index
+skip-name-resolve
+# 设置连接端口
+port=3306
+# 设置mysql的安装目录
+basedir=/usr/local/mysql
+# 设置mysql数据库的数据的存放目录
+datadir=/usr/local/mysql/mysql-files
+# 允许最大连接数
+max_connections=200
+# 允许连接失败的次数。
+max_connect_errors=10
+# 服务端使用的字符集默认为UTF8
+character-set-server=utf8
+# 创建新表时将使用的默认存储引擎
+default-storage-engine=INNODB
+# 默认使用“mysql_native_password”插件认证
+#mysql_native_password
+default_authentication_plugin=mysql_native_password
+```
+
+> 配置说明：主要需要修改的是以下几个属性：
+>
+> server-id：服务节点的唯一标识。需要给集群中的每个服务分配一个单独的ID。
+>
+> log\_bin：打开Binlog日志记录，并指定文件名。
+>
+> log\_bin-index：Binlog日志文件
+
+重启MySQL服务， `service mysqld restart`
+
+然后，我们需要给root用户分配一个replication slave的权限。
+
+```shell
+#登录主数据库
+mysql -u root -p
+GRANT REPLICATION SLAVE ON *.* TO 'root'@'%';
+flush privileges;
+#查看主节点同步状态：
+show master status;
+```
+
+> 在实际生产环境中，通常不会直接使用root用户，而会创建一个拥有全部权限的用户来负责主从同步。
+
+![](./asserts/1.2.png)
+
+这个指令结果中的File和Position记录的是当前日志的binlog文件以及文件中的索引。
+
+而后面的Binlog\_Do\_DB和Binlog\_Ignore\_DB这两个字段是表示需要记录binlog文件的库以及不需要记录binlog文件的库。目前我们没有进行配置，就表示是针对全库记录日志。这两个字段如何进行配置，会在后面进行介绍。
+
+> 开启binlog后，数据库中的所有操作都会被记录到datadir当中，以一组轮询文件的方式循环记录。而指令查到的File和Position就是当前日志的文件和位置。而在后面配置从服务时，就需要通过这个File和Position通知从服务从哪个地方开始记录binLog。
+
+![](./asserts/1.3.png)
 
 
