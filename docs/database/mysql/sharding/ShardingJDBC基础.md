@@ -337,3 +337,36 @@ Query OK, 1 row affected (0.01 sec)
 > ```
 >
 > 但是这种方式要注意binlog的文件和位置，如果修改后和之前的同步接不上，那就会丢失部分数据。所以不太常用。
+
+### 4、全库同步与部分同步
+
+在完成这个基本的MySQL主从集群后，我们还可以进行后续的实验：
+
+之前提到，我们目前配置的主从同步是针对全库配置的，而实际环境中，一般并不需要针对全库做备份，而只需要对一些特别重要的库或者表来进行同步。那如何针对库和表做同步配置呢？
+
+首先在Master端：在my.cnf中，可以通过以下这些属性指定需要针对哪些库或者哪些表记录binlog
+
+```ini
+#需要同步的二进制数据库名
+binlog-do-db=masterdemo
+#只保留7天的二进制日志，以防磁盘被日志占满(可选)
+expire-logs-days  = 7
+#不备份的数据库
+binlog-ignore-db=information_schema
+binlog-ignore-db=performation_schema
+binlog-ignore-db=sys
+```
+
+然后在Slave端：在my.cnf中，需要配置备份库与主服务的库的对应关系。
+
+```ini
+#如果salve库名称与master库名相同，使用本配置
+replicate-do-db = masterdemo 
+#如果master库名[mastdemo]与salve库名[mastdemo01]不同，使用以下配置[需要做映射]
+replicate-rewrite-db = masterdemo -> masterdemo01
+#如果不是要全部同步[默认全部同步]，则指定需要同步的表
+replicate-wild-do-table=masterdemo01.t_dict
+replicate-wild-do-table=masterdemo01.t_num
+```
+
+配置完成了之后，在show master status指令中，就可以看到Binlog\_Do\_DB和Binlog\_Ignore\_DB两个参数的作用了。
