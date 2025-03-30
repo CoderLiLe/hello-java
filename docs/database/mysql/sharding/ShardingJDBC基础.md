@@ -370,3 +370,30 @@ replicate-wild-do-table=masterdemo01.t_num
 ```
 
 配置完成了之后，在show master status指令中，就可以看到Binlog\_Do\_DB和Binlog\_Ignore\_DB两个参数的作用了。
+
+### 5、GTID同步集群
+
+上面我们搭建的集群方式，是基于Binlog日志记录点的方式来搭建的，这也是最为传统的MySQL集群搭建方式。而在这个实验中，可以看到有一个Executed\_Grid\_Set列，暂时还没有用上。实际上，这就是另外一种搭建主从同步的方式，即GTID搭建方式。这种模式是从MySQL5.6版本引入的。
+
+GTID的本质也是基于Binlog来实现主从同步，只是他会基于一个全局的事务ID来标识同步进度。GTID即全局事务ID，全局唯一并且趋势递增，他可以保证为每一个在主节点上提交的事务在复制集群中可以生成一个唯一的ID 。
+
+在基于GTID的复制中，首先从服务器会告诉主服务器已经在从服务器执行完了哪些事务的GTID值，然后主库会有把所有没有在从库上执行的事务，发送到从库上进行执行，并且使用GTID的复制可以保证同一个事务只在指定的从库上执行一次，这样可以避免由于偏移量的问题造成数据不一致。
+
+他的搭建方式跟我们上面的主从架构整体搭建方式差不多。只是需要在my.cnf中修改一些配置。
+
+在主节点上：
+
+    gtid_mode=on
+    enforce_gtid_consistency=on
+    log_bin=on
+    server_id=单独设置一个
+    binlog_format=row
+
+在从节点上：
+
+    gtid_mode=on
+    enforce_gtid_consistency=on
+    log_slave_updates=1
+    server_id=单独设置一个
+
+然后分别重启主服务和从服务，就可以开启GTID同步复制方式。
