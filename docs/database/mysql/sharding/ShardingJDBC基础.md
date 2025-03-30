@@ -419,3 +419,100 @@ mysql -u root -p < backup.sql
 ```
 
 这样新的MySQL服务就已经有了所有的历史数据，然后就可以再按照上面的步骤，配置Slave从服务的数据同步了。
+
+## 5、搭建半同步复制
+
+### 1》理解半同步复制
+
+到现在为止，我们已经可以搭建MySQL的主从集群，互主集群，但是我们这个集群有一个隐患，就是有可能会丢数据。这是为什么呢？这要从MySQL主从数据复制分析起。
+
+MySQL主从集群默认采用的是一种异步复制的机制。主服务在执行用户提交的事务后，写入binlog日志，然后就给客户端返回一个成功的响应了。而binlog会由一个dump线程异步发送给Slave从服务。
+
+![](./asserts/1.8.png)
+
+由于这个发送binlog的过程是异步的。主服务在向客户端反馈执行结果时，是不知道binlog是否同步成功了的。这时候如果主服务宕机了，而从服务还没有备份到新执行的binlog，那就有可能会丢数据。
+
+那怎么解决这个问题呢，这就要靠MySQL的半同步复制机制来保证数据安全。
+
+半同步复制机制是一种介于异步复制和全同步复制之前的机制。主库在执行完客户端提交的事务后，并不是立即返回客户端响应，而是等待至少一个从库接收并写到relay log中，才会返回给客户端。MySQL在等待确认时，默认会等10秒，如果超过10秒没有收到ack，就会降级成为异步复制。
+
+![](./asserts/1.9.png)
+
+这种半同步复制相比异步复制，能够有效的提高数据的安全性。但是这种安全性也不是绝对的，他只保证事务提交后的binlog至少传输到了一个从库，并且并不保证从库应用这个事务的binlog是成功的。另一方面，半同步复制机制也会造成一定程度的延迟，这个延迟时间最少是一个TCP/IP请求往返的时间。整个服务的性能是会有所下降的。而当从服务出现问题时，主服务需要等待的时间就会更长，要等到从服务的服务恢复或者请求超时才能给用户响应。
+
+### 2、搭建半同步复制集群
+
+半同步复制需要基于特定的扩展模块来实现。而mysql从5.5版本开始，往上的版本都默认自带了这个模块。这个模块包含在mysql安装目录下的lib/plugin目录下的semisync\_master.so和semisync\_slave.so两个文件中。需要在主服务上安装semisync\_master模块，在从服务上安装semisync\_slave模块。
+
+![](./asserts/1.10.png)
+
+首先我们登陆主服务，安装semisync\_master模块：
+
+```sql
+mysql> install plugin rpl_semi_sync_master soname 'semisync_master.so';
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> show global variables like 'rpl_semi%';
++-------------------------------------------+------------+
+| Variable_name                             | Value      |
++-------------------------------------------+------------+
+| rpl_semi_sync_master_enabled              | OFF        |
+| rpl_semi_sync_master_timeout              | 10000      |
+| rpl_semi_sync_master_trace_level          | 32         |
+| rpl_semi_sync_master_wait_for_slave_count | 1          |
+| rpl_semi_sync_master_wait_no_slave        | ON         |
+| rpl_semi_sync_master_wait_point           | AFTER_SYNC |
++-------------------------------------------+------------+
+6 rows in set, 1 warning (0.02 sec)
+
+mysql> set global rpl_semi_sync_master_enabled=ON;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+> 这三行指令中，第一行是通过扩展库来安装半同步复制模块，需要指定扩展库的文件名。
+>
+> 第二行查看系统全局参数，rpl\_semi\_sync\_master\_timeout就是半同步复制时等待应答的最长等待时间，默认是10秒，可以根据情况自行调整。
+>
+> 第三行则是打开半同步复制的开关。
+>
+> 在第二行查看系统参数时，最后的一个参数rpl\_semi\_sync\_master\_wait\_point其实表示一种半同步复制的方式。
+>
+> 半同步复制有两种方式，一种是我们现在看到的这种默认的AFTER\_SYNC方式。这种方式下，主库把日志写入binlog，并且复制给从库，然后开始等待从库的响应。从库返回成功后，主库再提交事务，接着给客户端返回一个成功响应。
+>
+> 而另一种方式是叫做AFTER\_COMMIT方式。他不是默认的。这种方式，在主库写入binlog后，等待binlog复制到从库，主库就提交自己的本地事务，再等待从库返回给自己一个成功响应，然后主库再给客户端返回响应。
+
+然后我们登陆从服务，安装smeisync\_slave模块
+
+```sql
+mysql> install plugin rpl_semi_sync_slave soname 'semisync_slave.so';
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> show global variables like 'rpl_semi%';
++---------------------------------+-------+
+| Variable_name                   | Value |
++---------------------------------+-------+
+| rpl_semi_sync_slave_enabled     | OFF   |
+| rpl_semi_sync_slave_trace_level | 32    |
++---------------------------------+-------+
+2 rows in set, 1 warning (0.01 sec)
+
+mysql> set global rpl_semi_sync_slave_enabled = on;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show global variables like 'rpl_semi%';
++---------------------------------+-------+
+| Variable_name                   | Value |
++---------------------------------+-------+
+| rpl_semi_sync_slave_enabled     | ON    |
+| rpl_semi_sync_slave_trace_level | 32    |
++---------------------------------+-------+
+2 rows in set, 1 warning (0.00 sec)
+
+mysql> stop slave;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.01 sec)
+```
+
+> slave端的安装过程基本差不多，不过要注意下安装完slave端的半同步插件后，需要重启下slave服务。
