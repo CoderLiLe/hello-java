@@ -171,4 +171,20 @@ ShardingSphere在服务治理这一块主要有两个部分：
 
 > 配套资料中也收集了ShardingSphere-UI的最新版本5.0.0-alpha版的运行包。解压后执行其中的start.bat就可以直接运行。
 
+## 4、Shardingproxy的其他功能
 
+**影子库**
+
+这部分功能主要是用于进行压测的。通过给生产环境上的关键数据库表配置一个影子库，就可以将写往生产环境的数据全部转为写入影子库中，而影子库通常会配置成跟生产环境在同一个库，这样就可以在生产环境上直接进行压力测试，而不会影响生产环境的数据。
+
+在conf/config-shadow\.yaml中有配置影子库的示例。其中最核心的就是下面的shadowRule这一部分。
+
+    #shadowRule:
+    #  column: shadow
+    #  shadowMappings:
+    # 绑定shadow_ds为ds的影子库
+    #    ds: shadow_ds
+
+**数据加密**
+
+在conf/config-encrypt.yaml中还演示了ShardingProxy的另一个功能，数据加密。默认集成了AES对称加密和MD5加密。还可以通过SPI机制自行扩展更多的加密算法。
