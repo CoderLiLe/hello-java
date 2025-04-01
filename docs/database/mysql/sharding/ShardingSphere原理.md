@@ -143,3 +143,23 @@ ShardingSphere并不是简单的将改写完的SQL提交到数据库执行。执
 然后我们的源码调试从ShardingJDBCDemo.java这个测试类开始。这个示例是重现我们之前示例application02.properties中配置的分库分表规则。
 
 > ShardingSphere的分库分表功能，不管是JDBC还是Proxy，最终都是会转化成Java API的配置方式。具体参见官网的配置说明`https://shardingsphere.apache.org/document/legacy/4.x/document/cn/manual/sharding-jdbc/configuration/config-java/ `
+
+# 三、ShardingSphere的SPI扩展点
+
+ShardingSphere为了兼容更多的应用场景，在源码中保留了大量的SPI扩展点。所以在看源码之前，需要对JAVA的SPI机制有足够的了解。
+
+## 1、SPI机制
+
+SPI的全名为：Service Provider Interface。在java.util.ServiceLoader的文档里有比较详细的介绍。
+
+简单的总结下 Java SPI 机制的思想。我们系统里抽象的各个模块，往往有很多不同的实现方案，比如日志模块的方案，xml解析模块、jdbc模块的方案等。面向的对象的设计里，我们一般推荐模块之间基于接口编程，模块之间不对实现类进行硬编码。
+
+一旦代码里涉及具体的实现类，就违反了可拔插的原则，如果需要替换一种实现，就需要修改代码。为了实现在模块装配的时候能不在程序里动态指明，这就需要一种服务发现机制。
+
+Java SPI 就是提供这样的一个机制：为某个接口寻找服务实现的机制。有点类似IOC的思想，就是将装配的控制权移到程序之外，在模块化设计中这个机制尤其重要
+
+Java SPI 的具体约定为:当服务的提供者，提供了服务接口的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。
+
+而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。
+
+基于这样一个约定就能很好的找到服务接口的实现类，而不需要再代码里制定。jdk提供服务实现查找的一个工具类：java.util.ServiceLoader。
