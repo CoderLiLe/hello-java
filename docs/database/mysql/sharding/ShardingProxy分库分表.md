@@ -91,4 +91,54 @@ start.bat 3316
     [INFO ] 20:46:56.958 [nioEventLoopGroup-2-1] i.n.handler.logging.LoggingHandler - [id: 0xc90e0eef] BIND: 0.0.0.0/0.0.0.0:3316
     [INFO ] 20:46:56.960 [nioEventLoopGroup-2-1] i.n.handler.logging.LoggingHandler - [id: 0xc90e0eef, L:/0:0:0:0:0:0:0:0:3316] ACTIVE
 
+## 2、ShardingProxy使用
+
+这样，我们就可以像连接一个标准MySQL服务一样连接ShardingProxy了。
+
+    D:\dev-hook\mysql-8.0.20-winx64\bin>mysql.exe -P3316 -uroot -p
+    Enter password: ****
+    Welcome to the MySQL monitor.  Commands end with ; or \g.
+    Your MySQL connection id is 1
+    Server version: 8.0.20-Sharding-Proxy 4.1.0
+
+    Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+    Oracle is a registered trademark of Oracle Corporation and/or its
+    affiliates. Other names may be trademarks of their respective
+    owners.
+
+    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+    mysql> show databases;
+    +-------------+
+    | Database    |
+    +-------------+
+    | sharding_db |
+    +-------------+
+    1 row in set (0.03 sec)
+
+    mysql> use sharding_db
+    Database changed
+    mysql> show tables;
+    +--------------------+
+    | Tables_in_coursedb |
+    +--------------------+
+    | course             |
+    | t_dict             |
+    +--------------------+
+    2 rows in set (0.16 sec)
+
+    mysql> select * from course;
+    +--------------------+-------+---------+---------+
+    | cid                | cname | user_id | cstatus |
+    +--------------------+-------+---------+---------+
+    | 545730330389118976 | java  |    1001 | 1       |
+    | 545730330804355072 | java  |    1001 | 1       |
+    | 545730330842103808 | java  |    1001 | 1       |
+    | 545730330879852544 | java  |    1001 | 1       |
+    | 545730330917601280 | java  |    1001 | 1       |
+    +--------------------+-------+---------+---------+
+    5 rows in set (0.08 sec)
+
+> 之前在ShardingJDBC部分完成了的其他几种分库分表策略以及读写分离策略，就请大家自行验证了。
 
