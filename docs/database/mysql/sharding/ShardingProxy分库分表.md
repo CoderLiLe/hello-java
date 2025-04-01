@@ -142,3 +142,33 @@ start.bat 3316
 
 > 之前在ShardingJDBC部分完成了的其他几种分库分表策略以及读写分离策略，就请大家自行验证了。
 
+## 3、ShardingProxy的服务治理
+
+从ShardingProxy的server.yaml中看到，ShardingProxy还支持非常多的服务治理功能。在server.yaml配置文件中的orchestration部分属性就演示了如何将ShardingProxy注册到Zookeeper当中。
+
+```yaml
+orchestration:
+  orchestration_ds:
+    orchestrationType: registry_center,config_center,distributed_lock_manager
+    instanceType: zookeeper
+    serverLists: localhost:2181
+    namespace: orchestration
+    props:
+      overwrite: false
+      retryIntervalMilliseconds: 500
+      timeToLiveSeconds: 60
+      maxRetries: 3
+      operationTimeoutMilliseconds: 500
+```
+
+ShardingSphere在服务治理这一块主要有两个部分：
+
+一是数据接入以及弹性伸缩。简单理解就是把MySQL或者其他数据源的数据快速迁移进ShardingSphere的分片库中。并且能够快速的对已有的ShardingShere分片库进行扩容以及减配。这一块由ShardingSphere-scaling产品来提供支持。只是这个功能在目前的4.1.1版本中，还处于Alpha测试阶段。
+
+另一方面，ShardingSphere支持将复杂的分库分表配置上传到统一的注册中心中集中管理。目前支持的注册中心有Zookeeper和Etcd。而ShardingSphere也提供了SPI扩展接口，可以快速接入Nacos、Apollo等注册中心。在ShardingProxy的server.yaml中我们已经看到了这一部分的配置示例。
+
+另外，ShardingSphere针对他的这些生态功能，提供了一个ShardingSphere-UI产品来提供页面支持。ShardingSphere-UI是针对整个ShardingSphere的一个简单有用的Web管理控制台。它用于帮助用户更简单的使用ShardingSphere的相关功能。目前提供注册中心管理、动态配置管理、数据库编排管理等功能。
+
+> 配套资料中也收集了ShardingSphere-UI的最新版本5.0.0-alpha版的运行包。解压后执行其中的start.bat就可以直接运行。
+
+
