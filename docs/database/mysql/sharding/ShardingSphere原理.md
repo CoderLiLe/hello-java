@@ -133,3 +133,13 @@ ShardingSphere并不是简单的将改写完的SQL提交到数据库执行。执
     缺点：
 
     强依赖机器时钟，如果机器上时钟回拨，会导致发号重复。
+
+# 二、源码环境安装
+
+将配套资料中的源码包导入到IDEA后，就可以执行指令mvn clean install -Dmaven.test.skip=true  -Dmaven.javadoc.skip=true -Dcheckstyle.skip=true -Drat.numUnapprovedLicenses=100来完成编译。
+
+![](./asserts/3.10.png)
+
+然后我们的源码调试从ShardingJDBCDemo.java这个测试类开始。这个示例是重现我们之前示例application02.properties中配置的分库分表规则。
+
+> ShardingSphere的分库分表功能，不管是JDBC还是Proxy，最终都是会转化成Java API的配置方式。具体参见官网的配置说明`https://shardingsphere.apache.org/document/legacy/4.x/document/cn/manual/sharding-jdbc/configuration/config-java/ `
