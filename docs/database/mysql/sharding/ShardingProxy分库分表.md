@@ -1,0 +1,4 @@
+
+# 一、ShardingProxy快速使用
+
+​	ShardingProxy的功能同样是分库分表，但是他是一个独立部署的服务端，提供统一的数据库代理服务。注意，ShardingProxy目前只支持MySQL和PostgreSQL。并且，客户端连接ShardingProxy时，最好使用MySQL的JDBC客户端。下面我们来部署一个ShardingProxy服务。
