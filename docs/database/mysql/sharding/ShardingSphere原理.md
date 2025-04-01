@@ -163,3 +163,11 @@ Java SPI 的具体约定为:当服务的提供者，提供了服务接口的一�
 而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。
 
 基于这样一个约定就能很好的找到服务接口的实现类，而不需要再代码里制定。jdk提供服务实现查找的一个工具类：java.util.ServiceLoader。
+
+## 2、ShardingSphere中的SPI扩展点
+
+ShardingSphere的开发思想是对源码中主体流程封闭，而对SPI开放。在配套的官方文档《shardingsphere\_docs\_cn.pdf》的开发者手册部分详细列出了ShardingSphere的所有SPI扩展点。
+
+## 3、实现自定义主键生成策略
+
+使用ShardingSphere提供的SPI扩展点，实现自定义分布式主键生成策略。参见示例代码。
