@@ -188,3 +188,116 @@ ShardingSphere在服务治理这一块主要有两个部分：
 **数据加密**
 
 在conf/config-encrypt.yaml中还演示了ShardingProxy的另一个功能，数据加密。默认集成了AES对称加密和MD5加密。还可以通过SPI机制自行扩展更多的加密算法。
+
+## 5、ShardingProxy的SPI扩展
+
+上一部分提到了ShardingSphere保留了大量的SPI扩展接口，对主流程封闭、对SPI开放。这在ShardingJDBC中还体现不出太大的作用，但是在ShardingProxy中就能极大程度提高服务的灵活性了。
+
+在ShardingProxy中，只需要将自定义的扩展功能按照SPI机制的要求打成jar包，就可以直接把jar包放入lib目录，然后就配置使用了。
+
+例如如果想要扩展一个新的主键生成策略，只需要自己开发一个主键生成类
+
+```java
+package com.roy.shardingDemo.spiextention;
+
+import org.apache.shardingsphere.spi.keygen.ShardingKeyGenerator;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicLong;
+
+/**
+ * @author ：楼兰
+ * @date ：Created in 2020/12/17
+ * @description:
+ **/
+
+public final class MykeyGenerator implements ShardingKeyGenerator {
+
+    private AtomicLong atom = new AtomicLong(0);
+
+    private Properties properties = new Properties();
+
+    public synchronized Comparable<?> generateKey() {
+        //读取了一个自定义属性
+        String prefix = properties.getProperty("mykey-offset", "100");
+        LocalDateTime ldt = LocalDateTime.now();
+        String timestampS = DateTimeFormatter.ofPattern("HHmmssSSS").format(ldt);
+        return Long.parseLong(""+prefix+timestampS+atom.incrementAndGet());
+    }
+    //扩展算法的类型
+    public String getType() {
+        return "MYKEY";
+    }
+
+    public Properties getProperties() {
+        return this.properties;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+}
+```
+
+然后增加一个META-INF\services\org.apache.shardingsphere.spi.keygen.ShardingKeyGenerator文件，并在文件中写明自己的实现类。`com.roy.shardingDemo.spiextention.MykeyGenerator` 将扩展类和这个SPI服务文件一起打成jar包，就可以直接放到ShardingProxy的lib目录下。
+
+![](./asserts/4.1.png)
+
+接下来就可以在config-sharding.yaml中以类似下面这种配置方式引入了。
+
+```yaml
+shardingRule:
+  tables:
+    course:
+      actualDataNodes: m1.course_$->{1..2}
+      tableStrategy:
+        inline:
+          shardingColumn: cid
+          algorithmExpression: course_$->{cid%2+1}
+      keyGenerator:
+#        type: SNOWFLAKE
+        type: MYKEY # 自定义的主键生成器
+        column: cid
+```
+
+然后我们可以启动ShardingProxy，试试我们自定义的主键生成器。
+
+    mysql> select * from course;
+    +--------------------+-------+---------+---------+
+    | cid                | cname | user_id | cstatus |
+    +--------------------+-------+---------+---------+
+    |                222 | java2 |    1002 | 1       |
+    | 545730330389118976 | java  |    1001 | 1       |
+    | 545730330804355072 | java  |    1001 | 1       |
+    | 545730330842103808 | java  |    1001 | 1       |
+    | 545730330879852544 | java  |    1001 | 1       |
+    | 545730330917601280 | java  |    1001 | 1       |
+    +--------------------+-------+---------+---------+
+    6 rows in set (0.01 sec)
+
+    mysql> insert into course(cname,user_id,cstatus) values ('java2',1002,'1');
+    Query OK, 1 row affected (0.11 sec)
+
+    mysql> insert into course(cname,user_id,cstatus) values ('java2',1003,'1');
+    Query OK, 1 row affected (0.01 sec)
+
+    mysql> select * from course;
+    +--------------------+-------+---------+---------+
+    | cid                | cname | user_id | cstatus |
+    +--------------------+-------+---------+---------+
+    |                222 | java2 |    1002 | 1       |
+    |      1001509178012 | java2 |    1003 | 1       |
+    | 545730330389118976 | java  |    1001 | 1       |
+    | 545730330804355072 | java  |    1001 | 1       |
+    | 545730330842103808 | java  |    1001 | 1       |
+    | 545730330879852544 | java  |    1001 | 1       |
+    | 545730330917601280 | java  |    1001 | 1       |
+    |      1001509119631 | java2 |    1002 | 1       |
+    +--------------------+-------+---------+---------+
+    8 rows in set (0.01 sec)
+
+从结果可以看到，插入的两条记录，自动生成的CID分别为1001509178012、1001509119631。这样我们就很快的完成了一个自定义的主键生成策略。
+
+> 关于ShardingSphere的SPI扩展点，在配套资料《shardingsphere\_docs\_cn.pdf》的开发者手册部分有更全面详细的梳理。
