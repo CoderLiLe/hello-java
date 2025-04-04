@@ -488,3 +488,16 @@ Warning: Using a password with '-a' or '-u' option on the command line interface
 ## 6、Redis指令原子性总结
 
 &#x9;以上介绍的各种机制，其实都是Redis改变指令执行顺序的方式。在这几种工具中，Lua脚本通常会是项目中用得最多的方式。在很多追求极致性能的高并发场景，Lua脚本都会担任很重要的角色。但是其他的各种方式你也需要有了解，这样面临真实业务场景，你才有更多的方案可以选择。
+
+# 四、Redis中的Bigkey问题
+
+&#x9;Bigkey指那些占用空间非常大的key。比如一个list中包含200W个元素，或者一个string里放一篇文章。基于Redis的单线程为主的核心工作机制，这些Bigkey非常容易造成Redis的服务阻塞。因此在实际项目中，一定需要特殊关照。
+
+&#x9;在Redis客户端指令中，提供了两个扩展参数，可以帮助快速发现这些BigKey
+
+```shell
+[root@192-168-65-214 myredis]# redis-cli --help
+...
+ --bigkeys          Sample Redis keys looking for keys with many elements (complexity).
+ --memkeys          Sample Redis keys looking for keys consuming a lot of memory.
+```
