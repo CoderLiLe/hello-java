@@ -501,3 +501,11 @@ Warning: Using a password with '-a' or '-u' option on the command line interface
  --bigkeys          Sample Redis keys looking for keys with many elements (complexity).
  --memkeys          Sample Redis keys looking for keys consuming a lot of memory.
 ```
+
+# 五、总结
+
+&#x9;Redis的线程模型整体还是多线程的，只是后台执行指令的核心线程是单线程的。整个线程模型可以理解为还是以单线程为主。基于这种单线程为主的线程模型，不同客户端的各种指令都需要依次排队执行。
+
+&#x9;Redis这种以单线程为主的线程模型，相比其他中间件，还是非常简单的。这使得Redis处理线程并发问题，要简单高效很多。甚至在很多复杂业务场景下，Redis都是用来进行线程并发控制的很好的工具。但是，这并不意味着Redis就没有线程并发的问题。这时候选择合理的指令执行方式，就非常重要了。
+
+&#x9;另外，Redis这种比较简单的线程模型其实本身是不利于发挥多线程的并发优势的。而且Redis的应用场景又通常与高性能深度绑定在一起，所以，在使用Redis的时候，还是要时刻思考Redis的这些指令执行方式，这样才能最大限度发挥Redis高性能的优势。
