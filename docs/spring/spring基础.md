@@ -51,7 +51,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * systemEnvironment - 保存系统环境键值
     * 自定义 PropertySource - 保存自定义键值，例如来自于 *.properties 文件的键值
 
-![](asserts/spring基础/1.1准备刷新.png)
+![](assets/spring基础/1.1准备刷新.png)
   
 **2. obtainFreshBeanFactory**
 
@@ -61,7 +61,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * BeanDefinition 的来源有多种多样，可以是通过 xml 获得、配置类获得、组件扫描获得，也可以是编程添加
 * 所有的 BeanDefinition 会存入 BeanFactory 中的 beanDefinitionMap 集合
 
-![](asserts/spring基础/1.2获取bean工厂.png)
+![](assets/spring基础/1.2获取bean工厂.png)
 
 **3. prepareBeanFactory**
 
@@ -75,7 +75,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * ApplicationContextAwareProcessor 用来解析 Aware 接口
     * ApplicationListenerDetector 用来识别容器中 ApplicationListener 类型的 bean
 
-![](asserts/spring基础/1.3准备bean工厂.png)
+![](assets/spring基础/1.3准备bean工厂.png)
 
 **4. postProcessBeanFactory**
 
@@ -92,7 +92,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * PropertySourcesPlaceHolderConfigurer – 替换 BeanDefinition 中的 ${ }
     * MapperScannerConfigurer – 补充 Mapper 接口对应的 BeanDefinition
 
-![](asserts/spring基础/1.5调用bean工厂的后置处理器.png)
+![](assets/spring基础/1.5调用bean工厂的后置处理器.png)
 
 **6. registerBeanPostProcessors**
 
@@ -102,14 +102,14 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * CommonAnnotationBeanPostProcessor 功能有：解析 @Resource，@PostConstruct，@PreDestroy
     * AnnotationAwareAspectJAutoProxyCreator 功能有：为符合切点的目标 bean 自动创建代理
 
-![](asserts/spring基础/1.6注册bean后置处理器.png)
+![](assets/spring基础/1.6注册bean后置处理器.png)
 
 **7. initMessageSource**
 
 * 这一步是为 ApplicationContext 添加 messageSource 成员，实现国际化功能
 * 去 beanFactory 内找名为 messageSource 的 bean，如果没有，则提供空的 MessageSource 实现
 
-![](asserts/spring基础/1.7初始化消息源.png)
+![](assets/spring基础/1.7初始化消息源.png)
 
 **8. initApplicationContextEventMulticaster**
 
@@ -118,7 +118,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
 * 去 beanFactory 找名为 applicationEventMulticaster 的 bean 作为事件广播器，若没有，会创建默认的事件广播器
 * 之后就可以调用 ApplicationContext.publishEvent(事件对象) 来发布事件
 
-![](asserts/spring基础/1.8初始化事件广播器.png)
+![](assets/spring基础/1.8初始化事件广播器.png)
 
 **9. onRefresh**
 
@@ -135,7 +135,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * 来自于 @EventListener 的解析
 * 要实现事件监听器，只需要实现 ApplicationListener 接口，重写其中 onApplicationEvent(E e) 方法即可
 
-![](asserts/spring基础/1.10注册监听器.png)
+![](assets/spring基础/1.10注册监听器.png)
 
 **11. finishBeanFactoryInitialization**
 
@@ -145,7 +145,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
 * singletonObjects 即单例池，缓存所有单例对象
     * 对象的创建都分三个阶段，每一阶段都有不同的 bean 后处理器参与进来，扩展功能
 
-![](asserts/spring基础/1.11完成bean工厂初始化.png)
+![](assets/spring基础/1.11完成bean工厂初始化.png)
 
 **12. finishRefresh**
 
@@ -156,7 +156,7 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
     * 调用 context 的 stop，即可触发所有实现 LifeCycle 接口 bean 的 stop
 * 发布 ContextRefreshed 事件，整个 refresh 执行完成
 
-![](asserts/spring基础/1.12完成刷新.png)
+![](assets/spring基础/1.12完成刷新.png)
 
 ## 2. Spring bean 生命周期
 
@@ -168,8 +168,8 @@ refresh 是 AbstractApplicationContext 中的一个方法，负责初始化 Appl
 
 bean 的生命周期从调用 beanFactory 的 getBean 开始，到这个 bean 被销毁，可以总结为以下七个阶段：
 
-![](asserts/spring基础/2.1Bean生命周期流程图.png)
-![](asserts/spring基础/2.2Bean生命周期流程图.png)
+![](assets/spring基础/2.1Bean生命周期流程图.png)
+![](assets/spring基础/2.2Bean生命周期流程图.png)
 
 1. 处理名称，检查缓存
 2. 处理父子容器
@@ -283,7 +283,7 @@ bean 的生命周期从调用 beanFactory 的 getBean 开始，到这个 bean �
 
 * 首先要明白，bean 的创建要遵循一定的步骤，必须是创建、注入、初始化三步，这些顺序不能乱
 
-<img src="asserts/spring基础/3.1bean创建的三步.png" alt="bean创建的三步" style="zoom:50%;" />
+<img src="assets/spring基础/3.1bean创建的三步.png" alt="bean创建的三步" style="zoom:50%;" />
 
 * set 方法（包括成员变量）的循环依赖如图所示
 
@@ -292,11 +292,11 @@ bean 的生命周期从调用 beanFactory 的 getBean 开始，到这个 bean �
 
   * a 的顺序，及 b 的顺序都能得到保障
 
-<img src="asserts/spring基础/3.2set方法的循环依赖.png" alt="set方法的循环依赖" style="zoom: 33%;" />
+<img src="assets/spring基础/3.2set方法的循环依赖.png" alt="set方法的循环依赖" style="zoom: 33%;" />
 
 * 构造方法的循环依赖如图所示，显然无法用前面的方法解决
 
-<img src="asserts/spring基础/3.3构造方法的循环依赖.png" alt="构造方法的循环依赖" style="zoom: 50%;" />
+<img src="assets/spring基础/3.3构造方法的循环依赖.png" alt="构造方法的循环依赖" style="zoom: 50%;" />
 
 **构造循环依赖的解决**
 
@@ -304,13 +304,13 @@ bean 的生命周期从调用 beanFactory 的 getBean 开始，到这个 bean �
   * a 注入 b 的代理对象，这样能够保证 a 的流程走通
   * 后续需要用到 b 的真实对象时，可以通过代理间接访问
   
-  <img src="asserts/spring基础/3.4构造循环依赖的解决.png" alt="4构造循环依赖的解决" style="zoom: 50%;" />
+  <img src="assets/spring基础/3.4构造循环依赖的解决.png" alt="4构造循环依赖的解决" style="zoom: 50%;" />
 
 * 思路2
   * a 注入 b 的工厂对象，让 b 的实例创建被推迟，这样能够保证 a 的流程先走通
   * 后续需要用到 b 的真实对象时，再通过 ObjectFactory 工厂间接访问
     
-  <img src="asserts/spring基础/3.5构造循环依赖的解决.png" alt="构造循环依赖的解决" style="zoom:50%;" />
+  <img src="assets/spring基础/3.5构造循环依赖的解决.png" alt="构造循环依赖的解决" style="zoom:50%;" />
 
 * 示例1：用 @Lazy 为构造方法参数生成代理
 
@@ -515,7 +515,7 @@ public class App60_4 {
 ### 解决 set 循环依赖的原理
 
 **一级缓存**
-<img src="asserts/spring基础/3.6一级缓存.png" alt="一级缓存" style="zoom:80%;" />
+<img src="assets/spring基础/3.6一级缓存.png" alt="一级缓存" style="zoom:80%;" />
 
 作用是保证单例对象仅被创建一次
 
@@ -524,7 +524,7 @@ public class App60_4 {
 
 **一级缓存与循环依赖**
 
-<img src="asserts/spring基础/3.7一级缓存与循环依赖.png" alt="一级缓存与循环依赖" style="zoom:80%;" />
+<img src="assets/spring基础/3.7一级缓存与循环依赖.png" alt="一级缓存与循环依赖" style="zoom:80%;" />
 
 一级缓存无法解决循环依赖问题，分析如下
 
@@ -535,7 +535,7 @@ public class App60_4 {
 
 **二级缓存**
 
-<img src="asserts/spring基础/3.8二级缓存.png" alt="二级缓存" style="zoom:80%;" />
+<img src="assets/spring基础/3.8二级缓存.png" alt="二级缓存" style="zoom:80%;" />
 
 解决思路如下：
 
@@ -553,7 +553,7 @@ public class App60_4 {
 
 **二级缓存与创建代理**
 
-<img src="asserts/spring基础/3.9二级缓存与创建代理.png" alt="二级缓存与创建代理" style="zoom:80%;" />
+<img src="assets/spring基础/3.9二级缓存与创建代理.png" alt="二级缓存与创建代理" style="zoom:80%;" />
 
 二级缓存无法正确处理循环依赖并且包含有代理创建的场景，分析如下
 
@@ -563,7 +563,7 @@ public class App60_4 {
 
 **三级缓存**
 
-![三级缓存](asserts/spring基础/3.10三级缓存.png)
+![三级缓存](assets/spring基础/3.10三级缓存.png)
 
 简单分析的话，只需要将代理的创建时机放在依赖注入之前即可，但 spring 仍然希望代理的创建时机在 init 之后，只有出现循环依赖时，才会将代理的创建时机提前。所以解决思路稍显复杂：
 
@@ -884,7 +884,7 @@ public class Service7 {
 
 * 原因：事务的原子性仅涵盖 insert、update、delete、select … for update 语句，select 方法并不阻塞
 
-<img src="asserts/spring基础/4.1select不阻塞.png" alt="select不阻塞" style="zoom: 50%;" />
+<img src="assets/spring基础/4.1select不阻塞.png" alt="select不阻塞" style="zoom: 50%;" />
 
 * 如上图所示，红色线程和蓝色线程的查询都发生在扣减之前，都以为自己有足够的余额做扣减
 
@@ -922,7 +922,7 @@ public class Service7 {
 * synchronized 保证的仅是目标方法的原子性，环绕目标方法的还有 commit 等操作，它们并未处于 sync 块内
 * 可以参考下图发现，蓝色线程的查询只要在红色线程提交之前执行，那么依然会查询到有 1000 足够余额来转账
 
-![](asserts/spring基础/4.2synchronized失效.png)
+![](assets/spring基础/4.2synchronized失效.png)
 
 * 解法1：synchronized 范围应扩大至代理方法调用
 

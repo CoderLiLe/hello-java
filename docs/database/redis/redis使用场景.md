@@ -15,9 +15,9 @@
 - 解决方案二：布隆过滤器
   - 布隆过滤器主要用于检索一个数据是否在一个集合中，我们当时使用的是Redisson实现的布隆过滤器。
   - 它的底层主要是先去初始化一个比较大的数组，里面存放的二进制0和1。一开始都是0，当一个key来了之后，经过三次hash计算，模数组长度找到找到对应下标，然后将该位置改为1，这三个位置的1表明key存在。
-  ![](assets/redis使用场景/2.2布隆过滤器.png)
-  ![](assets/redis使用场景/2.3布隆过滤器.png)
-  ![](assets/redis使用场景/2.4布隆过滤器.png)
+  ![](assets/01/redis使用场景/2.2布隆过滤器.png)
+  ![](assets/01/redis使用场景/2.3布隆过滤器.png)
+  ![](assets/01/redis使用场景/2.4布隆过滤器.png)
   - 优点：内存占用较少，没有多余key
   - 缺点：实现复杂，存在误判
     - 会产生误判，设置一个误判率，比如%5。
@@ -25,10 +25,10 @@
 
 ## 3. 什么是缓存击穿？怎么解决？
 - 缓存击穿：给某一个key设置了过期时间，当key过期的时候，恰好这时间点对这个key有大量的并发请求过来，这些并发的请求可能会瞬间把DB压垮
-![缓存击穿图例](assets/redis使用场景/3.1缓存击穿.png)
+![缓存击穿图例](assets/01/redis使用场景/3.1缓存击穿.png)
 - 解决方案一：互斥锁
 - 解决方案二：逻辑过期
-![](assets/redis使用场景/3.2缓存击穿方案.png)
+![](assets/01/redis使用场景/3.2缓存击穿方案.png)
 > Tips：回答示例
 > 1. 缓存击穿的意思是对于设置了过期时间的key，缓存在某个时间点过期的时候，恰好这个时间点对这个key有大量的并发请求过来，这些请求发现这个key的缓存已经过期，就都会从数据库查询数据并同时缓存到Redis中，这个时候大并发请求可能会瞬间把DB压垮。
 > 2. 解决方案有两种方式：
@@ -38,7 +38,7 @@
 
 ## 4. 什么是缓存雪崩？怎么解决？
 - 缓存雪崩：在同一时段大量的缓存key同时失效或者Redis服务宕机，导致大量请求到达数据库，带来巨大压力
-![](assets/redis使用场景/4.1缓存雪崩.png)
+![](assets/01/redis使用场景/4.1缓存雪崩.png)
 - 解决方案：
   - 给不同的key的TTL添加随机值
   - 利用Redis集群提高服务的可用性（哨兵模式、集群模式）
@@ -63,15 +63,15 @@
 ### 5.1 分布式锁保证数据一致性
 - 双写一致性：当修改了数据库的数据也要同时更新缓存的数据，缓存和数据库的数据要保持一致
 - 读操作：缓存命中，直接返回；缓存未命中查询数据库，写入缓存设置超时时间，然后返回结果
-![](assets/redis使用场景/5.1读操作.png)
+![](assets/01/redis使用场景/5.1读操作.png)
 - 写操作：延迟双删
-![](assets/redis使用场景/5.2写操作.png)
+![](assets/01/redis使用场景/5.2写操作.png)
 - 双写一致分布式锁
-![](assets/redis使用场景/5.3双写一致分布式锁.png)
+![](assets/01/redis使用场景/5.3双写一致分布式锁.png)
 - 读多写少
   - 共享锁：读锁readLock，加锁之后，其它线程可以共享读操作
   - 排他锁：独占锁writeLock，加锁之后，阻塞其它线程读写操作
-![](assets/redis使用场景/5.4分布式锁特点.png)
+![](assets/01/redis使用场景/5.4分布式锁特点.png)
 ```java
 public Item getById(Integer id) {
     RReadWriteLock readWriteLock = redissonClient.getReadWriteLock("ITEM_READ_WRITE_LOCK");
@@ -122,15 +122,15 @@ public void updateById(Integer id) {
 }
 ```
 ### 5.2 异步通知保证数据的最终一致性
-![](assets/redis使用场景/5.5异步通知保证数据的最终一致性.png)
+![](assets/01/redis使用场景/5.5异步通知保证数据的最终一致性.png)
 - 基于Canal的异步通知
-![](assets/redis使用场景/5.6基于cancal的异步通知.png)
+![](assets/01/redis使用场景/5.6基于cancal的异步通知.png)
 > Tip：二进制日志（BINLOG）记录了所有的 DDL（数据定义语言）语句和 DML（数据操纵语言）语句，但不包括数据查询（SELECT、SHOW）语句。
 
 ## 6. 能聊一聊Redis的持久化机制吗？
 ### 6.1 RDB
 - RDB持久化：Redis默认的持久化方式，就是将内存中的数据保存到磁盘上，以二进制文件的形式保存，这种持久化方式比较简单，但是效率低，而且磁盘空间占用大。当Redis实例故障重启后，从磁盘读取快照文件，恢复数据。
-![](assets/redis使用场景/6.1RDB持久化命令.png)
+![](assets/01/redis使用场景/6.1RDB持久化命令.png)
 - Redis内部有触发RDB的机制，可以在redis.conf文件中找到，格式如下：
 ```text
 # 900秒内，如果至少有1个key被修改，则执行bgsave 
@@ -143,10 +143,10 @@ save 60 10000
     - 当主进程执行读操作时，访问的是共享内存
     - 当主进程执行写操作时，会拷贝一份数据，执行写操作
 
-![](assets/redis使用场景/6.2RDB执行原理.png)
+![](assets/01/redis使用场景/6.2RDB执行原理.png)
 ### 6.2 AOF
 - AOF全称为Append Only File（追加文件）。Redis处理的每一个写命令都会记录在AOF文件，可以看做是命令日志文件。
-![](assets/redis使用场景/6.3AOF.png)
+![](assets/01/redis使用场景/6.3AOF.png)
 - AOF默认是关闭的，需要修改redis.conf配置文件来开启AOF：
 ```text
 # 是否开启AOF功能，默认是no
@@ -169,7 +169,7 @@ appendfsync no
 | everysec | 每秒刷盘   | 性能适中 | 最多丢失1秒数据|
 | no       | 操作系统控制 | 性能最好 | 可靠性较差，可能丢失大量数据 |
 - 因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但只有最后一次写操作才有意义。通过执行bgrewriteaof命令，可以让AOF文件执行重写功能，用最少的命令达到相同效果。
-![](assets/redis使用场景/6.4aofrewrite.png)
+![](assets/01/redis使用场景/6.4aofrewrite.png)
 - Redis也会在触发阈值时自动去重写AOF文件。阈值也可以在redis.conf中配置：
 ```text
 # AOF文件比上次文件 增长超过多少百分比则触发重写
@@ -239,7 +239,7 @@ DEL key
 redis的SETNX指令不好控制这个问题。我们当时采用的是redis的一个框架Redisson实现的。在Redisson中需要手动加锁，并且可以控制锁的失效时间和等待时间。当锁住的一个业务还没有执行完成的时候，Redisson会引入一个看门狗机制。就是说，每隔一段时间就检查当前业务是否还持有锁。如果持有，就增加加锁的持有时间。当业务执行完成之后，需要使用释放锁就可以了。还有一个好处就是，在高并发下，一个业务有可能会执行很快。客户1持有锁的时候，客户2来了以后并不会马上被拒绝。它会自旋不断尝试获取锁。如果客户1释放之后，客户2就可以马上持有锁，性能也得到了提升。
 
 Redisson实现的分布式锁-执行流程：
-![](assets/redis使用场景/10.1Redisson实现的分布式锁.png)
+![](assets/01/redis使用场景/10.1Redisson实现的分布式锁.png)
 
 Redisson实现的分布式锁-代码实现：
 ```java
@@ -273,30 +273,30 @@ public void redisLock() throws InterruptedException {
 ## 13. Redis的集群方案有哪些？
 ### 13.1 主从复制
 单节点Redis的并发能力是有上限的，要进一步提高Redis的并发能力，就需要搭建主从集群，实现读写分离
-![](assets/redis使用场景/13.1主从复制.png)
+![](assets/01/redis使用场景/13.1主从复制.png)
 
 主从<font color=color>全量复制</font>： 
 > <font color=red>Replication Id</font>：简称replid，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid，slave则会继承master节点的replid
 
 > <font color=red>offset</font>：偏移量，随着记录在repl_baklog中的数据增多而逐渐增大。slave完成同步时也会记录当前同步的offset。如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。
 
-![](assets/redis使用场景/13.2主从全量复制.png)
+![](assets/01/redis使用场景/13.2主从全量复制.png)
 
 主从<font color=red>增量同步</font>(slave重启或后期数据变化)：
 
-![](assets/redis使用场景/13.3主从增量复制.png)
+![](assets/01/redis使用场景/13.3主从增量复制.png)
 
 ### 13.2 哨兵模式
 Redis提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复
 - **监控**：Sentinel 会不断检查您的master和slave是否按预期工作
 - **自动故障恢复**：如果master故障，Sentinel会将一个slave提升为master。当故障实例恢复后也以新的master为主
 - **通知**：Sentinel充当Redis客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给Redis的客户端
-![](assets/redis使用场景/13.4哨兵模式.png)
+![](assets/01/redis使用场景/13.4哨兵模式.png)
 
 Sentinel基于心跳机制监测服务状态，<font color=red>每隔1秒</font>向集群的每个实例发送ping命令：
 - 主观下线：如果某sentinel节点发现某实例未在规定时间响应，则认为该实例**主观下线**。
 - 客观下线：若超过指定数量（quorum）的sentinel都认为该实例主观下线，则该实例**客观下线**。quorum值最好超过Sentinel实例数量的一半。
-![](assets/redis使用场景/13.5服务状态监控.png)
+![](assets/01/redis使用场景/13.5服务状态监控.png)
 
 **哨兵选主规则**
 - 首先判断主与从节点断开时间长短，如超过指定值就排除该从节点
@@ -310,9 +310,9 @@ redis中有两个配置参数：
 min-replicas-to-write 1   表示最少的salve节点为1个
 min-replicas-max-lag 5  表示数据复制和同步的延迟不能超过5秒
 ```
-![](assets/redis使用场景/13.6哨兵模式脑裂.png)
-![](assets/redis使用场景/13.7哨兵模式脑裂.png)
-![](assets/redis使用场景/13.8哨兵模式脑裂.png)
+![](assets/01/redis使用场景/13.6哨兵模式脑裂.png)
+![](assets/01/redis使用场景/13.7哨兵模式脑裂.png)
+![](assets/01/redis使用场景/13.8哨兵模式脑裂.png)
 
 ### 13.3 分片集群
 主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决：
@@ -324,12 +324,12 @@ min-replicas-max-lag 5  表示数据复制和同步的延迟不能超过5秒
 - 每个master都可以有多个slave节点
 - master之间通过ping监测彼此健康状态
 - 客户端请求可以访问集群任意节点，最终都会被转发到正确节点
-![](assets/redis使用场景/13.9分片集群.png)
+![](assets/01/redis使用场景/13.9分片集群.png)
 
 **分片集群结构-数据读写**
 
 Redis 分片集群引入了哈希槽的概念，Redis 集群有 16384 个哈希槽，每个 key通过 CRC16 校验后对 16384 取模来决定放置哪个槽，集群的每个节点负责一部分 hash 槽。
-![](assets/redis使用场景/13.10分片集群结构-数据读写.png)
+![](assets/01/redis使用场景/13.10分片集群结构-数据读写.png)
 
 ## 14. Redis是单线程，为什么还那么快？
 - Redis是纯内存操作，执行速度非常快
@@ -348,12 +348,12 @@ Linux系统为了提高IO效率，会在用户空间和内核空间都加入缓�
 - 写数据时，要把用户缓冲数据拷贝到内核缓冲区，然后写入设备
 - 读数据时，要从设备读取数据到内核缓冲区，然后拷贝到用户缓冲区
 
-![](assets/redis使用场景/15.1用户空间和内核空间.png)
+![](assets/01/redis使用场景/15.1用户空间和内核空间.png)
 
 <font color=red>**Redis网络模型：**</font>
 
 Redis通过IO多路复用来提高网络性能，并且支持各种不同的多路复用实现，并且将这些实现进行封装， 提供了统一的高性能事件库
-![](assets/redis使用场景/15.2Redis网络模型.png)
+![](assets/01/redis使用场景/15.2Redis网络模型.png)
 
 > I/O多路复用是指利用单个线程来同时监听多个Socket，并且在某个Socket可读、可写时得到通知，从而避免无效的等待，充分利用CPU资源。目前的I/O多路复用都是采用的epoll模式实现，它会在通知用户进程Socket就绪的同时，把已就绪的Socket写入用户空间，不需要挨个遍历Socket来判断是否就绪，提升了性能。
 >
