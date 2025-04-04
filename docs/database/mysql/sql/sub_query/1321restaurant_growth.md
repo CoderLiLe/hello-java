@@ -2,12 +2,12 @@
 
 表: Customer
 
->|Column Name|Type|
->|-----|-------|
->|customer_id|int|
->|name|varchar|
->|visited_on|date|
->|amount|int|
+>| Column Name   | Type    |
+>|---------------|---------|
+>| customer_id   | int     |
+>| name          | varchar |
+>| visited_on    | date    |
+>| amount        | int     |
 >
 >在 SQL 中，(customer_id, visited_on) 是该表的主键。  
 >该表包含一家餐馆的顾客交易数据。  
