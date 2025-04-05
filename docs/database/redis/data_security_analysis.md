@@ -342,3 +342,41 @@ aof-use-rdb-preamble yes
 
 &#x9;最后要注意，Redis的持久化策略只能保证单机的数据安全。如果服务器的磁盘坏了，那么再好的持久化策略也无法保证数据安全。如果希望进一步保证数据安全，那就需要增加以下几种集群化的方案了。
 
+# 三、Redis主从复制Replica机制详解
+
+&#x9;接下来的三种Redis分布式优化方案，主从复制、哨兵集群、Redis集群，都是在分布式场景下保护Redis数据安全以及流量分摊的方案。他们是层层递进的。
+
+## **1、Replica是什么？有什么用？**
+
+&#x9;官网介绍：<https://redis.io/docs/latest/operate/oss_and_stack/management/replication/>
+
+&#x9;redis.conf中的描述
+
+```conf
+# Master-Replica replication. Use replicaof to make a Redis instance a copy of
+# another Redis server. A few things to understand ASAP about Redis replication.
+#
+#   +------------------+      +---------------+
+#   |      Master      | ---> |    Replica    |
+#   | (receive writes) |      |  (exact copy) |
+#   +------------------+      +---------------+
+#
+# 1) Redis replication is asynchronous, but you can configure a master to
+#    stop accepting writes if it appears to be not connected with at least
+#    a given number of replicas.
+# 2) Redis replicas are able to perform a partial resynchronization with the
+#    master if the replication link is lost for a relatively small amount of
+#    time. You may want to configure the replication backlog size (see the next
+#    sections of this file) with a sensible value depending on your needs.
+# 3) Replication is automatic and does not need user intervention. After a
+#    network partition replicas automatically try to reconnect to masters
+#    and resynchronize with them.	
+```
+
+简单总结：主从复制。当Master数据有变化时，自动将新的数据异步同步到其他slave中。
+
+&#x9;最典型的作用：
+
+*   读写分离：mater以写为主，Slave以读为主
+*   数据备份+容灾恢复
+
