@@ -598,3 +598,149 @@ replica-read-only yes
 - **服务端数据量太大后，单个复制集难以承担的问题**
 
 - **master节点挂了之后，主动将slave切换成master，保证服务稳定**
+
+
+
+## 2、Cluster的核心配置
+
+&#x9;Cluster的基础搭建工作在基础版中已经给大家逐一演示，这里同样不再赘述。接下来还是以单机快速模拟三主三从的Redis集群服务，带大家深入理解集群的原理。
+
+&#x9;构建Redis集群的核心配置是要在redis.conf中开启集群模式。并且指定一个给集群进行修改的配置文件。
+
+```conf
+# Normal Redis instances can't be part of a Redis Cluster; only nodes that are
+# started as cluster nodes can. In order to start a Redis instance as a
+# cluster node enable the cluster support uncommenting the following:
+#
+cluster-enabled yes
+
+# Every cluster node has a cluster configuration file. This file is not
+# intended to be edited by hand. It is created and updated by Redis nodes.
+# Every Redis Cluster node requires a different cluster configuration file.
+# Make sure that instances running in the same system do not have
+# overlapping cluster configuration file names.
+#
+cluster-config-file nodes-6379.conf
+```
+
+&#x9;以下是其中一个服务的配置文件示例：
+
+    # 允许所有的IP地址
+    bind * -::*
+    # 后台运行
+    daemonize yes
+    # 允许远程连接
+    protected-mode no
+    # 密码
+    requirepass 123qweasd
+    # 主节点密码
+    masterauth 123qweasd
+    # 端口
+    port 6381
+    # 开启集群模式
+    cluster-enabled yes
+    # 集群配置文件
+    cluster-config-file nodes-6381.conf
+    # 集群节点超时时间
+    cluster-node-timeout 5000
+    # log日志
+    logfile "/root/myredis/cluster/redis6381.log"
+    # pid文件
+    pidfile /var/run/redis_6381.pid
+    # 开启AOF持久化
+    appendonly yes
+    # 配置数据存储目录
+    dir "/root/myredis/cluster"
+    # AOF目录
+    appenddirname "aof"
+    # AOF文件名
+    appendfilename "appendonly6381.aof"
+    # RBD文件名
+    dbfilename "dump6381.rdb"
+
+&#x9;接下来依次创建6381,6382,6383,6384,6385,6386六个端口的Redis配置文件，并启动服务。
+
+&#x9;接下来就可以构建Redis集群。将多个独立的Redis服务整合成一个统一的集群。
+
+```shell
+[root@192-168-65-214 cluster]# redis-cli -a 123qweasd --cluster create --cluster-replicas 1 192.168.65.214:6381 192.168.65.214:6382 192.168.65.214:6383 192.168.65.214:6384 192.168.65.214:6385 192.168.65.214:6386
+```
+
+&#x9;其中 --cluster create表示创建集群。 --cluster-replicas 表示为每个master创建一个slave节点。接下来，Redis会自动分配主从关系，形成Redis集群。
+
+&#x9;集群启动完成后，可以使用客户端连接上其中任意一个服务端，验证集群。
+
+```shell
+--连接Redis集群。-c表示集群模式
+redis-cli -p 6381 -a 123qweasd -c 
+--查看集群节点
+cluster nodes
+--查看集群状态
+cluster info
+```
+
+> Redis在分配主从关系时，会优先将主节点和从节点分配在不同的机器上。我们这里用一台服务器模拟集群，就无法体现出这种特性。
+
+&#x9;接下来再来逐步验证之前提到的Redis集群要解决的三个问题。
+
+```shell
+-- 客户端连接集群
+[root@192-168-65-214 cluster]# redis-cli -a 123qweasd -p 6381 -c
+Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+!!! 设置k1时，集群会将k1分配到6383节点，解决了数据太大的问题。
+!!! 客户端会自动切换到6383服务上，解决了服务端切换master的问题
+127.0.0.1:6381> set k1 v1
+-> Redirected to slot [12706] located at 192.168.65.214:6383
+OK
+192.168.65.214:6383> set k2 v2
+-> Redirected to slot [449] located at 192.168.65.214:6381
+OK
+192.168.65.214:6381> set k3 v3
+OK
+```
+
+下面验证集群的高可用
+
+```shell
+--  查看集群状态
+[root@192-168-65-214 cluster]# redis-cli -a 123qweasd -p 6381 -c cluster nodes
+Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+4bc8ba4aa07fbed559befbc7af14424e78ebf3ef 192.168.65.214:6384@16384 slave ff9437319ceee739d72cc23b987bd28002b72eae 0 1718353142000 3 connected
+3b1848099a74e6de1669bde3af108132d8b03e41 192.168.65.214:6385@16385 slave fd3cbd892f11e950104955f7297adb20fab0253c 0 1718353143567 1 connected
+ff9437319ceee739d72cc23b987bd28002b72eae 192.168.65.214:6383@16383 master - 0 1718353143065 3 connected 10923-16383
+883a01f49ad112220253dcf4e6dc54ac12db6355 192.168.65.214:6386@16386 slave 698f36253e9f01470a179f4f04f5d6c683437851 0 1718353142000 2 connected
+698f36253e9f01470a179f4f04f5d6c683437851 192.168.65.214:6382@16382 master - 0 1718353143000 2 connected 5461-10922
+fd3cbd892f11e950104955f7297adb20fab0253c 192.168.65.214:6381@16381 myself,master - 0 1718353141000 1 connected 0-5460
+
+--关闭6383服务
+[root@192-168-65-214 cluster]# redis-cli -a 123qweasd -p 6383 -c shutdown
+
+-- 重新查看集群状态
+[root@192-168-65-214 cluster]# redis-cli -a 123qweasd -p 6381 -c cluster nodes
+Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+4bc8ba4aa07fbed559befbc7af14424e78ebf3ef 192.168.65.214:6384@16384 master - 0 1718353206000 8 connected 10923-16383
+3b1848099a74e6de1669bde3af108132d8b03e41 192.168.65.214:6385@16385 slave fd3cbd892f11e950104955f7297adb20fab0253c 0 1718353207256 1 connected
+ff9437319ceee739d72cc23b987bd28002b72eae 192.168.65.214:6383@16383 master,fail - 1718353192017 1718353189508 3 disconnected
+883a01f49ad112220253dcf4e6dc54ac12db6355 192.168.65.214:6386@16386 slave 698f36253e9f01470a179f4f04f5d6c683437851 0 1718353206252 2 connected
+698f36253e9f01470a179f4f04f5d6c683437851 192.168.65.214:6382@16382 master - 0 1718353206553 2 connected 5461-10922
+fd3cbd892f11e950104955f7297adb20fab0253c 192.168.65.214:6381@16381 myself,master - 0 1718353206000 1 connected 0-5460
+!!! 集群信息发生了切换，6384服务从slave切换成了master（节点切换需要一点点时间）
+
+--重新启动6383服务
+[root@192-168-65-214 cluster]# redis-server redis6383.conf
+
+--重新查看集群状态
+[root@192-168-65-214 cluster]# redis-cli -a 123qweasd -p 6381 -c cluster nodes
+Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+4bc8ba4aa07fbed559befbc7af14424e78ebf3ef 192.168.65.214:6384@16384 master - 0 1718353409018 8 connected 10923-16383
+3b1848099a74e6de1669bde3af108132d8b03e41 192.168.65.214:6385@16385 slave fd3cbd892f11e950104955f7297adb20fab0253c 0 1718353409000 1 connected
+ff9437319ceee739d72cc23b987bd28002b72eae 192.168.65.214:6383@16383 slave 4bc8ba4aa07fbed559befbc7af14424e78ebf3ef 0 1718353409519 8 connected
+883a01f49ad112220253dcf4e6dc54ac12db6355 192.168.65.214:6386@16386 slave 698f36253e9f01470a179f4f04f5d6c683437851 0 1718353409519 2 connected
+698f36253e9f01470a179f4f04f5d6c683437851 192.168.65.214:6382@16382 master - 0 1718353410022 2 connected 5461-10922
+fd3cbd892f11e950104955f7297adb20fab0253c 192.168.65.214:6381@16381 myself,master - 0 1718353409000 1 connected 0-5460
+!!! 6383成为了6384的slave。
+```
+
+> 注：集群故障转移也可以通过手动形式触发。例如在一个slave节点上执行cluster failover，就会触发一次故障转移，尝试将这个slave提升为master。
+
+&#x9;从节点信息可以看到，集群中在每个master的最后，都记录了他负责的slot槽位，这些slot就是Redis集群工作的核心。
