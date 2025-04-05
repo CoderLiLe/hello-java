@@ -509,7 +509,7 @@ replica-read-only yes
 
 &#x9;官网介绍： <https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/>
 
-![image.png](https://note.youdao.com/yws/res/5537/WEBRESOURCE39bd8de7abf79b28604636f9b32c10e4)
+![](assets/data_security_analysis/05.png)
 
 &#x9;Redis的Sentinel不负责数据读写，主要就是给Redis的Replica主从复制提供高可用功能。主要作用有四个：
 
