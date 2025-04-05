@@ -4,9 +4,9 @@
 - 调试工具：Arthas
 - 运维工具：Prometheus、Skywalking
 
-![](asserts/mysql优化/1.1Prometheus.png)
+![](assets/mysql优化/1.1Prometheus.png)
 
-![](asserts/mysql优化/1.2Skywalking.png)
+![](assets/mysql优化/1.2Skywalking.png)
 
 ### 方案二：MySQL自带慢查询
 慢查询日志记录了所有执行时间超过指定参数（long_query_time，单位：秒，默认10秒）的所有SQL语句的日志  
@@ -22,7 +22,7 @@ long_query_time=2
 
 ## 2. 那这个SQL语句执行很慢，如何分析呢？
 可以采用<font color=red size=3>EXPLAIN</font> 或者 <font color=red size=3>DESC</font>命令获取 MySQL 如何执行 SELECT 语句的信息
-![](asserts/mysql优化/2.1explain.png)
+![](assets/mysql优化/2.1explain.png)
  - type 这条sql的连接的类型
 
 | type类型 | 含义   |
@@ -55,16 +55,16 @@ long_query_time=2
 MySQL默认使用的索引底层数据结构是B+树。
 
 先看一下树相关的数据结构：
-![](asserts/mysql优化/3.1树相关数据结构.png)
+![](assets/mysql优化/3.1树相关数据结构.png)
 以上几种数据结构在节点很多时树的深度会很深，查询的效率会降低。
 
 B-Tree，B树是一种多叉平衡查找树，相对于二叉树，B树每个节点可以有多个分支，即多叉。  
 以一棵最大度数（max-degree）为5（5阶）的B-tree为例，这个B树每个节点最多存储4个key。
-![](asserts/mysql优化/3.2B树.png)
+![](assets/mysql优化/3.2B树.png)
 从上图可以看出来，如果要进行范围查找，B树会比较麻烦，而B+树则比较简单。
 
 B+Tree是在BTree基础上的一种优化，使其更适合实现外存储索引结构，InnoDB存储引擎就是用B+Tree实现其索引结构
-![](asserts/mysql优化/3.3B+树.png)
+![](assets/mysql优化/3.3B+树.png)
 
 B树与B+树的区别：  
 ① 磁盘读写代价B+树更低；  
@@ -88,11 +88,11 @@ B树与B+树的区别：
 - 如果不存在主键，将使用第一个唯一（UNIQUE）索引作为聚集索引。
 - 如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引。
 
-![](asserts/mysql优化/4.1索引分类.png)
+![](assets/mysql优化/4.1索引分类.png)
 
 ## 5. 你了解回表查询吗？可以对其进行优化吗？
 回表查询是指通过二级索引找到对应的主键值，然后再通过主键值查询聚簇索引中对应的整行数据的过程。
-![](asserts/mysql优化/5.1回表查询.png)
+![](assets/mysql优化/5.1回表查询.png)
 
 可以通过覆盖索引解决回表查询问题，覆盖索引就是指SELECT查询中返回的列全部能在索引中找到，避免了回表查询，提高了性能。  
 使用覆盖索引可以减少对主键索引的查询次数，提高查询效率。
@@ -111,9 +111,9 @@ B树与B+树的区别：
 > 如果符合最左法则，但是出现跳跃某一列，只有最左列索引生效
 - 范围查询右边的列，不能使用索引
 - 在索引列上进行运算操作， 索引将失效
-![](asserts/mysql优化/7.1索引上进行运算.png)
+![](assets/mysql优化/7.1索引上进行运算.png)
 - 字符串不加单引号，造成索引失效
-![](asserts/mysql优化/7.2字符串不加单引号.png)
+![](assets/mysql优化/7.2字符串不加单引号.png)
 - 以%开头的Like模糊查询，索引失效。如果仅仅是尾部模糊匹配，索引不会失效。
 
 ## 8. 谈谈你对SQL优化的经验
@@ -129,5 +129,5 @@ B树与B+树的区别：
   - Join优化：能用inner join，就不用left join 和 right join，如必须使用一定要以小表为驱动。
     - 内连接会对两个表进行优化，优先把小表放到外边，把大表放到里边。left join 或 right join，不会重新调整顺序
 - 主从复制、读写分离
-![](asserts/mysql优化/8.1读写分离.png)
+![](assets/mysql优化/8.1读写分离.png)
 - 分库分表

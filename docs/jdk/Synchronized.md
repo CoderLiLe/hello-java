@@ -52,9 +52,9 @@ synchronized有两种形式上锁，一个是对方法上锁，一个是构造�
 
 定义一个同步代码块，编译出class字节码，然后找到method方法所在的指令块
 
-![](./asserts/5.1.png)
+![](./assets/5.1.png)
 
-![](./asserts/5.2.png)
+![](./assets/5.2.png)
 
 关于这两条指令的作用，我们直接参考JVM规范中描述
 
@@ -62,7 +62,7 @@ JVM规范中对于monitorenter的描述：
 
 https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.monitorenter
 
-![](./asserts/5.3.png)
+![](./assets/5.3.png)
 
 这段话的大概意思为：
 
@@ -74,7 +74,7 @@ https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.monitore
 
 3.如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到monitor的进入数为0，再重新尝试获取monitor的所有权。
 
-![](./asserts/5.4.png)
+![](./assets/5.4.png)
 
 这段话的大概意思为：
 
@@ -86,9 +86,9 @@ https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.monitore
 
 首先看在方法上上锁，然后进行反编译，查看其字节码：
 
-![](./asserts/5.5.png)
+![](./assets/5.5.png)
 
-![](./asserts/5.6.png)
+![](./assets/5.6.png)
 
 从编译的结果来看，方法的同步并没有通过指令 monitorenter 和 monitorexit 来完成（理论上其实也可以通过这两条指令来实现），不过相对于普通方法，其常量池中多了 ACC_SYNCHRONIZED 标示符。JVM就是根据该标示符来实现方法的同步的：
 
@@ -102,7 +102,7 @@ https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.monitore
 
 当一个对象在堆内存中分配好并且初始化完成之后的结构是什么样的呢？
 
-![](./asserts/5.7.png)
+![](./assets/5.7.png)
 
 1、添加对求填充是为了保证对象的总大小是8的整数倍个字节。
 
@@ -112,7 +112,7 @@ Synchronized用的锁就是存在Java对象头里的，那么什么是Java对象
 
 Mark Word用于存储对象自身的运行时数据，如：哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程 ID、偏向时间戳等
 
-![](./asserts/5.8.png)
+![](./assets/5.8.png)
 
 我们发现，markword的后三位被设定成了跟锁相关的标志位，其中有两位是锁标志位，1位是偏向锁标志位。
 
@@ -161,13 +161,13 @@ ObjectMonitor中有两个队列，WaitSet 和 _EntryList，用来保存ObjectWai
 
 前面我们看到了synchronized在字节码层面是对应monitorenter合monitorexit，而真正实现互斥的锁其实依赖操作系统底层的Mutex Lock来实现，首先要明确一点，这个锁是一个重量级的锁，由操作系统直接管理，要想使用它，需要将当前线程挂起并从用户态切换到内核态来执行，这种切换的代价是非常昂贵的。
 
-![](./asserts/5.9.png)
+![](./assets/5.9.png)
 
 确实jdk1.6之前每次获取的都是重量级锁，无疑在很多场景下性能不高，故jdk1.6对synchronized做了很大程度的优化，其目的就是为了减少这种重量级锁的使用。
 
 整体锁升级的过程大致可以分为两条路径，如下：
 
-![](./asserts/5.10.png)
+![](./assets/5.10.png)
 
 #### 锁膨胀
 上面讲到锁有四种状态，并且会因实际情况进行膨胀升级，其膨胀方向是：无锁——>偏向锁——>轻量级锁——>重量级锁，并且膨胀方向不可逆。

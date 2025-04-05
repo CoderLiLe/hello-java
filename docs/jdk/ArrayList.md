@@ -16,7 +16,7 @@
 public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 ```
 
-![](./asserts/2.1.png)
+![](./assets/2.1.png)
 
 ① 实现 RandomAccess 接口
 
@@ -34,7 +34,7 @@ Cloneable 和 RandomAccess 接口一样也是一个标记接口，接口内无�
 
 这个接口是 List 类集合的上层接口，定义了实现该接口的类都必须要实现的一组方法
 
-![](./asserts/2.2.png)
+![](./assets/2.2.png)
 
 ## 字段属性
 ```java
@@ -120,7 +120,7 @@ public void test(){
 }
 ```
 
-![](./asserts/2.3.png)
+![](./assets/2.3.png)
 
 原理：
 
@@ -262,7 +262,7 @@ public E remove(int index) {
 
 remove(int index) 方法表示删除索引index处的元素，首先通过 rangeCheck(index) 方法判断给定索引的范围，超过集合大小则抛出异常；接着通过 System.arraycopy 方法对数组进行自身拷贝
 
-![](./asserts/2.4.png)
+![](./assets/2.4.png)
 
 附：
 
@@ -447,7 +447,7 @@ while(it.hasNext()){
 }
 ```
 
-![](./asserts/2.5.png)
+![](./assets/2.5.png)
 
 解决办法是不调用 ArrayList.remove() 方法，转而调用 迭代器的 remove() 方法：
 

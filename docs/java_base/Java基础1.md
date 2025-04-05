@@ -66,7 +66,7 @@
 
 Byte、Short、Integer、Long 这4种包装类默认创建了数值[-128, 127]的相应类型的缓存数据，Character创建了数值[0, 127]范围的缓存数据，Boolean直接返回True or False。
 
-![](./asserts/包装类型的缓存机制.png)
+![](./assets/包装类型的缓存机制.png)
 
 # 四、方法
 

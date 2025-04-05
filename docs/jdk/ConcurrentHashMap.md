@@ -16,9 +16,9 @@ ConcurrentHashMap中的分段锁称为Segment，它即类似于HashMap的结构�
 
 Java 7 版本 ConcurrentHashMap 的存储结构如图：
 
-![](./asserts/6.1.png)
+![](./assets/6.1.png)
 
-![](./asserts/6.2.png)
+![](./assets/6.2.png)
 
 ConcurrnetHashMap 由很多个 Segment 组合，而每一个 Segment 是一个类似于 HashMap 的结构，所以每一个 HashMap 的内部可以进行扩容。但是 Segment 的个数一旦**初始化就不能改变**，默认 Segment 的个数是 16 个，所以可以认为 ConcurrentHashMap 默认支持最多 16 个线程并发。
 
@@ -392,7 +392,7 @@ public V get(Object key) {
 # ConcurrentHashMap 1.8
 ## 存储结构
 
-![](./asserts/6.3.png)
+![](./assets/6.3.png)
 
 可以发现 Java8 的 ConcurrentHashMap 相对于 Java7 来说变化比较大，不再是之前的** Segment 数组 + HashEntry 数组 + 链表**，而是 **Node 数组 + 链表 / 红黑树**。当冲突链表达到一定长度时，链表会转换成红黑树。
 

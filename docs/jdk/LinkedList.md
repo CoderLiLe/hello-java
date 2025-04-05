@@ -6,7 +6,7 @@ LinkedList是一种可以在任何位置进行高效地插入和移除操作的�
 
 ### LinkedList的数据结构
 
-![](./asserts/3.1.png)
+![](./assets/3.1.png)
 
 如上图所示，LinkedList底层使用的双向链表结构，有一个头结点和一个尾结点，双向链表意味着我们可以从头开始正向遍历，或者是从尾开始逆向遍历，并且可以针对头部和尾部进行相应的操作。
 
@@ -25,7 +25,7 @@ All of the operations perform as could be expected for a doubly-linked list. Ope
 ```java
 public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>, Deque<E>, Cloneable, java.io.Serializable
 ```
-![](./asserts/3.2.png)
+![](./assets/3.2.png)
 
 和 ArrayList 集合一样，LinkedList 集合也实现了Cloneable接口和Serializable接口，分别用来支持克隆以及支持序列化。List 接口也不用多说，定义了一套 List 集合类型的方法规范。
 
@@ -47,7 +47,7 @@ transient Node<E> first;
 transient Node<E> last;
 ```
 
-![](./asserts/3.3.png)
+![](./assets/3.3.png)
 
 注意这里出现了一个 Node 类，这是 LinkedList 类中的一个内部类，其中每一个元素就代表一个 Node 类对象，LinkedList 集合就是由许多个 Node 对象类似于手拉着手构成。
 
@@ -66,7 +66,7 @@ private static class Node<E> {
     }
 }
 ```
-![](./asserts/3.4.png)
+![](./assets/3.4.png)
 
 上图的 LinkedList 是有四个元素，也就是由 4 个 Node 对象组成，size=4，head 指向第一个elementA,tail指向最后一个节点elementD。
 
@@ -524,13 +524,13 @@ private class ListItr implements ListIterator<E>
 
 看一下他的继承结构，发现只继承了一个ListIterator，到ListIterator中一看：
 
-![](./asserts/3.5.png)
+![](./assets/3.5.png)
 
 看到方法名之后，就发现不止有向后迭代的方法，还有向前迭代的方法，所以我们就知道了这个ListItr这个内部类干嘛用的了，就是能让linkedList不光能像后迭代，也能向前迭代。
 
 看一下ListItr中的方法，可以发现，在迭代的过程中，还能移除、修改、添加值得操作。
 
-![](./asserts/3.6.png)
+![](./assets/3.6.png)
 
 DescendingIterator内部类　
 
@@ -600,6 +600,6 @@ long endTimeIte = System.currentTimeMillis();
 System.out.println("使用迭代器遍历10000个元素需要的时间：" + (endTimeIte - beginTimeIte));
 ```
 
-![](./asserts/3.7.png)
+![](./assets/3.7.png)
 
 一万个元素两者之间都相差一倍多的时间，如果是十万，百万个元素，那么两者之间相差的速度会越来越大

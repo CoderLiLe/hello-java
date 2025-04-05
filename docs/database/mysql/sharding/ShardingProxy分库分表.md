@@ -243,7 +243,7 @@ public final class MykeyGenerator implements ShardingKeyGenerator {
 
 然后增加一个META-INF\services\org.apache.shardingsphere.spi.keygen.ShardingKeyGenerator文件，并在文件中写明自己的实现类。`com.roy.shardingDemo.spiextention.MykeyGenerator` 将扩展类和这个SPI服务文件一起打成jar包，就可以直接放到ShardingProxy的lib目录下。
 
-![](./asserts/4.1.png)
+![](./assets/4.1.png)
 
 接下来就可以在config-sharding.yaml中以类似下面这种配置方式引入了。
 

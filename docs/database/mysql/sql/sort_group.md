@@ -2,7 +2,7 @@
 
 ## [619.只出现一次的数字](https://leetcode.cn/problems/biggest-single-number/description)
 
-![](./asserts/619.png)
+![](./assets/619.png)
 
 * 使用聚合函数对空值进行处理时，SUM/AVG/MAX/MIN都会返回null值
 * 使用ifnull对空值进行处理。(实际上并不是ifnull起作用)),输出的仍然是空值

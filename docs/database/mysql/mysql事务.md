@@ -32,13 +32,13 @@
 ## 3. undo log和redo log的区别？
 - **缓冲池（buffer pool）**:主内存中的一个区域，里面可以缓存磁盘上经常操作的真实数据，在执行增删改查操作时，先操作缓冲池中的数据（若缓冲池没有数据，则从磁盘加载并缓存），以一定频率刷新到磁盘，从而减少磁盘IO，加快处理速度
 - **数据页（page）**:是InnoDB 存储引擎磁盘管理的最小单元，每个页的大小默认为 16KB。页中存储的是行数据
-![](asserts/mysql事务/3.1缓冲池和数据页.png)
+![](assets/mysql事务/3.1缓冲池和数据页.png)
 ### 3.1 redo log
 重做日志，记录的是事务提交时数据页的物理修改，是<font color=red>用来实现事务的持久性</font>。
 
 该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file）,前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中, 用于在刷新脏页到磁盘,发生错误时, 进行数据恢复使用。
 
-![](asserts/mysql事务/3.2redo-log.png)
+![](assets/mysql事务/3.2redo-log.png)
 
 ### 3.2 undo log
 回滚日志，用于记录数据被修改前的信息 , 作用包含两个 : <font color=red>提供回滚</font> 和 <font color=red>MVCC(多版本并发控制)</font> 。undo log和redo log记录物理日志不一样，它是<font color=red>逻辑日志</font>。
@@ -71,9 +71,9 @@ MVCC的具体实现，主要依赖于数据库记录中的<font color=red>隐式
   - 而update、delete的时候，产生的undo log日志不仅在回滚时需要，mvcc版本访问也需要，不会立即被删除。
 
 - undo log 版本链
-![](asserts/mysql事务/4.1.1undo-log版本链.png)
-![](asserts/mysql事务/4.1.2undo-log版本链.png)
-![](asserts/mysql事务/4.1.3undo-log版本链.png)
+![](assets/mysql事务/4.1.1undo-log版本链.png)
+![](assets/mysql事务/4.1.2undo-log版本链.png)
+![](assets/mysql事务/4.1.3undo-log版本链.png)
   > 不同事务或相同事务对同一条记录进行修改，会导致该记录的undolog生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。
  
 ### 4.2 ReadView
@@ -116,7 +116,7 @@ trx_id：代表是当前事务ID
 |trx_id > max_trx_id|<font color=red>不可以访问该版本</font>|成立，说明该事务是在ReadView生成后才开启。|
 |min_trx_id <= trx_id <= max_trx_id|如果trx_id不在m_ids中是<font color=green>可以访问</font>该版本的|成立，说明数据已经提交。|
 
-![](asserts/mysql事务/4.1.4mvcc.png)
+![](assets/mysql事务/4.1.4mvcc.png)
 
 ## 5. 谈一谈MySQL事务的两阶段提交
 ### 5.1 两阶段提交是什么？
