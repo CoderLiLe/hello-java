@@ -380,3 +380,11 @@ aof-use-rdb-preamble yes
 *   读写分离：mater以写为主，Slave以读为主
 *   数据备份+容灾恢复
 
+## **2、如何配置Replica？**
+
+&#x9;配置方式在基础课程部分有详细讲解，这里不做过多重复。简单总结一个原则：**配从不配主**。 这意味着对于一个Redis服务，可以在几乎没有影响的情况下，给他配置一个或者多个从节点。
+
+&#x9;相关核心操作简化为以下几点：
+
+*   REPLICAOF host port|NO ONE : 一般配置到redis.conf中。
+*   SLAVEOF host port|NO ONE： 在运行期间修改slave节点的信息。如果该服务已经是某个主库的从库了，那么就会停止和原master的同步关系。
