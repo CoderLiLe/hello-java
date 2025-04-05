@@ -517,3 +517,14 @@ replica-read-only yes
 *   消息通知：将故障转移的结果发送给客户端
 *   故障转移：如果master异常，则会进行主从切换。将其中一个slave切换成为master。
 *   配置中心：客户端通过连接哨兵可以获取当前Redis服务的master地址。
+
+## 2、Sentinel核心配置
+
+&#x9;Sentinel的环境搭建以及基础使用，在基础版中已经有详细过程。这里不再赘述。这里以单机模拟搭建Sentinel以及主从集群。Redis的服务端口为6379(master),6380,6381。Sentinel的服务端口为26379,26380,26381
+
+&#x9;Sentinel最核心的配置其实就是  sentinel.conf中的sentinel monitor \<master-name> \<ip> \<redis-port> \<quorum>
+
+![](assets/data_security_analysis/06.png)
+
+
+&#x9;这个配置中，最抽象的参数就最后的那个quorum。这个参数是什么意思呢？这就需要了解一下Sentinel的工作原理。
