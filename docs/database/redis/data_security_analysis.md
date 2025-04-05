@@ -501,3 +501,19 @@ replica-read-only yes
 &#x9;后续的哨兵集群，就相当于做这个人工干预的工作。当检测到master挂了之后，自动从slave中选择一个节点，切换成master。
 
 3》从数据安全性的角度，主从复制牺牲了服务高可用，但是增加了数据安全。
+
+
+# 四、Redis哨兵集群Sentinel机制详解
+
+## 1、Sentinel是什么？有什么用
+
+&#x9;官网介绍： <https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/>
+
+![image.png](https://note.youdao.com/yws/res/5537/WEBRESOURCE39bd8de7abf79b28604636f9b32c10e4)
+
+&#x9;Redis的Sentinel不负责数据读写，主要就是给Redis的Replica主从复制提供高可用功能。主要作用有四个：
+
+*   主从监控：监控主从Redis运行是否正常
+*   消息通知：将故障转移的结果发送给客户端
+*   故障转移：如果master异常，则会进行主从切换。将其中一个slave切换成为master。
+*   配置中心：客户端通过连接哨兵可以获取当前Redis服务的master地址。
