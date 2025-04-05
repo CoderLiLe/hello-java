@@ -491,3 +491,13 @@ replica-read-only yes
 4》只要slave定期向master回复心跳请求，master就会持续将后续收集到的修改数据的指令传递给slave。同时，master会记录offset，即已经同步给slave的消息偏移量。
 
 5》如果slave短暂不回复master的心跳请求，master就会停止向slave同步数据。直到slave重新上线后，master从offset开始，继续向slave同步数据。
+
+## 6、主从复制的缺点
+
+1》复制延时，信号衰减：  所有写操作都是先在master上操作，然后再同步到slave，所以数据同步一定会有延迟。当系统繁忙，或者slave数量增加时，这个延迟会更加严重。
+
+2》master高可用问题： 如果master挂了，slave节点是不会自动切换master的，只能等待人工干预，重启master服务，或者调整主从关系，将一个slave切换成master，同时将其他slave的主节点调整为新的master。
+
+&#x9;后续的哨兵集群，就相当于做这个人工干预的工作。当检测到master挂了之后，自动从slave中选择一个节点，切换成master。
+
+3》从数据安全性的角度，主从复制牺牲了服务高可用，但是增加了数据安全。
