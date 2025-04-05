@@ -528,3 +528,39 @@ replica-read-only yes
 
 
 &#x9;这个配置中，最抽象的参数就最后的那个quorum。这个参数是什么意思呢？这就需要了解一下Sentinel的工作原理。
+
+## 3、解析Sentinel工作原理
+
+&#x9;Sentinel的核心工作原理分两个步骤，一是如何发现master服务宕机了。二是发现master服务宕机后，如何切换新的master。
+
+### 1. 如何发现master服务宕机
+
+&#x9;这里有两个概念需要了解，S\_DOWN（主观下线）和 O\_DOWN（客观下线）
+
+&#x9;对于每一Sentinel服务，他会不断地往master发送心跳，监听master的状态。如果经过一段时间（参数sentinel down-after-milliseconds \<master-name> \<milliseconds> 指定。默认30秒）没有收到master的响应，他就会主观的认为这个master服务下线了。也就是S\_DOWN。
+
+&#x9;但是主观下线并不一定是master服务的问题，如果网络出现抖动或者阻塞，也会造成master的响应超时。为了防止网络抖动造成的误判，Redis的Sentinel就会互相进行沟通，当超过quorum个Sentinel节点都认为master已经出现S\_DOWN后，就会将master标记为O\_DOWN。此时才会真正确定master的服务是宕机的，然后就可以开始故障切换了。
+
+&#x9;在配置Sentinel集群时，通常都会搭建奇数个节点，而将quorum配置为集群中的过半个数。这样可以最大化的保证Sentinel集群的可用性。
+
+### 2. 发现master服务宕机后，如何切换新的master
+
+&#x9;当确定master宕机后，Sentinel会主动将一个新的slave切换为mater。这个过程是怎么做的呢？通过以下一个Sentinel服务的日志，可以看到整个过程：
+
+![](assets/data_security_analysis/07.png)
+
+&#x9;从这个日志中，可以看到Sentinel在做故障切换时，是经过了以下几个步骤的：
+
+(1) master变成O\_DOWN后，Sentinel会在集群中选举产生一个服务节点作为Leader。Leader将负责向其他Redis节点发送命令，协调整个故障切换过程。在选举过程中，Sentinel是采用的Raft算法，这是一种多数派统一的机制，其基础思想是对集群中的重大决议，只要集群中超过半数的节点投票同意，那么这个决议就会成为整个集群的最终决议。这也是为什么建议Sentinel的quorum设置为集群超半数的原因。
+
+(2) Sentinel会在剩余健康的Slave节点中选举出一个节点作为新的Master。 选举的规则如下：
+
+*   首先检查是否有提前配置的优先节点：各个服务节点的redis.conf中的replica-priority配置最低的从节点。这个配置的默认值是100。如果大家的配置都一样，就进入下一个检查规则。
+*   然后检查复制偏移量offset最大的从节点。也就是找同步数据最快的slave节点。因为他的数据是最全的。如果大家的offset还是一样的，就进入下一个规则
+*   最后按照slave的RunID字典顺序最小的节点。
+
+(3) 切换新的主节点。 Sentinel Leader给新的mater节点执行 slave of no one操作，将他提升为master节点。 然后给其他slave发送slave of 指令。让其他slave成为新Master的slave。
+
+(4) 如果旧的master恢复了，Sentinel Leader会让旧的master降级为slave，并从新的master上同步数据，恢复工作。
+
+&#x9;最终，各个Redis的配置信息，会输出到Redis服务对应的redis.conf文件中，完成配置覆盖。
