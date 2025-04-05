@@ -468,3 +468,14 @@ replica-read-only yes
 &#x9;例如在redis.conf配置文件中增加配置 rename-command CONFIG ""  。就可以屏蔽掉slave上的CONFIG指令。
 
 > 很多企业在维护Redis时，都会通过rename 直接禁用keys , flushdb, flushall等这一类危险的指令。
+
+
+## 4、如果Slave上已经有数据了，同步时会如何处理？
+
+&#x9;在从节点的日志当中其实能够分析出结果：
+
+![](assets/data_security_analysis/03.png)
+
+&#x9;也可以在从节点尝试解除主从关系，再重新建立主从关系测试一下。
+
+![](assets/data_security_analysis/04.png)
