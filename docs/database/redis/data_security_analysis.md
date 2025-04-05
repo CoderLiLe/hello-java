@@ -564,3 +564,17 @@ replica-read-only yes
 (4) 如果旧的master恢复了，Sentinel Leader会让旧的master降级为slave，并从新的master上同步数据，恢复工作。
 
 &#x9;最终，各个Redis的配置信息，会输出到Redis服务对应的redis.conf文件中，完成配置覆盖。
+
+## 4、Sentinel的缺点
+
+&#x9;Sentinel+Replica的集群服务，可以实现自动故障恢复，所以可用性以及性能都还是比较好的。但是这种方案也有一些问题:
+
+(1) 对客户端不太友好
+
+&#x9;由于master需要切换，这也就要求客户端也要将写请求频繁切换到master上。
+
+(2) 数据不安全&#x20;
+
+&#x9;在主从复制集群中，不管~~master~~是谁，所有的数据都以master为主。当master宕机后，那些在master上已经完成了，但是还没有同步给其他slave的操作，就会彻底丢失。因为只要master一完成了切换，所有数据就以新的master为准了。
+
+&#x9;因此，在企业实际运用中，用得更多的是下面的Redis集群服务。
