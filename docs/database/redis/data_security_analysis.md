@@ -479,3 +479,15 @@ replica-read-only yes
 &#x9;也可以在从节点尝试解除主从关系，再重新建立主从关系测试一下。
 
 ![](assets/data_security_analysis/04.png)
+
+## 5、主从复制工作流程
+
+1》 Slave启动后，向master发送一个sync请求。等待建立成功后，slave会删除掉自己的数据日志文件，等待主节点同步。
+
+2》master接收到slave的sync请求后，会触发一次RDB全量备份，同时收集所有接收到的修改数据的指令。然后master将RDB和操作指令全量同步给slave。完成第一次全量同步。
+
+3》主从关系建立后，master会定期向slave发送心跳包，确认slave的状态。心跳发送的间隔通过参数repl-ping-replica-period指定。默认10秒。
+
+4》只要slave定期向master回复心跳请求，master就会持续将后续收集到的修改数据的指令传递给slave。同时，master会记录offset，即已经同步给slave的消息偏移量。
+
+5》如果slave短暂不回复master的心跳请求，master就会停止向slave同步数据。直到slave重新上线后，master从offset开始，继续向slave同步数据。
