@@ -324,3 +324,21 @@ Successfully truncated AOF appendonly.aof.1.incr.aof
 
 > 注，对于RDB文件，Redis同样提供了修复指令redis-check-rdb，但是，由于RDB是二进制压缩文件，一般不太可能被篡改，所以一般用得并不太多。
 
+
+## 4、混合持久化策略
+
+&#x9;RDB和AOF两种持久化策略各有优劣，所以在使用Redis时，是支持同时开启两种持久化策略的。在redis.conf配置文件中，有一个参数可以同时打开RDB和AOF两种持久化策略。
+
+```conf
+# Redis can create append-only base files in either RDB or AOF formats. Using
+# the RDB format is always faster and more efficient, and disabling it is only
+# supported for backward compatibility purposes.
+aof-use-rdb-preamble yes
+```
+
+&#x9;这也说明，如果同时开启RDB和AOF两种持久化策略，那么Redis在恢复数据时，其实还是会优先选择从AOF的持久化文件开始恢复。因为通常情况下，AOF的数据集比RDB更完整。而且AOF的持久化策略现在已经明确包含了RDB和AOF两种格式，所以AOF恢复数据的效率也还是比较高的。
+
+&#x9;但是要注意，既然服务重启时只找AOF文件，那是不是就不需要做RDB备份了呢？通常建议还是增加RDB备份。因为AOF数据通常在不断变化，这样其实不太利于定期做数据备份。所以通常建议保留RDB文件并定期进行备份，作为保证数据安全的后手。
+
+&#x9;最后要注意，Redis的持久化策略只能保证单机的数据安全。如果服务器的磁盘坏了，那么再好的持久化策略也无法保证数据安全。如果希望进一步保证数据安全，那就需要增加以下几种集群化的方案了。
+
