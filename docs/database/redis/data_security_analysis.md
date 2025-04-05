@@ -388,3 +388,83 @@ aof-use-rdb-preamble yes
 
 *   REPLICAOF host port|NO ONE : 一般配置到redis.conf中。
 *   SLAVEOF host port|NO ONE： 在运行期间修改slave节点的信息。如果该服务已经是某个主库的从库了，那么就会停止和原master的同步关系。
+
+## **3、如何确定主从状态？从库可以写数据吗？**
+
+&#x9;主从状态可以通过 info replication查看。例如，在一个主从复制的master节点上查看到的主从状态是这样的：
+
+```shell
+127.0.0.1:6379> info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=192.168.65.214,port=6380,state=online,offset=56,lag=1
+master_failover_state:no-failover
+master_replid:56a1835bdb1f02d2398fac3c34a321e665b07d36
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:56
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:56
+```
+
+> 重点要观察slave的state状态。 另外，可以观察下master\_repl\_offset参数。如果是刚建立Replica，数据同步是需要过程的，这时可以看到offset往后推移的过程。
+
+&#x9;从节点上查看到的主从状态是这样的：
+
+```shell
+127.0.0.1:6380> info replication
+# Replication
+role:slave
+master_host:192.168.65.214
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:6
+master_sync_in_progress:0
+slave_read_repl_offset:574
+slave_repl_offset:574
+slave_priority:100
+slave_read_only:1
+replica_announced:1
+connected_slaves:0
+master_failover_state:no-failover
+master_replid:56a1835bdb1f02d2398fac3c34a321e665b07d36
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:574
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:15
+repl_backlog_histlen:560
+```
+
+> 重点要观察master\_link\_status
+
+&#x9;默认情况下，从库是只读的，不允许写入数据。因为数据只能从master往slave同步，如果slave修改数据，就会造成数据不一致。
+
+```shell
+127.0.0.1:6380> set k4 v4
+(error) READONLY You can't write against a read only replica.
+```
+
+&#x9;redis.conf中配置了slave的默认权限
+
+```conf
+# Since Redis 2.6 by default replicas are read-only.
+#
+# Note: read only replicas are not designed to be exposed to untrusted clients
+# on the internet. It's just a protection layer against misuse of the instance.
+# Still a read only replica exports by default all the administrative commands
+# such as CONFIG, DEBUG, and so forth. To a limited extent you can improve
+# security of read only replicas using 'rename-command' to shadow all the
+# administrative / dangerous commands.
+replica-read-only yes
+```
+
+&#x9;这里也提到，对于slave从节点，虽然禁止了对数据的写操作，但是并没有禁止CONFIG、DEBUG等管理指令，这些指令如果和主节点不一致，还是容易造成数据不一致。如果为了安全起见，可以使用rename-command方法屏蔽这些危险的指令。
+
+&#x9;例如在redis.conf配置文件中增加配置 rename-command CONFIG ""  。就可以屏蔽掉slave上的CONFIG指令。
+
+> 很多企业在维护Redis时，都会通过rename 直接禁用keys , flushdb, flushall等这一类危险的指令。
