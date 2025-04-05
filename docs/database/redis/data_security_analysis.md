@@ -133,3 +133,194 @@ Summary:
 3> 主从复制时会触发RDB备份。
 
 &#x9;LASTSAVE指令查看最后一次成功执行快照的时间。时间是一个代表毫秒的LONG数字，在linux中可以使用date -d @{timestamp} 快速格式化。
+
+## 3、AOF详解
+
+&#x9;**1、AOF能干什么**
+
+&#x9;	以日志的形式记录每个写操作(读操作不记录)。只允许追加文件而不允许改写文件。
+
+&#x9;**2、相关重要配置**
+
+1> appendonly 是否开启aof。 默认是不开启的。
+
+2> appendfilename 文件名称。
+
+```conf
+
+# The base name of the append only file.
+#
+# Redis 7 and newer use a set of append-only files to persist the dataset
+# and changes applied to it. There are two basic types of files in use:
+#
+# - Base files, which are a snapshot representing the complete state of the
+#   dataset at the time the file was created. Base files can be either in
+#   the form of RDB (binary serialized) or AOF (textual commands).
+# - Incremental files, which contain additional commands that were applied
+#   to the dataset following the previous file.
+#
+# In addition, manifest files are used to track the files and the order in
+# which they were created and should be applied.
+#
+# Append-only file names are created by Redis following a specific pattern.
+# The file name's prefix is based on the 'appendfilename' configuration
+# parameter, followed by additional information about the sequence and type.
+#
+# For example, if appendfilename is set to appendonly.aof, the following file
+# names could be derived:
+#
+# - appendonly.aof.1.base.rdb as a base file.
+# - appendonly.aof.1.incr.aof, appendonly.aof.2.incr.aof as incremental files.
+# - appendonly.aof.manifest as a manifest file.
+
+appendfilename "appendonly.aof"
+```
+
+&#x9;Redis7中，对文件名称做了调整。原本只是一个文件，现在换成了三个文件。base.rdb文件即二进制的数据文件。incr.aof是增量的操作日志。manifest则是记录文件信息的元文件。其实在Redis7之前的版本中，aof文件也会包含二进制的RDB部分和文本的AOF部分。在Redis7中，将这两部分分成了单独的文件，这样，即可以分别用来恢复文件，也便于控制AOF文件的大小。
+
+![](assets/data_security_analysis/01.png)
+
+&#x9;从这几个文件中能够看到， 现在的AOF已经具备了RDB+AOF的功能。并且，拆分增量文件的方式，也能够进一步控制aof文件的大小。
+
+3> appendfsync 同步方式。默认everysecond 每秒记录一次。no 不记录(交由操作系统进行内存刷盘)。 always 记录每次操作，数据更安全，但性能较低。
+
+4> appenddirname AOF文件目录。新增参数，指定aof日志的文件目录。 实际目录是 {dir}+{appenddirname}
+
+5> auto-aof-rewrite-percentage, auto-aof-rewrite-min-size 文件重写触发策略。默认每个文件64M， 写到100%，进行一次重写。
+
+> Redis会定期对AOF中的操作进行优化重写，让AOF中的操作更为精简。例如将多个INCR指令，合并成一个SET指令。同时，在Redis7的AOF文件中，会生成新的base rdb文件和incr.aof文件。
+>
+> AOF重写也可以通过指令 BGREWRITEAOF 手动触发
+
+6> no-appendfsync-on-rewrite aof重写期间是否同步
+
+&#x9;**3、AOF文件内容解析**
+
+&#x9;示例：打开aof配置，aof日志文件appendonly.aof。然后使用redis-cli连接redis服务，简单执行两个set操作。
+
+```shell
+[root@192-168-65-214 myredis]# redis-cli -a 123qweasd
+Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+127.0.0.1:6379> keys *
+(empty array)
+127.0.0.1:6379> set k1 v1
+OK
+127.0.0.1:6379> set k2 v2
+OK
+```
+
+&#x9;然后，就可以打开appendonly.aof.1.incr.aof增量文件。里面其实就是按照Redis的协议记录了每一次操作。
+
+![](assets/data_security_analysis/02.png)
+
+&#x9;这就是redis的指令协议。redis就是通过TCP协议，一次次解析各个指令。比如一个set k1 v1 这样的指令，\*3表示由三个部分组成， 第一个部分 \$3 set 表示三个字符长度的set组成第一个部分。
+
+&#x9;了解这个协议后，你甚至可以很轻松的自己写一个Redis的客户端。例如：
+
+```java
+package com.roy.redis;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
+/**
+ * Author： roy
+ * Description：
+ **/
+public class MyRedisClient {
+
+    OutputStream write;
+    InputStream reader;
+
+    public MyRedisClient(String host,int port) throws IOException {
+        Socket socket = new Socket(host,port);
+        write = socket.getOutputStream();
+        reader = socket.getInputStream();
+
+    }
+	//auth 123qweasd
+    public String auth(String password){
+        //1 组装报文
+        StringBuffer command = new StringBuffer();
+        command.append("*2").append("\r\n");//参数数量
+        command.append("$4").append("\r\n");//第一个参数长度
+        command.append("AUTH").append("\r\n");//第一个参数值
+        //socket编程需要关注二进制长度。
+        command.append("$").append(password.getBytes().length).append("\r\n");//第二个参数长度
+        command.append(password).append("\r\n");//第二个参数值
+
+        //2 发送报文到
+        try {
+            write.write(command.toString().getBytes());
+            //3 接收redis响应
+            byte[] response = new byte[1024];
+            reader.read(response);
+            return new String(response);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    //set k4 v4
+    public String set(String key, String value){
+        //1 组装报文
+        StringBuffer command = new StringBuffer();
+        command.append("*3").append("\r\n");//参数数量
+        command.append("$3").append("\r\n");//第一个参数长度
+        command.append("SET").append("\r\n");//第一个参数值
+        //socket编程需要关注二进制长度。
+        command.append("$").append(key.getBytes().length).append("\r\n");//第二个参数长度
+        command.append(key).append("\r\n");//第二个参数值
+
+        command.append("$").append(value.getBytes().length).append("\r\n");//第三个参数长度
+        command.append(value).append("\r\n");//第三个参数值
+        //2 发送报文到
+        try {
+            write.write(command.toString().getBytes());
+            //3 接收redis响应
+            byte[] response = new byte[1024];
+            reader.read(response);
+            return new String(response);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        MyRedisClient client = new MyRedisClient("192.168.65.214",6379);
+        System.out.println(client.auth("123qweasd"));
+        System.out.println(client.set("test","test"));
+    }
+}
+
+```
+
+**4、AOF日志恢复**
+
+&#x9;如果Redis服务出现一些意外情况，就会造成AOF日志中指令记录不完整。例如，手动编辑appendonly.aof.1.incr.aof日志文件，在最后随便输入一段文字，就可以模拟指令记录不完整的情况。这时，将Redis服务重启，就会发现重启失败。日志文件中会有如下错误日志：
+
+```log
+21773:M 11 Jun 2024 18:22:43.928 * DB loaded from base file appendonly.aof.1.base.rdb: 0.019 seconds
+21773:M 11 Jun 2024 18:22:43.928 # Bad file format reading the append only file appendonly.aof.1.incr.aof: make a backup of your AOF file, then use ./redis-check-aof --fix <filename.manifest>
+```
+
+> 需要配置日志文件，例如： logfile "/root/myredis/logs/6379.log"
+
+&#x9;这时就需要先将日志文件修复，然后才能启动。
+
+```shell
+[root@192-168-65-214 appendonlydir]# redis-check-aof --fix appendonly.aof.1.incr.aof 
+Start checking Old-Style AOF
+AOF appendonly.aof.1.incr.aof format error
+AOF analyzed: filename=appendonly.aof.1.incr.aof, size=132, ok_up_to=114, ok_up_to_line=27, diff=18
+This will shrink the AOF appendonly.aof.1.incr.aof from 132 bytes, with 18 bytes, to 114 bytes
+Continue? [y/N]: y
+Successfully truncated AOF appendonly.aof.1.incr.aof
+
+--修复的过程实际上就是将最后那一条指令删除掉。
+```
+
+> 注，对于RDB文件，Redis同样提供了修复指令redis-check-rdb，但是，由于RDB是二进制压缩文件，一般不太可能被篡改，所以一般用得并不太多。
+
