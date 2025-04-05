@@ -578,3 +578,23 @@ replica-read-only yes
 &#x9;在主从复制集群中，不管~~master~~是谁，所有的数据都以master为主。当master宕机后，那些在master上已经完成了，但是还没有同步给其他slave的操作，就会彻底丢失。因为只要master一完成了切换，所有数据就以新的master为准了。
 
 &#x9;因此，在企业实际运用中，用得更多的是下面的Redis集群服务。
+
+# 五、Redis集群Cluster机制详解
+
+## 1、Cluster是什么？有什么用？
+
+&#x9;官网地址：<https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/>
+
+&#x9;一句话总结：将多组Redis Replica主从集群整合到一起，像一个Redis服务一样对外提供服务。
+
+&#x9;![](assets/data_security_analysis/08.png)
+
+&#x9;所以Redis Cluster的核心依然是Replica复制集。
+
+&#x9;**Redis Cluster通过对复制集进行合理整合后，核心是要解决三个问题：**
+
+- **客户端需要频繁切换master的问题**
+
+- **服务端数据量太大后，单个复制集难以承担的问题**
+
+- **master节点挂了之后，主动将slave切换成master，保证服务稳定**
