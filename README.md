@@ -2,6 +2,12 @@
 
 ## Java基础
 * [Java基础1](https://github.com/CoderLiLe/hello-java/blob/main/docs/java_base/Java%E5%9F%BA%E7%A1%801.md)
+* [Java概述和环境搭建](docs/java_se/01java_summary.md)
+* [Java语言基础语法](docs/java_se/02base_grammar.md)
+* [流程控制](docs/java_se/03flow_control.md)
+* [静态方法](docs/java_se/04static_method.md)
+* [数组](docs/java_se/06array.md)
+* [初识面向对象](docs/java_se/07OOP.md)
 
 ## 集合
 
@@ -79,7 +85,7 @@
 
 ## 微服务
 
-###  Nacos
+### Nacos
 
 
 
