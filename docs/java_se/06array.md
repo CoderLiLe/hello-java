@@ -1,12 +1,30 @@
+# 数组
+
+- [1 数组的概念](#1-数组的概念)
+- [2 数组的定义](#2-数组的定义)
+- [3 数组的使用](#3-数组的使用)
+- [4 数组的遍历](#4-数组的遍历)
+- [5 数组的属性](#5-数组的属性)
+- [6 数组的默认值](#6-数组的默认值)
+- [7 数组的扩容](#7-数组的扩容)
+- [8 数组的复制](#8-数组的复制)
+- [9 练习](#9-练习)
+- [10 面试题](#10-面试题)
+- [11 可变长参数](#11-可变长参数)
+- [12 数组排序](#12-数组排序)
+  - [12.1 冒泡排序](#121-冒泡排序)
+  - [12.2 选择排序](#122-选择排序)
+- [13 Arrays工具类](#13-arrays工具类)
+- [14 数组插入元素](#14-数组插入元素)
+- [15 数组删除元素](#15-数组删除元素)
+- [16 二维数组](#16-二维数组)
 
 
-## 数组
-
-### 1.数组的概念
+## 1 数组的概念
 
 > 概念：一组`连续`的存储空间，存储多个`相同`数据类型的值，长度是`固定`的。
 
-### 2. 数组的定义
+## 2 数组的定义
 
 > 先声明、再分配空间：
 > 数据类型[] 数组名;
@@ -16,18 +34,13 @@
 > 数据类型[] 数组名 = new 数据类型[长度];
 >
 > 声明并赋值（繁）：
-> 数据类型[] 数组名 = new 数据类型[]{value1,value2,value3,...};
+> 数据类型[] 数组名 = new 数据类型[]{value1, value2, value3, ...};
 >
 > 声明并赋值（简）：
-> 数据类型[] 数组名 = {value1,value2,value3,...}; 
+> 数据类型[] 数组名 = {value1, value2, value3, ...}; 
 
 ```java
-package com.atguigu.test2;
-
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 10:37
  *  数组的定义：四种方式
  *  小细节：声明数组的中括号通常写在类型之后 数组名之前 也可以写在 数组名之后
  */
@@ -49,16 +62,13 @@ public class TestArrayDefine {
 }
 ```
 
-### 3. 数组的使用
+## 3 数组的使用
 
 > 数组的元素：数组中的每个数据称之为数组中的元素
 >
->
 > 数组的访问：对数组中的元素赋值以及取值的操作 统称为数组的访问
 >
->
 > 下标、索引、角标、index ： 下标自动生成 从0开始 往后依次+1
->
 >
 > 访问数组通过下标访问：
 >
@@ -66,34 +76,13 @@ public class TestArrayDefine {
 >
 > 取值  System.out.println(数组名[下标]);
 >
->
 > 访问不存在的下标 将会导致数组下标越界异常  ArrayIndexOutOfBoundsException
 
 ```java
-package com.atguigu.test3;
-
-import java.util.Scanner;
-
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 11:01
- *  数组的元素：数组中的每个数据称之为数组中的元素
- *
- *  数组的访问：对数组中的元素赋值以及取值的操作 统称为数组的访问
- *
- *  下标、索引、角标、index ： 下标自动生成 从0开始 往后依次+1
- *
- *  访问数组通过下标访问：
- *      赋值  数组名[下标] = 值;
- *      取值  System.out.println(数组名[下标]);
- *
- *  访问不存在的下标 将会导致数组下标越界异常  ArrayIndexOutOfBoundsException
- *
  * ctrl + d 赋值当前行
  */
 public class TestArrayUse {
-
     public static void main(String[] args) {
         int [] arr1 = new int[5];
         // 赋值
@@ -111,29 +100,15 @@ public class TestArrayUse {
         System.out.println(arr1[3]);
         System.out.println(arr1[4]);
 //        System.out.println(arr1[5]);
-
-
-
     }
-
 }
 ```
 
-### 4. 数组的遍历
+## 4 数组的遍历
 
 > 数组的遍历：逐一对数组中的元素进行访问 称之为数组的遍历
 
 ```java
-package com.atguigu.test3;
-
-import java.util.Scanner;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 11:13
- *  数组的遍历：逐一对数组中的元素进行访问 称之为数组的遍历
- */
 public class TestArrayForeach {
     public static void main(String[] args) {
         int [] nums = new int[5];
@@ -149,14 +124,11 @@ public class TestArrayForeach {
         System.out.println("---------------------------------------------------");
 
         // 使用for循环获取数组的元素
-        for(int i = 0;i < 5;i++){
+        for(int i = 0; i < 5; i++){
             System.out.println("第" + (i + 1) + "个元素的值为" + nums[i]);
         }
 
         System.out.println("程序结束");
-
-
-
     }
 }
 
@@ -164,29 +136,20 @@ public class TestArrayForeach {
 
 
 
-### 5.数组的属性
+## 5 数组的属性
 
 > 数组的属性：length属性 表示数组的长度 是一个int类型的整数 可以通过数组名.length获取
 
 ```java
-package com.atguigu.test3;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 11:17
- *  数组的属性：length属性 表示数组的长度 是一个int类型的整数 可以通过数组名.length获取
- */
 public class TestArrayField {
     public static void main(String[] args) {
-        int [] arr1 = {454,8,2,655,54};
+        int [] arr1 = {454, 8, 2, 655, 54};
 
         System.out.println(arr1.length);
 
-        for(int i = 0;i < arr1.length;i++){
+        for(int i = 0; i < arr1.length; i++){
             System.out.println(arr1[i]);
         }
-
     }
 }
 
@@ -194,7 +157,7 @@ public class TestArrayField {
 
 
 
-### 6.数组的默认值
+## 6 数组的默认值
 
 > 数组的默认值：数组作为引用数据类型 其元素是有默认值的 当我们给数组开辟空间以后 默认值即存在
 >
@@ -216,26 +179,6 @@ public class TestArrayField {
 > Arrays.toString(数组名) : 将数组中的元素转换为字符串 返回
 
 ```java
-package com.atguigu.test3;
-
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 11:22
- *  数组的默认值：数组作为引用数据类型 其元素是有默认值的 当我们给数组开辟空间以后 默认值即存在
- *  整数：0
- *  浮点：0.0
- *  字符：\u0000
- *  布尔：false
- *  其他：null (空)
- *
- *  JDK提供了一个用于操作数组的工具类 java.util.Arrays
- *  此类中提供大量的用于操作数组的各种方法
- *  Arrays.toString(数组名) : 将数组中的元素转换为字符串 返回
- *
- */
 public class TestArrayDefaultValue {
     public static void main(String[] args) {
         byte [] arr1 = new byte[3];
@@ -276,8 +219,6 @@ public class TestArrayDefaultValue {
         String [] arr9 = new String[2];
 
         System.out.println(Arrays.toString(arr9));
-
-
     }
 }
 
@@ -285,50 +226,28 @@ public class TestArrayDefaultValue {
 
 
 
-### 7.数组的扩容
+## 7 数组的扩容
 
 > 数组的扩容：
 >
 > 实现步骤：
 >
-> ​	1.创建比原数组更长的新数组
->
-> ​	2.将原数组中的元素依次复制到新数组中
->
-> ​	3.将新数组的地址赋值给原数组
->
->
+> - 1.创建比原数组更长的新数组- 
+> - 2.将原数组中的元素依次复制到新数组中- 
+> - 3.将新数组的地址赋值给原数组
 >
 > 数组作为引用数据类型 其数组名中保存的是指向堆中的地址
->  所以 当我们把一个数组 赋值 给 另外一个数组   `赋值的是地址`
+>  所以 当我们把一个数组 赋值 给 另外一个数组 `赋值的是地址`
 
-
-
-![](img/地址的替换.png)
 
 ```java
-package com.atguigu.test4;
-
-
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 13:59
- *  数组的扩容：
- *  实现步骤：
- *      1.创建比原数组更长的新数组
- *      2.将原数组中的元素依次复制到新数组中
- *      3.将新数组的地址赋值给原数组
- */
 public class TestArrayGrow {
     public static void main(String[] args) {
         int [] oldArr = {1,2,3,4,5};
 
         int [] newArr = new int[oldArr.length * 2];
 
-        for(int i = 0;i < oldArr.length ;i++){
+        for(int i = 0; i < oldArr.length; i++){
             newArr[i] = oldArr[i];
         }
 
@@ -360,31 +279,15 @@ public class TestArrayGrow {
 
 ```
 
-### 8.数组的复制
+## 8 数组的复制
 
 > 复制数组的三种方式：
 >
-> ​	循环将原数组中所有元素逐一赋值给新数组。
->
-> ​	System.arraycopy(原数组,原数组起始,新数组,新数组起始,长度);
->
-> ​	java.util.Arrays.copyOf(原数组, 新长度);//返回带有原值的新数组。
+> - 循环将原数组中所有元素逐一赋值给新数组。
+> - System.arraycopy(原数组,原数组起始,新数组,新数组起始,长度);
+> - java.util.Arrays.copyOf(原数组, 新长度);//返回带有原值的新数组。
 
 ```java
-package com.atguigu.test4;
-
-import java.sql.SQLOutput;
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 14:23
- *  复制数组的三种方式：
- *      循环将原数组中所有元素逐一赋值给新数组。
- *      System.arraycopy(原数组,原数组起始,新数组,新数组起始,长度);
- *      java.util.Arrays.copyOf(原数组, 新长度);//返回带有原值的新数组。
- */
 public class TestArrayCopy {
     public static void main(String[] args) {
         int [] oldArr = {1,2,3,4,5};
@@ -408,20 +311,11 @@ public class TestArrayCopy {
 }
 ```
 
-### 9. 课堂练习
-
-> 数组课堂练习1： 统计int类型数组中所有元素的总和，平均值。
+## 9 练习
 
 ```java
-package com.atguigu.test5;
-
-import java.util.Scanner;
-
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 15:12
- *  数组课堂练习1： 统计int类型数组中所有元素的总和，平均值。
+ *  数组练习1： 统计int类型数组中所有元素的总和，平均值。
  */
 public class TestArrayExercise1 {
     public static void main(String[] args) {
@@ -430,7 +324,7 @@ public class TestArrayExercise1 {
         int length = input.nextInt();
         int [] nums = new int[length];
         int sum = 0;
-        for(int i =0;i < nums.length;i++){
+        for(int i =0; i < nums.length; i++){
             System.out.println("请输入第" + (i + 1) + "个元素的值");
             nums[i] = input.nextInt();
 
@@ -439,26 +333,15 @@ public class TestArrayExercise1 {
 
         System.out.println("数组的元素总和为：" + sum);
         System.out.println("数组的平均值为：" + sum / nums.length);
-
     }
 }
 
 ```
 
-> 数组课堂练习2：求一个数组中的最大值，或者最小值。
->
-> 分析：先假设一个最大值/最小值 依次与其他元素进行比较 如果遇到更大的/更小的 就交换
->
-> 头衔
 
 ```java
-package com.atguigu.test5;
-
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 15:16
- *  数组课堂练习2：求一个数组中的最大值，或者最小值。
+ *  数组练习2：求一个数组中的最大值，或者最小值。
  *  分析：先假设一个最大值/最小值 依次与其他元素进行比较 如果遇到更大的/更小的 就交换
  *  头衔
  */
@@ -472,7 +355,7 @@ public class TestArrayExercise2 {
 
         // 逐一跟后续的元素进行比较
         // 因为我们假设的元素下标为0  所以比较元素下标从1 开始 因为 不需要自己跟自己比了
-        for(int i = 1;i < nums.length;i++){
+        for(int i = 1; i < nums.length; i++){
             if(max < nums[i]){ // 如果遇到了更大的元素 则交换'最大元素' 头衔
                 max = nums[i]; // 交换
             }
@@ -483,15 +366,14 @@ public class TestArrayExercise2 {
         }
         System.out.println("最大的元素为：" + max);
         System.out.println("最小的元素为：" + min);
-
     }
 }
 
 ```
 
-### 10. 面试题
+## 10 面试题
 
->  值传递和引用传递的区别？
+> 值传递和引用传递的区别？
 >
 > Java官方明确指出 Java中只有值传递
 >
@@ -502,20 +384,6 @@ public class TestArrayExercise2 {
 > String类型是特殊的引用数据类型 作为参数不会影响原变量 因为String是不可变 
 
 ```java
-package com.atguigu.test6;
-
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 15:36
- *  值传递和引用传递的区别？
- *  Java官方明确指出 Java中只有值传递
- *  基本数据类型属于'值传递',传递的就是值的副本，值的拷贝,在方法中对参数的修改不会影响原变量
- *  引用数据类型属于'引用传递' 传递的是地址，也就是引用,在方法中对参数的修改会影响原变量
- *  String类型是特殊的引用数据类型 作为参数不会影响原变量 因为String是不可变 
- */
 public class TestArrayInterView {
     public static void m1(int num){
         num++;
@@ -536,82 +404,53 @@ public class TestArrayInterView {
         System.out.println("b = " + b);
         System.out.println(Arrays.toString(b)); // 2,3,4,5,6
     }
-
-
 }
 
 ```
 
-### 11.可变长参数
+## 11 可变长参数
 
 > 可变长参数：可接收多个同类型实参，个数不限，使用方式与数组相同。
 >
 > 要求：
 >
-> 1.整个形参列表中只能有一个可变长参数
->
-> 2.必须书写在形参列表的末尾
+> - 1.整个形参列表中只能有一个可变长参数
+> - 2.必须书写在形参列表的末尾
 >
 > 格式：数据类型...参数名
 
 ```java
-package com.atguigu.test6;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/2 15:54
- *  可变长参数：可接收多个同类型实参，个数不限，使用方式与数组相同。
- *  要求：
- *      1.整个形参列表中只能有一个可变长参数
- *      2.必须书写在形参列表的末尾
- *  格式：数据类型...参数名
- */
 public class TestChangedParam {
     public static void m1(int ... args){
         System.out.println("m1方法开始执行");
-        for(int i =0;i < args.length;i++){
+        for(int i = 0; i < args.length; i++){
             System.out.println(args[i]);
         }
         System.out.println("m1方法执行完毕");
     }
     public static void m2(int [] args){
         System.out.println("m2方法开始执行");
-        for(int i =0;i < args.length;i++){
+        for(int i = 0; i < args.length; i++){
             System.out.println(args[i]);
         }
         System.out.println("m2方法执行完毕");
     }
     public static void main(String[] args) {
-        m1(1,2,3,4,5,6);
+        m1(1, 2, 3, 4, 5, 6);
 
         int [] nums = new int[4];
         m2(nums);
 
     }
-
-
 }
 
 ```
 
-### 12. 冒泡排序
-
-![]()
-
-![](img/冒泡排序.png)
-
-![](img/冒泡排序1.gif)
+## 12 数组排序
+### 12.1 冒泡排序
 
 ```java
-package com.atguigu.test1;
-
-import java.util.Arrays;
-
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 9:16
  *  冒泡排序：相邻的两个元素比较大小 条件成立 则交换位置 直到数列排列正确
  *
  *  比较的轮数为：n - 1
@@ -619,13 +458,12 @@ import java.util.Arrays;
  *
  *  外层循环控制比较的轮数：n - 1
  *  内存循环控制每一轮比较的次数：n - 1 - i
- *
  */
 public class TestBubbleSort {
     public static void main(String[] args) {
-        int [] nums = {562,451,110,23,45,85,96,666};
-        for(int i = 0;i < nums.length - 1;i++){ // 行数 即 轮数
-            for(int j = 0;j < nums.length - 1 - i;j++){// 列数 即 比较的次数
+        int [] nums = {562, 451, 110, 23, 45, 85, 96, 666};
+        for(int i = 0; i < nums.length - 1; i++){ // 行数 即 轮数
+            for(int j = 0; j < nums.length - 1 - i; j++){// 列数 即 比较的次数
                 if(nums[j] < nums[j + 1]){
                     // 交换元素写法固定规律：上一行的等号右边的值 在下一行 直接写在等号左边 等待被覆盖
                     int temp = nums[j];
@@ -641,23 +479,10 @@ public class TestBubbleSort {
 
 ```
 
-### 13.选择排序
-
-![](img/选择排序.png)
-
-![](img/选择排序2.gif)
+### 12.2 选择排序
 
 ```java
-package test2;
-
-import java.util.Arrays;
-
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 10:14
- *
- *
  *  选择排序：固定位置的元素与其他元素依次比较大小，遇到需要交换位置的元素，先不交换，
  *  使用应该被交换位置的元素继续往后比较，等待一轮比较完成，统一交换一次位置。
  *
@@ -672,13 +497,13 @@ import java.util.Arrays;
  */
 public class TestChoiceSort {
     public static void main(String[] args) {
-        int [] nums = {-2,562,-1,451,110,23,45,85,96,666};
+        int [] nums = {-2, 562, -1, 451, 110, 23, 45, 85, 96, 666};
 
         int count = 0;
 
-        for(int i = 0;i < nums.length -1;i++){ // A
+        for(int i = 0; i < nums.length -1; i++){ // A
             int moveIndex = i; // 定义moveIndex 表示为需要最终交换位置的下标
-            for(int j = i + 1; j < nums.length;j++){ // B
+            for(int j = i + 1; j < nums.length; j++){ // B
                 if(nums[moveIndex] < nums[j]){
                     moveIndex = j;
                 }
@@ -688,7 +513,7 @@ public class TestChoiceSort {
             // 而条件成立 则表示有需要交换位置的元素
             // 最终将moveIndex 和 i 对应位置的元素进行交换 因为
             // i 表示每一轮的第一个元素 而moveIndex最终将停留在最大/最小的元素
-            if(moveIndex != i){
+            if (moveIndex != i){
                 int temp = nums[i];
                 nums[i] = nums[moveIndex];
                 nums[moveIndex] = temp;
@@ -702,7 +527,7 @@ public class TestChoiceSort {
 }
 ```
 
-### 14. Arrays工具类
+## 13 Arrays工具类
 
 > java.util.Arrays 是JDK提供的一个用于操作数组的工具类  
 >
@@ -717,20 +542,6 @@ public class TestChoiceSort {
 > binarySearch(数组名,元素) : 使用二分查找法查找某个元素在数组中的下标
 
 ```java
-package com.atguigu.test3;
-
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 14:05
- *  toString(数组名) : 将数组中的元素转换为字符串
- *  copyOf(数组名,新长度) : 复制数组
- *  sort(数组名) : 将数组按照升序排序
- *  fill(数组名,填充元素) : 将数组按照指定元素进行填充
- *  binarySearch(数组名,元素) : 使用二分查找法查找某个元素在数组中的下标
- */
 public class TestArrays {
     public static void main(String[] args) {
         int [] nums = {56,12,22,41,85,99};
@@ -741,50 +552,32 @@ public class TestArrays {
 
         int [] newArr = new int[nums.length];
 
-        for(int i = 0,j = nums.length -1;i < nums.length;i++,j--){
+        for(int i = 0, j = nums.length -1; i < nums.length; i++, j--){
             newArr[i] = nums[j];
         }
 
         System.out.println(Arrays.toString(newArr));
-
         System.out.println("--------------------------------------------");
-
         Arrays.fill(newArr, 666);
-
         System.out.println(Arrays.toString(newArr));
-
         System.out.println("--------------------------------------------");
-
         int index = Arrays.binarySearch(nums, 999);
-
         System.out.println("index = " + index);
-
     }
 }
 
 ```
 
-### 15. 数组插入元素
+## 14 数组插入元素
 
 > 编写方法实现在数组中插入元素
 >
 > 扩展：可以使用System.arraycopy方法 实现插入效果
 
 ```java
-package com.atguigu.test3;
-
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 14:16
- *  编写方法实现在数组中插入元素
- *  扩展：可以使用System.arraycopy方法 实现插入效果
- */
 public class TestArrayInsert {
     public static void main(String[] args) {
-        int [] nums = {1,2,3,4,5};
+        int [] nums = {1, 2, 3, 4, 5};
         int[] newArray = insert(nums, -8, 666);
         System.out.println(Arrays.toString(newArray));
     }
@@ -808,11 +601,11 @@ public class TestArrayInsert {
         int [] newArray = new  int[oldArray.length + 1];
 
         // 遍历开始移动元素
-        for(int i = 0;i < oldArray.length;i++){
+        for(int i = 0; i < oldArray.length; i++){
             // 情况1 小于插入下标 则直接复制到新数组中
-            if(i < index){
+            if (i < index) {
                 newArray[i] = oldArray[i];
-            }else{ // 情况2  大于或者等于插入下标 则移动到新数组的+1位置
+            } else { // 情况2  大于或者等于插入下标 则移动到新数组的+1位置
                 newArray[i + 1] = oldArray[i];
             }
         }
@@ -824,24 +617,13 @@ public class TestArrayInsert {
 
 ```
 
-### 16.数组删除元素
+## 15 数组删除元素
 
 > 编写方法实现删除数组中的元素
 >
 > 扩展：可以使用System.arraycopy方法 实现删除效果
 
 ````java
-package com.atguigu.test3;
-
-import java.util.Arrays;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 14:31
- *  编写方法实现删除数组中的元素
- *  扩展：可以使用System.arraycopy方法 实现删除效果
- */
 public class TestArrayDelete {
     public static int[] delete(int [] oldArray,int index){
         // 判断下标 如果小于0 或者 大于等于数组长度 表示不合法 因为删除 只能删除有效范围以内的
@@ -853,10 +635,10 @@ public class TestArrayDelete {
         // 准备一个长度-1的数组 用于删除之后复制元素
         int [] newArray = new int[oldArray.length - 1];
         // 循环遍历开始复制元素
-        for(int i = 0;i < newArray.length;i++){
-            if(i < index){ // 情况1 小于删除的下标 直接复制
+        for(int i = 0; i < newArray.length; i++){
+            if (i < index) { // 情况1 小于删除的下标 直接复制
                 newArray[i] = oldArray[i];
-            }else{ // 情况2 大于等于删除下标 则直接将原数组的+1位置 移动到新数组的后续位置 属于向左移动覆盖
+            } else { // 情况2 大于等于删除下标 则直接将原数组的+1位置 移动到新数组的后续位置 属于向左移动覆盖
                 newArray[i] = oldArray[i +1];
             }
         }
@@ -872,19 +654,11 @@ public class TestArrayDelete {
 }
 ````
 
-### 17.二维数组
+## 16 二维数组
 
 > 二维数组：数组中的元素还是数组
 
 ```java
-package com.atguigu.test3;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 15:30
- *  二维数组：数组中的元素还是数组
- */
 public class Test2DArray {
     public static void main(String[] args) {
         int [] arr1 = {1,2,3,4,5};
@@ -914,13 +688,10 @@ public class Test2DArray {
             }
             System.out.println();
         }
-
-
     }
 }
 
 ```
-
 
 
 > 二维数组定义：和一维数组定义方式大致相同
@@ -928,15 +699,6 @@ public class Test2DArray {
 > 二维开辟空间 高维度(第一个中括号)长度必须指定 低维度(第二个中括号)长度可以后续单独指定
 
 ```java
-package com.atguigu.test3;
-
-/**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 15:38
- *  二维数组定义：和一维数组定义方式大致相同
- *  二维开辟空间 高维度(第一个中括号)长度必须指定 低维度(第二个中括号)长度可以后续单独指定
- */
 public class Test2DArrayDefine {
     public static void main(String[] args) {
         // 方式1
@@ -963,16 +725,10 @@ public class Test2DArrayDefine {
 
 
         // 方式3
-        int [][] arr3 = new int[][]{{1},{22,33,44},{55,55,666}};
+        int [][] arr3 = new int[][]{{1}, {22, 33, 44}, {55, 55, 666}};
 
         // 方式4
-        int [][] arr4 = {{1},{22,33,44},{55,55,666}};
-
-
-
-
-
-
+        int [][] arr4 = {{1}, {22, 33, 44}, {55, 55, 666}};
     }
 }
 
@@ -984,9 +740,6 @@ public class Test2DArrayDefine {
 package com.atguigu.test3;
 
 /**
- * @author WHD
- * @description TODO
- * @date 2023/8/4 15:47
  *  杨辉三角
  *  1
  *  1   1
@@ -998,21 +751,21 @@ package com.atguigu.test3;
 public class TestYangHuiTriangle {
     public static void main(String[] args) {
         int [][] yh = new int[6][6];
-        for(int i = 0;i < yh.length;i++){
+        for(int i = 0; i < yh.length; i++){
             yh[i][0] = 1; // 每一行的第一列为1
             yh[i][i] = 1;
 
-            if(i > 1){ // 表示从第3行开始 赋值有具体的计算
-                for(int j = 1;j < i;j++){ // 因为每一行的第一列 和 最后一列都有值了 为0  所以 我们只需要赋值中间的元素
+            if (i > 1) { // 表示从第3行开始 赋值有具体的计算
+                for(int j = 1; j < i; j++){ // 因为每一行的第一列 和 最后一列都有值了 为0  所以 我们只需要赋值中间的元素
                     yh[i][j] = yh[i -1][j] + yh[i -1][j -1];
                 }
             }
         }
-        for(int i = 0;i < yh.length;i++){
-            for(int j = 6;j >= i;j--){
+        for(int i = 0; i < yh.length; i++){
+            for(int j = 6; j >= i; j--){
                 System.out.print(" ");
             }
-            for(int j = 0;j <= i;j++){
+            for(int j = 0; j <= i; j++){
                 System.out.print(yh[i][j] + " ");
             }
             System.out.println();
