@@ -1,890 +1,627 @@
-# 抽象类和接口
+# 多态
+
+- [1.多态概念](#1多态概念)
+- [2. 向上转型](#2-向上转型)
+  - [2.1 情况1](#21-情况1)
+  - [2.2 情况2](#22-情况2)
+  - [2.3 情况3](#23-情况3)
+- [3. 向下转型](#3-向下转型)
+- [4. 多态补充](#4-多态补充)
+- [5. 多态实现原理](#5-多态实现原理)
+- [6. java命令](#6-java命令)
 
 
-- [1. 抽象类](#1-抽象类)
-- [2. 抽象类实现多态](#2-抽象类实现多态)
-- [3. final关键字](#3-final关键字)
-  - [3.1 修饰属性](#31-修饰属性)
-  - [3.2 修饰方法](#32-修饰方法)
-  - [3.3 修饰类](#33-修饰类)
-- [4. 接口](#4-接口)
-- [5. 接口实现手机](#5-接口实现手机)
-- [6. 接口实现打印机](#6-接口实现打印机)
-- [7. 接口和抽象类](#7-接口和抽象类)
+## 1.多态概念
 
-
-## 1. 抽象类
-
-> 1.抽象方法没有方法体 必须存在于抽象类 均使用abstract修饰
+> 多态：
 >
-> 2.抽象类不能直接new对象 必须通过new子类的方式创建对象(多态向上转型)
+> 同一个事物，因为环境不同，产生不同的效果
 >
-> 3.子类必须重写抽象类中的所有抽象方法 除非子类也是抽象类
+> 同一个引用类型，使用不同的实例而执行不同操作(父类引用指向子类对象)
+
+## 2. 向上转型
+
+> 父类引用指向子类对象属于向上转型，此时通过父类引用，
 >
-> 4.抽象类中可以书写普通属性 普通方法 静态方法 构造方法
->
-> 5.抽象类作为父类 实现多态的方式与之前一致
+> 可以访问的是子类重写或者继承父类的方法 不能访问子类独有的方法
+
+### 2.1 情况1
+
+> 1.父类作为形参，子类作为实参
 
 ```java
-/**
- *  动物类
- *  abstract ： 抽象
- */
-public abstract class Animal {
-    // 属性
-    private String animalType;
+package com.atguigu.test4;
 
-    public String getAnimalType() {
-        return animalType;
-    }
-
-    public void setAnimalType(String animalType) {
-        this.animalType = animalType;
-    }
-
-    public Animal(String animalType) {
-        this.animalType = animalType;
-    }
-
-    public Animal() {
-    }
-
-    public static void m1(){
-        System.out.println("Animal类中的m1方法 ");
-    }
-
-    // 方法
-
-    /**
-     *  1.抽象方法没有方法体 必须存在于抽象类 均使用abstract修饰
-     *  2.抽象类不能直接new对象 必须通过new子类的方式创建对象(多态向上转型)
-     *  3.子类必须重写抽象类中的所有抽象方法 除非子类也是抽象类
-     *  4.抽象类中可以书写普通属性 普通方法 静态方法 构造方法
-     *  5.抽象类作为父类 实现多态的方式与之前一致
-     */
-    public abstract void eat();
-}
-```
-
-```java
-public class Tiger extends Animal{
-    @Override
-    public void eat() {
-        System.out.println("老虎吃肉");
-    }
-}
-```
-
-```java
-public abstract class Pet extends Animal{
-
-    public abstract void playWithMaster();
-
-}
-```
-
-```java
-public class Dog extends Pet{
-    @Override
-    public void eat() {
-        System.out.println("狗狗吃骨头");
-    }
-
-    @Override
-    public void playWithMaster() {
-        System.out.println("狗狗和主人玩飞盘");
-    }
-}
-```
-
-```java
-/**
- *  类是对象的抽象
- *  对象是类的具体
- */
-public class TestAnimal {
-    public static void main(String[] args) {
-        Animal tiger = new Tiger();
-        tiger.eat();
-
-        Animal dog1 = new Dog();
-        dog1.eat();
-
-        Pet dog2 = new Dog();
-        dog2.eat();
-        dog2.playWithMaster();
-    }
-}
-```
-
-## 2. 抽象类实现多态
-
-```java
-/**
- *  父类： 门
- *  子类：防盗门   普通门
- */
-public abstract class Door {
-    private String brand;
-    private double price;
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public abstract  void open();
-
-    public abstract void close();
-
-    public Door(String brand, double price) {
-        this.brand = brand;
-        this.price = price;
-    }
-
-    public Door() {
-    }
-}
-```
-
-```java
-public class CommonDoor extends Door{
-
-    @Override
-    public void open() {
-        System.out.println("普通门开门，插入钥匙，轻轻一转，zhi~ya一声，门开了");
-    }
-
-    @Override
-    public void close() {
-        System.out.println("普通门关门，随手关门，duang的一声，门关了");
-    }
-}
-```
-
-```java
-public class SecurityDoor extends Door{
-    private String password;
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public SecurityDoor(String brand, double price, String password) {
-        super(brand, price);
-        this.password = password;
-    }
-
-    public SecurityDoor() {
-
-    }
-
-    @Override
-    public void open() {
-        System.out.println("防盗门开门，输入密码，按下指纹，门自动打开");
-    }
-
-    @Override
-    public void close() {
-        System.out.println("防盗门关门，障碍物识别，自动关门");
-    }
-}
-```
-
-```java
-public class Person {
-    public void openCommonDoor(CommonDoor cd){
-        cd.open();
-    }
-
-    public void closeCommonDoor(CommonDoor cd){
-        cd.close();
-    }
-
-    public void openSecurityDoor(SecurityDoor sd){
-        sd.open();
-    }
-
-    public void closeSecurityDoor(SecurityDoor sd){
-        sd.close();
-    }
-    // 以上方式分别针对不同的门的种类编写了开和关的方法 如果后续有更多的门的种类
-    // 还需要继续编写更多的方法 这样设计不合理  不符合开闭原则
-    // -------------------------------------------------------------
-
-    public void openDoor(Door door){
-        door.open();
-    }
-
-    public void closeDoor(Door door){
-        door.close();
-    }
-
-    // -------------------------------------------------------------
-
-    public Door buyDoor(double money){
-        if(money > 300){
-            return new SecurityDoor();
-        }else{
-            return new CommonDoor();
-        }
-    }
-}
-```
-
-```java
-public class TestPerson {
-    public static void main(String[] args) {
-        Person person = new Person();
-
-        CommonDoor commonDoor = new CommonDoor();
-        commonDoor.setBrand("小金刚");
-        commonDoor.setPrice(200);
-
-        SecurityDoor securityDoor = new SecurityDoor();
-        securityDoor.setBrand("大金刚");
-        securityDoor.setPrice(500);
-
-        person.openDoor(commonDoor);
-        person.openDoor(securityDoor);
-
-        person.closeDoor(commonDoor);
-        person.closeDoor(securityDoor);
-
-        System.out.println("-------------------------------------------------------");
-
-        Door door = person.buyDoor(500);
-        door.open();
-        door.close();
-
-        System.out.println("-------------------------------------------------------");
-
-
-        Door [] doors = new Door[2];
-
-        doors[0] = new CommonDoor();
-        doors[1] = new SecurityDoor();
-    }
-}
-```
-
-## 3. final关键字
-
-### 3.1 修饰属性
-
-> final关键字：修饰属性、方法、类
-> 
-> 修饰属性：被final修饰的属性称之为常量 名称全部大写 多个单词之间使用下划线分割  常量只能被赋值一次
->
-> 通常(99%)在定义的时候赋值 或者 在构造方法中赋值 这两种方式都是为了保证在使用常量之前是有值的
->
-> 基本数据类型：值不能被改变
-> 
-> 引用数据类型：地址不能被改变 地址中的内容(属性)是可以改变
-
-```java
-public class TestFinalFiled {
-    final double PI = 3.14;
-    final int SEAT_COUNT;
-
-    final char [] SIGNS = new char[3];
-    public TestFinalFiled(){
-        SEAT_COUNT = 60;
-    }
-    public TestFinalFiled(double radius) {
-        SEAT_COUNT = 70;
-        this.radius = radius;
-    }
-
-    double radius;
-
-    public static void main(String[] args) {
-        TestFinalFiled testFinalFiled = new TestFinalFiled();
-//        testFinalFiled.pi = 3.24;
-        testFinalFiled.radius = 10;
-        System.out.println(testFinalFiled.radius * testFinalFiled.radius * testFinalFiled.PI);
-
-      // testFinalFiled.SIGNS = new char[2];
-
-        testFinalFiled.SIGNS[0] = 'a';
-        testFinalFiled.SIGNS[1] = 'b';
-        testFinalFiled.SIGNS[2] = 'c';
-    }
-}
-```
-
-> 被final修饰的属性称之为常量 表示其值或者地址不能被改变
->
-> 这样的数据通常也没有必要存在多份 所以实际开发中经常会用static final修饰不允许被改变的数据
->
-> 因为只有一份 且 数据无法改变 所以通常也会再加上public修饰 称之为：全局 静态 常量
->
->
-> 静态常量：通常在定义的时候赋值 或者 在静态代码块中赋值 这两种方式同样是为了保证在使用常量之前是有值的
-
-```java
-public class TestStaticFinalField {
-    public static final double PI = 3.14;
-
-    static final String COUNTRY_NAME;
-
-    static{
-        COUNTRY_NAME =   "中华人民共和国";
-    }
-
-    public TestStaticFinalField() {
-
-    }
-}
-```
-
-
-
-### 3.2 修饰方法
-
-> final修饰的方法不能被子类重写
-
-```java
-public class TestFinalMethod {
-}
-class A{
-    public final void m1(){
-        System.out.println("A类m1方法");
-    }
-
-    public void m2(){
-        System.out.println("A类m2方法");
-    }
-}
-
-class B extends A{
-    public void m2(){
-
-    }
-}
-```
-
-
-
-### 3.3 修饰类
-
-> 被final修饰的类不能被继承  String类就是使用final修饰的
-
-```java
-public class TestFinalClass {
-    public static void main(String[] args) {
-
-    }
-}
-
-final class C{
-
-}
-
-class D {
-
-}
-```
-
-
-
-## 4. 接口
-
-> 1.接口中的方法默认都为全局抽象方法 即不管是否书写均使用public abstract修饰
->
-> 2.接口不能直接new对象 必须通过new实现类(子类)的方式创建对象 (多态向上转型)
->
-> 3.实现类(子类)必须实现(重写)接口中的所有抽象方法 除非实现类是抽象类 或者 是 接口
->
-> 4.接口中不能书写普通属性、普通方法、构造方法、静态方法
->
-> 5.一个类只能继承一个父类  一个实现类可以实现多个接口 接口也可以继承多个接口
->
-> 6.接口实现多态的方式与之前一致
-
-> 面试题：Java支持多继承？
->
-> 不支持 但是可以使用接口继承多个接口的方式 实现类似多继承的效果
-
-```java
-/**
- *  面试题：Java支持多继承？
- *  不支持 但是可以使用接口继承多个接口的方式 实现类似多继承的效果
- */
-public interface USB {
-    int A = 100; // 默认为全局静态常量 不管是否书写 均使用public static final修饰
-
-    /**
-     *  1.接口中的方法默认都为全局抽象方法 即不管是否书写均使用public abstract修饰
-     *  2.接口不能直接new对象 必须通过new实现类(子类)的方式创建对象 (多态向上转型)
-     *  3.实现类(子类)必须实现(重写)接口中的所有抽象方法 除非实现类是抽象类 或者 是 接口
-     *  4.接口中不能书写普通属性、普通方法、构造方法、静态方法
-     *  5.一个类只能继承一个父类  一个实现类可以实现多个接口 接口也可以继承多个接口
-     *  6.接口实现多态的方式与之前一致
-     */
-    void connect();
-}
-```
-
-```java
-public class Mouse implements USB {
-    @Override
-    public void connect() {
-        System.out.println("鼠标连接USB接口，可以操作电脑了");
-    }
-}
-```
-
-```java
-public abstract class Converter implements  USB{
-    /**
-     *  转换方法 举例：网线转换器 需要执行转换功能  将水晶头网线转换为USB接口进行传输
-     */
-    public abstract void convert();
-}
-```
-
-```java
-public class UGreenConverter extends Converter{
-    @Override
-    public void convert() {
-        System.out.println("绿联转换器执行水晶头网络转换");
-    }
-
-    @Override
-    public void connect() {
-        System.out.println("绿联转换器连接USB接口");
-    }
-}
-```
-
-```java
-public class TestUSB {
-    public static void main(String[] args) {
-        USB usb = new Mouse();
-        usb.connect();
-
-        System.out.println("------------------------------------------------");
-
-        USB convert = new UGreenConverter();
-        convert.connect();
-        System.out.println("------------------------------------------------");
-        Converter converter = new UGreenConverter();
-        converter.connect();
-        converter.convert();
-    }
-}
-```
-
-## 5. 接口实现手机
-
-![](img/接口实现手机.png)
-
-> 接口是一种能力，实现一个接口，即表示具备一个能力，实现多个接口，即表示具备多个能力
->
-> 关心实现类有何能力，而不关心实现细节
->
-> 面向接口的约定而不考虑接口的具体实现 
-
-> 当前案例中，能不能将五个抽象方法全部书写在一个接口中呢？
->
-> 不推荐，不可以，因为如果书写在一个接口中，将增加程序的耦合性，即任何一个手机子类实现了这个接口，将必须重写这个五个抽象方法，即拥有五个功能，将不能根据市场需求灵活的生产不同档次的手机产品。
-
-```java
-/**
- *  手机类 父类
- *  属性：品牌 型号 价格
- *  方法：打电话 发短信
- */
-public abstract class Phone {
-    private String brand;
-    private String type;
-    private double price;
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public Phone() {
-
-    }
-
-    public Phone(String brand, String type, double price) {
-        this.brand = brand;
-        this.type = type;
-        this.price = price;
-    }
-
-    public abstract void call();
-
-    public abstract void sendMessage(String message);
-
-    @Override
-    public String toString() {
-        return "Phone{" +
-                "brand='" + brand + '\'' +
-                ", type='" + type + '\'' +
-                ", price=" + price +
-                '}';
-    }
-}
-```
-
-```java
-public class CommonPhone extends Phone implements NetWork,Audio,Game{
-    private String keyboardType;
-
-    public String getKeyboardType() {
-        return keyboardType;
-    }
-
-    public void setKeyboardType(String keyboardType) {
-        this.keyboardType = keyboardType;
-    }
-
-    public CommonPhone() {
-    }
-
-    public CommonPhone(String brand, String type, double price, String keyboardType) {
-        super(brand, type, price);
-        this.keyboardType = keyboardType;
-    }
-
-    @Override
-    public void call() {
-        System.out.println("普通手机打电话，按键拨号，体验还行");
-    }
-
-    @Override
-    public void sendMessage(String message) {
-        System.out.println("普通手机发短信，按键打字，体验一般：" + message);
-    }
-
-    @Override
-    public void playAudio(String audioName) {
-        System.out.println("普通手机播放音乐，音质感人：" + audioName);
-    }
-
-    @Override
-    public void playGame(String game) {
-        System.out.println("普通手机打游戏，体验一般：" + game);
-    }
-
-    @Override
-    public void connect() {
-        System.out.println("普通手机连接2G网络，体验很一般");
-    }
-}
-```
-
-```java
-/**
- *  智能手机
- */
-public class SmartPhone extends Phone implements NetWork,Video,Audio,Photo,Game{
-    private double screenSize;
-
-    public double getScreenSize() {
-        return screenSize;
-    }
-
-    public void setScreenSize(double screenSize) {
-        this.screenSize = screenSize;
-    }
-
-    public SmartPhone() {
-
-    }
-
-    public SmartPhone(String brand, String type, double price, double screenSize) {
-        super(brand, type, price);
-        this.screenSize = screenSize;
-    }
-
-    @Override
-    public void call() {
-        System.out.println("智能手机打电话，语音拨号，体验很不错");
-    }
-
-    @Override
-    public void sendMessage(String message) {
-        System.out.println("智能手机发短信，手写输入，体验很棒：" + message);
-    }
-
-    @Override
-    public void playAudio(String audioName) {
-        System.out.println("智能手机播放音频，音质很棒：" + audioName);
-    }
-
-    @Override
-    public void playGame(String game) {
-        System.out.println("智能手机打游戏，体验很丝滑：" + game);
-    }
-
-    @Override
-    public void connect() {
-        System.out.println("智能手机连接6G网络，飞一般的感觉");
-    }
-
-    @Override
-    public void takePhoto() {
-        System.out.println("智能拍照，1亿像素，咔嚓一下记录美好，记录你我");
-    }
-
-    @Override
-    public void playVideo(String videoName) {
-        System.out.println("智能手机播放视频，很清晰：" + videoName);
-    }
-}
-```
-
-```java
-/**
- *  播放音频接口
- */
-public interface Audio {
-    void playAudio(String audioName);
-}
-```
-
-```java
-/**
- *  打游戏接口
- */
-public interface Game {
-    void playGame(String game);
-}
-```
-
-```java
-/**
- *  联网接口
- */
-public interface NetWork {
-    void connect();
-}
-```
-
-```java
-/**
- *  拍照接口
- */
-public interface Photo {
-    void takePhoto();
-}
-```
-
-```java
-/**
- *  播放视频接口
- */
-public interface Video {
-    void playVideo(String videoName);
-}
-
-```
-
-```java
-public class TestPhone {
-    public static void main(String[] args) {
-        SmartPhone huawei = new SmartPhone("华为", "mate 50 PRO MAX PLUS", 9.9, 25);
-
-        huawei.connect();
-        huawei.call();
-        huawei.sendMessage("睡了吗？");
-        huawei.playVideo("《小猪佩奇成人版》");
-        huawei.playAudio("《最炫民族风》");
-        huawei.playGame("《原神》");
-        huawei.takePhoto();
-
-        System.out.println("-------------------------------------------------------------------------------");
-
-        CommonPhone nokia = new CommonPhone("诺基亚", "N97", 8.8, "九键");
-
-        nokia.connect();
-        nokia.sendMessage("真的睡了吗？");
-        nokia.call();
-        nokia.playAudio("《发如雪》");
-        nokia.playGame("《贪吃蛇》");
-    }
-}
-```
-
-## 6. 接口实现打印机
-
-> 接口是一种约定，即表示一种规范
->
-> 程序设计时面向接口的约定而不考虑具体实现 
-
-![](img/打印机类图.png)
-
-> 纸张是一种规范，接口也是一种规范，因为纸张和接口有我们公认的执行标准。
-
-```java
-/**
- *  打印机类
- *  属性：墨盒 和 纸张
- *  方法：打印
- */
-public class Printer {
-    private InkBox inkBox;
-    private Paper paper;
-
-    public void setInkBox(InkBox inkBox){
-        this.inkBox = inkBox;
-    }
-    public InkBox getInkBox(){
-        return inkBox;
-    }
-    public void setPaper(Paper paper){
-        this.paper = paper;
-    }
-    public Paper getPaper(){
-        return paper;
-    }
-
-    public void print(){
-        System.out.println("使用" + this.getInkBox().getInkBoxType() + "墨盒在" + this.getPaper().getPaperSize() + "纸张上打印");
-    }
-}
-```
-
-````java
-/**
- *  墨盒接口
- */
-public interface InkBox {
-    /**
-     *  获取墨盒的具体类型
-     * @return
-     */
-    String getInkBoxType();
-}
-````
-
-```java
 /**
  * @author WHD
  * @description TODO
- * @date 2023/8/12 10:42
+ * @date 2023/8/7 14:18
+ *  宠物父类：
+ *  父类中书写各个子类共有的属性 和 方法
+ *  子类中书写独有的属性 和 方法
  */
-public class BlackInkBox implements  InkBox{
-    @Override
-    public String getInkBoxType() {
-        return "黑色";
+public class Pet {
+    protected String name;
+    protected int health;
+    protected int love;
+
+    public String getName() {
+        return name;
     }
-}
-```
-
-```java
-/**
- * 彩色墨盒
- */
-public class ColorInkBox implements  InkBox{
-    @Override
-    public String getInkBoxType() {
-        return "彩色";
+    public void setName(String name) {
+        this.name = name;
     }
-}
+    public int getHealth() {
+        return health;
+    }
+    public void setHealth(int health) {
+        this.health = health;
+    }
+    public int getLove() {
+        return love;
+    }
+    public void setLove(int love) {
+        this.love = love;
+    }
 
-```
 
-```java
-/**
- *  纸张接口
- */
-public interface Paper {
+    public void print(){
+        System.out.println("宠物的名字是：" + name);
+        System.out.println("宠物的健康值是：" + health);
+        System.out.println("宠物的亲密值是：" + love);
+    }
+
     /**
-     *  返回纸张具体的型号
+     *  疗养 (看病) 方法
+     */
+    public void cure(){
+        System.out.println("宠物看病");
+    }
+
+    public Pet(String name, int health, int love) {
+        this.name = name;
+        this.health = health;
+        this.love = love;
+    }
+
+    public Pet() {
+    }
+}
+
+```
+
+```java
+/**
+ *  狗狗类：
+ *      名字 健康值 亲密值 品种
+ *      打印狗狗信息
+ *      无参构造
+ */
+public class Dog extends Pet {
+    private String strain;
+    public String getStrain() {
+        return strain;
+    }
+    public void setStrain(String strain) {
+        this.strain = strain;
+    }
+
+    @Override
+    public void print(){
+        super.print();
+        System.out.println("狗狗的品种是：" + strain);
+    }
+
+    @Override
+    public void cure() {
+        System.out.println("狗狗看病，吃药，吃骨头，健康值恢复");
+        this.setHealth(100);
+    }
+
+    public Dog() {
+    }
+
+    public Dog(String name, int health, int love, String strain) {
+        super(name, health, love);
+        this.strain = strain;
+    }
+}
+
+```
+
+```java
+/**
+ *  企鹅类：
+ *      姓名 健康值 亲密值 性别
+ *      打印企鹅信息
+ *      无参构造
+ */
+public class Penguin extends Pet {
+    private char sex;
+    public char getSex() {
+        return sex;
+    }
+    public void setSex(char sex) {
+        this.sex = sex;
+    }
+
+
+    public void print(){
+        super.print();
+        System.out.println("企鹅的性别是：" + sex);
+    }
+
+    @Override
+    public void cure() {
+        System.out.println("企鹅看病，打针，吃小鱼，健康值恢复");
+        this.setHealth(100);
+    }
+
+    public Penguin(String name, int health, int love, char sex) {
+        super(name, health, love);
+        this.sex = sex;
+    }
+
+    public Penguin() {
+    }
+}
+
+```
+
+```java
+/**
+ *  主人类
+ *      1.带宠物去看病
+ */
+public class Master {
+
+    public void toHospitalWithDog(Dog dog){
+        dog.cure();
+    }
+
+    public void toHospitalWithPenguin(Penguin penguin){
+        penguin.cure();
+    }
+
+
+    // 问题分析：以上代码编写了两个方法分别用于给不同的宠物子类看病 这种方式不符合开闭原则
+    // 如果后续有更多的宠物子类 那么还需要编写更多的方法来实现
+    // 解决方案：使用多态解决 我们应该编写一个方法 实现给所有的宠物子类看病
+    // 开闭原则 ： 程序应该对扩展开放 对修改源代码关闭
+
+
+    public void toHospitalWithPet(Pet pet){ // Pet pet = new Dog(); = new Penguin();
+        pet.cure();
+    }
+}
+
+```
+
+### 2.2 情况2
+
+> 2.父类作为声明返回值，实际返回值为子类类型
+
+```java
+/**
+ *  主人类
+ *      1.带宠物去看病
+ *      2.抽奖送宠物
+ *          一等奖 送企鹅一只
+ *          二等奖 送狗狗一只
+ *          三等奖 送猫咪一只
+ *          幸运奖 送成年东北虎一只
+ */
+public class Master {
+
+    public void toHospitalWithPet(Pet pet){
+        pet.cure();
+    }
+
+    public Penguin givePenguin(){
+        Penguin penguin = new Penguin("小白", 100, 100, '雄');
+        return penguin;
+    }
+
+    public Dog giveDog(){
+        Dog dog = new Dog("大黄", 100, 100, "金毛");
+        return dog;
+    }
+
+    /**
+     *  以上两个方法可以使用这个方法替代  
+     * @param str
      * @return
      */
-    String getPaperSize();
+    public Pet givePet(String str){
+        if(str.equals("一等奖")){
+            Penguin penguin = new Penguin("小白", 100, 100, '雄');
+            return penguin;
+        }else if(str.equals("二等奖")){
+            Dog dog = new Dog("大黄", 100, 100, "金毛");
+            return dog;
+        }else if(str.equals("三等奖")){
+            return new Cat();
+        }else{
+            return new Tiger();
+        }
+    }
+
 }
 
 ```
 
 ```java
 /**
- *  A4纸
+ *  向上转型
+ *        1.父类作为形参，子类作为实参
+ *        2.父类作为声明返回值，实际返回值为子类类型
+ *        3.父类类型的数组、集合，元素为子类类型
  */
-public class A4 implements Paper{
-    @Override
-    public String getPaperSize() {
-        return "A4";
-    }
-}
-
-```
-
-```java
-/**
- *  B5纸张
- */
-public class B5 implements  Paper{
-    @Override
-    public String getPaperSize() {
-        return "B5";
-    }
-}
-```
-
-```java
-public class Test {
+public class TestPet {
     public static void main(String[] args) {
-        Printer hp = new Printer();
-        Paper a4 = new A4();
-        Paper b5 = new B5();
-        InkBox black = new BlackInkBox();
-        InkBox color = new ColorInkBox();
-        hp.setPaper(a4);
-        hp.setInkBox(black);
+        Master master = new Master();
+        Pet pet = master.givePet("一等奖");
 
-        hp.print();
+        System.out.println("-------------------------------------------------");
     }
-}   
+}
+
 ```
 
-## 7. 接口和抽象类
 
-> 什么时候使用接口，什么时候使用抽象类呢？
+
+### 2.3 情况3
+
+> 3.父类类型的数组、集合，元素为子类类型
+
+```java
+/**
+ *  向上转型
+ *        1.父类作为形参，子类作为实参
+ *        2.父类作为声明返回值，实际返回值为子类类型
+ *        3.父类类型的数组、集合，元素为子类类型
+ */
+public class TestPet {
+    public static void main(String[] args) {
+        Pet [] pets = new Pet[3];
+        pets[0] = new Dog();
+        pets[1] = new Penguin();
+        pets[2] = new Cat();
+    }
+}      
+```
+
+
+
+## 3. 向下转型
+
+> 父类引用指向子类对象属于向上转型，此时通过父类引用，
 >
-> 推荐使用组合，即使用接口实现，因为类只能继承一个父类
+> 可以访问的是子类重写或者继承父类的方法
 >
-> 当你关注事物的本质，使用抽象类
+> 不能访问子类独有的方法 如需访问 则必须向下转型
 >
-> 当你关注某个功能，使用接口
+>
+> 向下转型：
+>
+> - 是将指向子类对象的父类引用 转换为 子类类型
+> - 而不是 将指向父类对象的父类引用 转换为子类类型
+>
+> 总结：必须先向上转型 才可以向下转型  否则将出现类型转换异常  ClassCastException
+
+> 因为异常会中断程序 所以 在实际开发中我们会使用`instanceof`关键字 在类型转换之前
+>
+> 进行判断 如果类型正确 则转换 不正确 则不转
+>
+> 用法： 对象名 instanceof 类名
+>
+> 表示判断左侧的对象是否属于右侧的类型 是则结果为true  不是则结果为false
+
+```java
+/**
+ *  宠物父类：
+ *  父类中书写各个子类共有的属性 和 方法
+ *  子类中书写独有的属性 和 方法
+ */
+public class Pet {
+    protected String name;
+    protected int health;
+    protected int love;
+
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public int getHealth() {
+        return health;
+    }
+    public void setHealth(int health) {
+        this.health = health;
+    }
+    public int getLove() {
+        return love;
+    }
+    public void setLove(int love) {
+        this.love = love;
+    }
+
+
+    public void print(){
+        System.out.println("宠物的名字是：" + name);
+        System.out.println("宠物的健康值是：" + health);
+        System.out.println("宠物的亲密值是：" + love);
+    }
+
+    /**
+     *  疗养 (看病) 方法
+     */
+    public void cure(){
+        System.out.println("宠物看病");
+    }
+
+    public Pet(String name, int health, int love) {
+        this.name = name;
+        this.health = health;
+        this.love = love;
+    }
+
+    public Pet() {
+    }
+}
+
+```
+
+```java
+/**
+ *  狗狗类：
+ *      名字 健康值 亲密值 品种
+ *      打印狗狗信息
+ *      无参构造
+ */
+public class Dog extends Pet {
+    private String strain;
+    public String getStrain() {
+        return strain;
+    }
+    public void setStrain(String strain) {
+        this.strain = strain;
+    }
+
+    @Override
+    public void print(){
+        super.print();
+        System.out.println("狗狗的品种是：" + strain);
+    }
+
+    @Override
+    public void cure() {
+        System.out.println("狗狗看病，吃药，吃骨头，健康值恢复");
+        this.setHealth(100);
+    }
+
+    public Dog() {
+    }
+
+    public Dog(String name, int health, int love, String strain) {
+        super(name, health, love);
+        this.strain = strain;
+    }
+
+    public void playFlyDisc(){
+        System.out.println("狗狗玩飞盘");
+    }
+}
+
+```
+
+```java
+/**
+ *  企鹅类：
+ *      姓名 健康值 亲密值 性别
+ *      打印企鹅信息
+ *      无参构造
+ */
+public class Penguin extends Pet {
+    private char sex;
+    public char getSex() {
+        return sex;
+    }
+    public void setSex(char sex) {
+        this.sex = sex;
+    }
+
+
+    public void print(){
+        super.print();
+        System.out.println("企鹅的性别是：" + sex);
+    }
+
+    @Override
+    public void cure() {
+        System.out.println("企鹅看病，打针，吃小鱼，健康值恢复");
+        this.setHealth(100);
+    }
+
+    public Penguin(String name, int health, int love, char sex) {
+        super(name, health, love);
+        this.sex = sex;
+    }
+
+    public Penguin() {
+    }
+}
+
+```
+
+```java
+package com.atguigu.test6;
+
+/**
+ *  父类引用指向子类对象属于向上转型，此时通过父类引用，
+ *  可以访问的是子类重写或者继承父类的方法
+ *  不能访问子类独有的方法 如需访问 则必须向下转型
+ *
+ * 向下转型：
+ * 是将指向子类对象的父类引用 转换为 子类类型
+ * 而不是 将指向父类对象的父类引用 转换为子类类型
+ * 总结：必须先向上转型 才可以向下转型  否则将出现类型转换异常  ClassCastException
+ *
+ * 因为异常会中断程序 所以 在实际开发中我们会使用instanceof关键字 在类型转换之前
+ * 进行判断 如果类型正确 则转换 不正确 则不转
+ *  用法： 对象名 instanceof 类名
+ *  表示判断左侧的对象是否属于右侧的类型
+ */
+public class TestPet {
+    public static void main(String[] args) {
+        Pet pet = new Dog();
+
+        if(pet instanceof  Dog){
+            Dog dog = (Dog)pet;
+
+            dog.playFlyDisc();
+        }
+
+
+        System.out.println("-------------------------------------------");
+
+        Pet p1 = new Pet();
+
+        if(p1 instanceof  Dog){
+            Dog dog1 = (Dog)p1;
+            System.out.println("dog1 = " + dog1);
+        }else{
+            System.out.println("类型不匹配");
+        }
+
+        System.out.println("程序结束");
+    }
+}
+
+```
+
+
+
+## 4. 多态补充
+
+> 我们观察重写Object类中的equals方法，父类中的方法实现形参为Object类型，所以我们重写形参也必须为Object类型，但是这样我们通过父类类型的形参就无法访问子类中的属性或者方法，所以我们在方法中必须向下转型。
+>
+> 父类写为Object类型，是为了子类的通用性。
+>
+> 子类在重写父类方法中又向下转型，是为了实用性。
+
+```java
+/**
+ *  人类
+ *  场景：如果现在有这样的"两个人" 这"两个人"名字和身份证号都相同 实际为同一个人
+ *  那么在程序中就表现为两个对象 所以我们应该重写equals方法 将两个对象的比较结果为true
+ *
+ */
+public class Person {
+    private String name;
+    private String idCard;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getIdCard() {
+        return idCard;
+    }
+
+    public void setIdCard(String idCard) {
+        this.idCard = idCard;
+    }
+
+    public Person(String name, String idCard) {
+        this.name = name;
+        this.idCard = idCard;
+    }
+
+    public Person() {
+    }
+
+    public boolean equals(Object obj){
+        if(this == obj){
+            return true;
+        }
+        if(obj instanceof  Person){
+            Person p1 = (Person)obj;
+            if(this.name.equals(p1.name) && this.idCard.equals(p1.idCard)){
+                return true;
+            }
+        }
+        return false;
+    }
+    public static void main(String[] args) {
+        Person p1 = new Person("赵四", "4578925985324539875421");
+        Person p2 = new Person("赵四", "4578925985324539875421");
+        Dog dog = new Dog();
+        System.out.println(p1.equals(dog));
+    }
+}
+
+```
+
+## 5. 多态实现原理
+
+> 多态原理：是由虚方法和动态绑定来实现的
+>
+>
+> 虚方法(Virtual Method)和非虚方法(Non Virtual Method)
+>
+> 虚方法是指在编译期间 无法确定方法版本信息的这一类方法
+>
+> 可以被子类重写(可以被子类继承的实例方法)的方法就属于虚方法
+>
+> 因为可以被子类重写的方法 会在多个子类中进行重写 而new对象的操作是在程序运行期间才执行的
+>
+> 所以在编译阶段 唯独可以确定的是等号左侧的类型 而不能确定的是等号右侧的对象
+>
+> 虚方法调用底层是通过JVM指令：#invokevritual
+>
+>
+> 非虚方法是指在编译期间可以确定方法版本信息的这一类方法
+>
+> 比如：静态方法 private修饰的方法 final修饰的方法  构造方法
+>
+> 非虚方法调用底层是通过JVM指令：#invokespecial
+>
+>
+> 动态绑定和静态绑定
+>
+> 虚方法属于动态绑定：因为在编译期间无法确定方法的版本信息 所以必须在程序运行过程中才确定调用哪个类中的
+>
+> 方法，所以虚方法属于动态绑定
+>
+> 非虚方法属于静态绑定：在编译期间就可以确定方法的版本信息 实现静态绑定
+>
+>
+> 方法覆盖(重写) 和 方法隐藏：
+>
+> 实例方法属于覆盖，即重写，也就是子类重写父类方法以后通过子类对象再无法访问父类中被覆盖的方法
+>
+> 静态方法属于隐藏，子类可以写同名同参数同返回值的静态方法，只是对父类相同静态方法的隐藏，无法覆盖
+>
+> 因为通过指向对象的父类引用还可以继续访问父类中的静态方法
+>
+>
+> 关于方法表：方法表是一个存在于类信息文件中的数组，保存当前类中的方法、继承以及重写的方法
+>
+> 当我们访问某一个方法时 先从本类中查找 本类中没有 继续向父类中查找 直到找打为止
+
+![](img/方法表.png)
+
+## 6. java命令
+
+> javap -verbose Note.class 查看当前class文件详细信息
+>
+> this被设计为了一个隐式参数，存在于本类中的所有实例方法和构造方法中，所以我们在实例方法以及构造方法中才可以使用
+>
+> 静态方法中没有添加此隐式参数 所以无法使用this 以及 super 
+
