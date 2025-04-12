@@ -8,6 +8,10 @@
 * [静态方法](docs/java_se/04static_method.md)
 * [数组](docs/java_se/06array.md)
 * [初识面向对象](docs/java_se/07OOP.md)
+* [封装和继承](docs/java_se/08OOP.md)
+* [static关键字和方法重写](docs/java_se/09OOP.md)
+* [多态](docs/java_se/10OOP.md)
+* [抽象类和接口](docs/java_se/11OOP.md)
 
 ## 集合
 
