@@ -20,6 +20,10 @@
   - [14.2 同步方法](#142-同步方法)
 - [15.生产者消费者模式](#15生产者消费者模式)
 - [16. 相关面试题](#16-相关面试题)
+- [17. Lock接口](#17-lock接口)
+- [18. Callable接口](#18-callable接口)
+- [19. 线程池](#19-线程池)
+- [20. 单例模式线程安全问题](#20-单例模式线程安全问题)
 
 
 ## 1. 程序
@@ -902,5 +906,282 @@ public class Test {
 > - notify() 是随机唤醒一个等待的线程 即 执行了wait方法的线程
 > - notifyAll() 是唤醒所有等待的线程 
 
+## 17. Lock接口
 
+> 面试题：描述 CAS Compare And Swap 比较和交换
+>
+> - CAS属于乐观锁的体现 当前线程乐观的认为 其他线程不会修改当前线程正在操作的数据
+> - 当前线程在对数据执行操作，先将数据读取到，然后再修改值做覆盖操作
+> - 如果发现数据没有被改变 则直接覆盖
+> - 如果发现数据被改变了  则再次读取 再次尝试覆盖 直到数据没有问题  
+>
+> Lock 单词 锁
+>
+> 乐观锁  自旋锁 无锁  CAS Compare And Swap 比较和交换
+>
+> 悲观锁  同步锁
+>
+>
+> 公平锁
+>
+> 非公平锁  同步锁
+>
+>
+> Lock接口实现类
+>
+> ReentrantLock 可重入锁 ： 同一个线程 多次获得一个锁对象 不应该产生死锁
+>
+> lock() 上锁
+>
+> unlock() 释放锁 解锁
+>
+>
+> 死锁：死锁是因为逻辑错误导致的多个线程同时竞争同一个资源 僵持不下 导致的线程互相等待的现象
+
+```java
+/**
+ * 使用多线程模拟：多人抢票 三个人 抢10张票
+ * 有一个线程买票 前边的线程购买完毕 后边的线程才能继续购买
+ * <p>
+ * 解决方案：多个线程必须排队买票 保证同一时间只能有一个线程买票 前边的线程购买完毕 后边的线程才能继续购买
+ * <p>
+ * 同步关键字：synchronized
+ * 可以用于修代码块 ，表示同一时间只能有一个线程访问这个代码块
+ */
+public class BuyTicket2 implements Runnable {
+    int ticketCount = 10;
+    Lock lock = new ReentrantLock();
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                lock.lock();
+                if (ticketCount == 0) {
+                    break;
+                }
+                ticketCount--;
+                System.out.println(Thread.currentThread().getName() + "抢到了第" + (10 - ticketCount) + "张票，还剩余" + ticketCount + "张票");
+            } finally {
+                // 实际开发中 推荐将释放锁的操作 书写在finally中 表示任何情况都要释放锁
+                lock.unlock();
+            }
+        }
+        System.out.println("票卖完了");
+    }
+
+    public static void main(String[] args) {
+        BuyTicket2 runnable = new BuyTicket2();
+
+        Thread th1 = new Thread(runnable, "赵四");
+        Thread th2 = new Thread(runnable, "广坤");
+        Thread th3 = new Thread(runnable, "大拿");
+
+        th1.start();
+        th2.start();
+        th3.start();
+    }
+}
+
+```
+
+
+
+## 18. Callable接口
+
+> 回顾之前创建线程的两种方式 分别为继承Thread 重写run方法 实现Runnable 重写run方法
+>
+> 因为都是重写run方法 所以
+>
+> 1.不能声明任何异常
+>
+> 2.不能有返回值 因为父类的方法声明返回值类型为void
+>
+> 以上两种问题 都可以使用Callable接口实现
+>
+>
+> 分析：Callable接口的实现类改如何运行呢？
+>
+> 任何线程的执行最终都离不开 Thread类
+>
+>
+> FutureTask 类 实现了RunnableFuture接口  而 RunnableFuture接口继承了Runnable接口
+>
+> 所以 FutureTask 属于Runnable的实现类
+>
+>
+> JUC包 属于Java中线程相关的包 
+
+```java
+public class TestCallable  implements Callable<Integer> {
+
+    @Override
+    public Integer call() throws IOException {
+        System.out.println(Thread.currentThread().getName());
+        return 100;
+    }
+
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        // 创建Callable接口实现类对象
+        TestCallable testCallable = new TestCallable();
+
+        // 创建FutureTask对象  使用Callable接口实现类作为参数 构造实例
+        FutureTask<Integer> task = new FutureTask<Integer>(testCallable);
+
+        // 创建线程对象 传入FutureTask 相当于传入Runnable实现类
+        Thread thread = new Thread(task, "线程A");
+
+        // 线程就绪
+        thread.start();
+
+        // 通过FutureTask get方法获取到返回值
+        System.out.println(task.get());
+    }
+
+}
+
+```
+
+
+
+## 19. 线程池
+
+> 回顾之前创建线程的三种方式，如果在多线程，多任务场景下：
+>
+> 1.不能统一的管理
+>
+> 2.会存在频繁的创建 以及 销毁的操作 浪费系统资源
+>
+> 3.不能执行定时任务
+>
+> 以上效果，线程池都可以实现
+>
+> 线程池相当于一个存储管理多个线程对象的容器  使用统一的容器来保存 可以做到统一管理
+>
+> 线程池中的线程对象 使用完毕 并不会立即回收 而是继续保存在线程池中 这样就避免了频繁创建销毁的操作
+>
+>
+> Executors 类 线程池工具类
+>
+> newCachedThreadPool() 根据当前任务场景创建线程的线程池
+>
+> newFixedThreadPool(int nThreads) 根据指定线程数创建线程池
+>
+> newScheduledThreadPool(int corePoolSize)根据指定线程数创建可以执行定时任务的线程池
+>
+> newSingleThreadExecutor() 创建只有单个线程的线程池
+>
+>
+>
+> 面试题：
+>
+> ThreadPoolExecutor相关属性
+>
+> 第一个参数：corePoolSize 核心线程数
+>
+> 第二个参数：最多线程数
+>
+> 第三个参数：保持空闲时间
+>
+> 第四个参数：时间单位
+>
+> 第五个参数：队列
+
+```java
+public class TestThreadPool {
+    public static void main(String[] args) {
+        ExecutorService es1 = Executors.newCachedThreadPool();
+
+        es1.submit(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() +  ":hello thread pool 1");
+            }
+        });
+
+        es1.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + ":hello thread pool 2");
+            }
+        });
+
+
+        ExecutorService es2 = Executors.newFixedThreadPool(10);
+
+        es2.submit(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + ":hello thread pool 3");
+            }
+        });
+
+        es2.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + ":hello thread pool 4 ");
+            }
+        });
+
+
+        ScheduledExecutorService es3 = Executors.newScheduledThreadPool(5);
+
+        es3.schedule(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + ":hello thread pool 5 ");
+            }
+        }, 5, TimeUnit.SECONDS);
+
+
+        ExecutorService es4 = Executors.newSingleThreadExecutor();
+
+        es4.submit(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + ":hello thread pool 6 ");
+            }
+        });
+
+        es4.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + ":hello thread pool 7 ");
+            }
+        });
+
+
+
+    }
+}
+
+```
+
+## 20. 单例模式线程安全问题
+
+> 懒汉单例模式 存在线程安全问题 我们可以使用同步关键字修饰方法解决 或者 修饰代码块解决
+
+```java
+public class LazySingleton {
+    private static LazySingleton instance = null;
+
+    private LazySingleton() {
+    }
+
+    public static synchronized LazySingleton getInstance() throws InterruptedException {
+        if(instance == null){
+            Thread.sleep(200);
+            instance =  new LazySingleton();
+        }
+        return instance;
+    }
+
+}
+
+```
 
