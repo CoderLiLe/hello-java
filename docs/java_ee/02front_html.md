@@ -8,23 +8,6 @@ Web2.0规范主张在前端开发中，把结构、表现、行为三者分开�
 
 
 
-## 1、HTML示例
-![images](./images/img0003.png)
-
-<br/>
-
-## 2、CSS示例
-![images](./images/img0004.png)
-
-<br/>
-
-## 3、JavaScript示例
-![images](./images/img0005.gif)
-
-<br/>
-
-
-
 # 二、HTML简介
 ## 1、HTML
 HTML：Hyper Text Markup Language超文本标记语言。
@@ -45,12 +28,6 @@ HTML5简称H5，2008年正式发布的HTML新语法标准。相比于之前的�
 # 三、First Blood
 ## 1、创建文件
 在电脑任意目录下创建一个文本文件，修改文件名（连同扩展名一起修改）为：index.html
-
-<br/>
-
-![images](./images/img0006.gif)
-
-<br/>
 
 ## 2、编辑文件
 使用文本编辑工具打开刚刚创建的文件，编写如下代码：
@@ -335,24 +312,24 @@ D:\location\atguigu-front-end-230522\module01-HTML\target\page-target.html
 
 
 
-## 8、音乐播放组件【选学】
+## 8、音乐播放组件
 - audio标签：负责显示音乐播放组件
 - src属性：指定音乐文件资源的路径
 - controls属性：是否显示音乐播放组件的控制界面
 - autoplay属性：控制音乐播放组件在打开页面时是否自动播放
 ```html
-<audio src="\module01-HTML\images\music.mp3" controls="controls" autoplay="autoplay"/>
+<audio src="\images\music.mp3" controls="controls" autoplay="autoplay"/>
 ```
 
 <br/>
 
 
 
-## 9、视频播放组件【选学】
+## 9、视频播放组件
 - width属性：视频播放时的宽度，单位是像素
 - height属性：视频播放时的高度，单位是像素
 ```html
-<video src="\module01-HTML\images\pain.mp4" controls="controls" autoplay="autoplay"></video>
+<video src="\images\pain.mp4" controls="controls" autoplay="autoplay"></video>
 ```
 - 播放组件的小坑：如果要音频、视频播放器互不干扰，那么把它们二者放在各自的div里
 

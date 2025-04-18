@@ -8,19 +8,19 @@
 ### ①从Servlet接口说起
 ```java
 public interface Servlet {
-	// 做初始化操作（生命周期方法）
+    // 做初始化操作（生命周期方法）
     void init(ServletConfig var1) throws ServletException;  
 
-	// 获取 ServletConfig 对象
+    // 获取 ServletConfig 对象
     ServletConfig getServletConfig();  
 
-	// 每一次接收到请求都调用这个 service() 方法来处理请求（生命周期方法）
+    // 每一次接收到请求都调用这个 service() 方法来处理请求（生命周期方法）
     void service(ServletRequest request, ServletResponse response) throws ServletException, IOException;  
 
-	// 获取 Servlet 相关信息
+    // 获取 Servlet 相关信息
     String getServletInfo();  
 
-	// 在 Web 应用卸载之前执行清理操作（生命周期方法）
+    // 在 Web 应用卸载之前执行清理操作（生命周期方法）
     void destroy();  
 }
 ```

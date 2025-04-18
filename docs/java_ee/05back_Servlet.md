@@ -422,8 +422,6 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response) t
 ## 2、解决方案
 ### ①父类完整代码
 ```java
-package com.atguigu.demo.servlet.parent;  
-  
 import jakarta.servlet.ServletException;  
 import jakarta.servlet.http.HttpServlet;  
 import jakarta.servlet.http.HttpServletRequest;  

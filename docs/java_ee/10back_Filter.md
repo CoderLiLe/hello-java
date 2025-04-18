@@ -82,9 +82,7 @@
 
 <br/>
 
-```java
-package com.atguigu.filter.filter;  
-  
+```java  
 import jakarta.servlet.FilterChain;  
 import jakarta.servlet.ServletException;  
 import jakarta.servlet.http.HttpFilter;  
@@ -191,10 +189,8 @@ public class Filter02LifeCycle extends HttpFilter {
 <br/>
 
 ### ②创建Filter类
-```java
-package com.atguigu.demo.filter;  
-  
-import com.atguigu.demo.entity.User;  
+```java  
+import com.demo.entity.User;  
 import jakarta.servlet.FilterChain;  
 import jakarta.servlet.ServletException;  
 import jakarta.servlet.http.HttpFilter;  

@@ -65,9 +65,7 @@
 <br/>
 
 ## 2、重构ServletParent
-```java
-package com.atguigu.demo.servlet.parent;  
-  
+```java  
 import jakarta.servlet.ServletContext;  
 import jakarta.servlet.ServletException;  
 import jakarta.servlet.http.HttpServlet;  

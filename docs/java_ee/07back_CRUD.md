@@ -1,8 +1,3 @@
-
-> <span style="color:red;font-weight:bold;">特别提示</span>：每个人都必须能做出来，而且没有思路、照抄出来不算！除了环境搭建的部分，具体功能开发必须每个人都会！
-
-<br/>
-
 # 一、三层架构理论
 ## 1、总述
 - <span style="color:blue;font-weight:bolder;">表述层</span>（表示层、表现层）：负责和浏览器打交道
@@ -362,8 +357,6 @@ public class DemoTest {
 
 ### ④引入BaseDao
 ```java
-package com.atguigu.demo.dao.impl;  
-  
 import com.atguigu.demo.utils.JDBCUtils;  
 import org.apache.commons.dbutils.QueryRunner;  
 import org.apache.commons.dbutils.ResultSetHandler;  
@@ -597,9 +590,6 @@ public class BaseDao<T> {
 ### ②Java代码
 - 重写doGet()、doPost()方法，不做请求路径最后一段的解析
 ```java
-package com.atguigu.demo.servlet.model;  
-  
-import com.atguigu.demo.servlet.parent.ServletThymeleafParent;  
 import jakarta.servlet.*;  
 import jakarta.servlet.http.*;  
   
