@@ -76,6 +76,29 @@
 
 ### RabbitMQ
 
+* [01-RabbitMQ安装](docs/mq/rabbitmq/01-Install.md)
+* [02-Hello RabbitMQ](docs/mq/rabbitmq/02-HelloRabbitMQ.md)
+* [03-工作队列模式](docs/mq/rabbitmq/03-WorkQueue.md)
+* [04-发布订阅模式](docs/mq/rabbitmq/04-PubSub.md)
+* [05-路由模式](docs/mq/rabbitmq/05-Routing.md)
+* [06-主题模式](docs/mq/rabbitmq/06-Topics.md)
+* [07-整合SpringBoot](docs/mq/rabbitmq/07-SpringBoot.md)
+* [08-生产者端消息确认机制](docs/mq/rabbitmq/08-A-Producer.md)
+* [08-B：备份交换机](docs/mq/rabbitmq/08-B-BackupEx.md)
+* [08-交换机和队列持久化](docs/mq/rabbitmq/08-C-Duration.md)
+* [08-消费端消息确认](docs/mq/rabbitmq/08-D-Consumer.md)
+* [09-Prefetch](docs/mq/rabbitmq/09-Prefetch.md)
+* [10-消息超时](docs/mq/rabbitmq/10-MessageTimeout.md)
+* [11-死信](docs/mq/rabbitmq/11-DeadLetter.md)
+* [12-延迟插件](docs/mq/rabbitmq/12-DelayPlugin.md)
+* [13-事务消息之生产者端](docs/mq/rabbitmq/13-Tx-Producer.md)
+* [14-惰性队列](docs/mq/rabbitmq/14-LazyQueue.md)
+* [15-优先级队列](docs/mq/rabbitmq/15-PriorityQueue.md)
+* [16-RabbitMQ集群](docs/mq/rabbitmq/16-Cluster.md)
+* [17-仲裁队列](docs/mq/rabbitmq/17-Quorum.md)
+* [18-Stream Queue](docs/mq/rabbitmq/18-Stream.md)
+* [19-命令行查看RabbitMQ运行时状态](docs/mq/rabbitmq/19-Command.md)
+* [20-Management UI](docs/mq/rabbitmq/20-Management_UI.md)
 
 ### RocketMQ
 
