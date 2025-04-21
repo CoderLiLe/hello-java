@@ -1,4 +1,4 @@
-# 18、Stream Queue
+# 18-Stream Queue
 
 ## 一、按Classic Queue方式使用Stream Queue
 

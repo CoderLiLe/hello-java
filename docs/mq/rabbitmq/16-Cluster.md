@@ -1,4 +1,4 @@
-# 16、RabbitMQ集群
+# 16-RabbitMQ集群
 
 ## 一、集群搭建
 

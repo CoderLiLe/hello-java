@@ -1,4 +1,4 @@
-# 19、命令行查看RabbitMQ运行时状态
+# 19-命令行查看RabbitMQ运行时状态
 
 ## 一、使用rabbitmqctl命令
 

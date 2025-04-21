@@ -1,4 +1,4 @@
-# 21、使用Prometheus监控RabbitMQ
+# 21-使用Prometheus监控RabbitMQ
 
 ## 一、产品简介
 
