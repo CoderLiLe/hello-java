@@ -73,6 +73,21 @@
 
 ### Kafka
 
+* [01-消息队列](docs/mq/kafka/01-消息队列.md)
+* [02-Kafka内部结构](docs/mq/kafka/02-Kafka内部结构.md)
+* [03-Kafka安装](docs/mq/kafka/03-Kafka安装.md)
+* [04-Kafka命令行操作](docs/mq/kafka/04-Kafka命令行操作.md)
+* [05-图形化界面软件Eagle](docs/mq/kafka/05-图形化界面软件Eagle.md)
+* [06-客户端原生API](docs/mq/kafka/06-客户端原生API.md)
+* [07-Kafka集群](docs/mq/kafka/07-Kafka集群.md)
+* [08-客户端SpringBoot](docs/mq/kafka/08-客户端SpringBoot.md)
+* [09-生产者分区策略](docs/mq/kafka/09-生产者分区策略.md)
+* [10-生产者拦截器](docs/mq/kafka/10-生产者拦截器.md)
+* [11-生产者数据有序](docs/mq/kafka/11-生产者数据有序.md)
+* [12-生产者ACK确认](docs/mq/kafka/12-生产者ACK确认.md)
+* [13-生产者事务](docs/mq/kafka/13-生产者事务.md)
+* [14-消费端提交](docs/mq/kafka/14-消费端提交.md)
+* [15-消费端指定偏移量](docs/mq/kafka/15-消费端指定偏移量.md)
 
 ### RabbitMQ
 
