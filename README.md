@@ -1,6 +1,18 @@
-# Java开发指南
+# Java开发指南 📚
 
-## Java基础
+![GitHub last commit](https://img.shields.io/github/last-commit/CoderLiLe/hello-java)
+![GitHub repo size](https://img.shields.io/github/repo-size/CoderLiLe/hello-java)
+![GitHub](https://img.shields.io/github/license/CoderLiLe/hello-java)
+
+全面的Java学习资源库，涵盖Java基础、JUC、JVM、数据库、消息队列等核心技术栈。
+
+## 📖 简介
+
+本仓库收集整理了Java开发相关的学习资料、笔记和实践代码，旨在为Java开发者提供一个全面的学习参考。
+
+## 🚀 快速导航
+
+### Java基础
 * [Java基础1](https://github.com/CoderLiLe/hello-java/blob/main/docs/java_base/Java%E5%9F%BA%E7%A1%801.md)
 * [Java概述和环境搭建](docs/java_se/01java_summary.md)
 * [Java语言基础语法](docs/java_se/02base_grammar.md)
@@ -180,3 +192,19 @@
 
 ## 打车系统
 
+
+
+## 🤝 贡献指南
+
+欢迎贡献！请阅读[CONTRIBUTING.md](CONTRIBUTING.md)了解如何开始。
+
+## 📄 许可证
+
+本项目基于MIT许可证 - 查看[LICENSE](LICENSE)文件了解详情。
+
+## 📞 联系
+
+如有问题或建议，请通过GitHub Issues提交。
+
+---
+*最后更新: 2026-03-18*

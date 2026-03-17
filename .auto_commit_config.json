@@ -1,0 +1,25 @@
+{
+  "auto_commit": true,
+  "commit_message_prefix": "[Auto] ",
+  "branch": "main",
+  "push_to_remote": true,
+  "remote_name": "origin",
+  "check_interval_minutes": 30,
+  "max_commit_size_mb": 10,
+  "exclude_patterns": [
+    "*.log",
+    "*.tmp",
+    "*.bak",
+    "__pycache__",
+    ".git",
+    ".idea",
+    ".vscode",
+    "node_modules",
+    "auto_commit_log.json"
+  ],
+  "notifications": {
+    "enabled": false,
+    "webhook_url": "",
+    "email": ""
+  }
+}

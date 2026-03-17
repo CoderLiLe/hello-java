@@ -1,0 +1,116 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # 每天凌晨2点运行
+    - cron: '0 2 * * *'
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Check for large files
+      run: |
+        echo "检查大文件..."
+        find . -type f -size +5M ! -path "./.git/*" | head -10
+        if [ $(find . -type f -size +10M ! -path "./.git/*" | wc -l) -gt 0 ]; then
+          echo "警告：发现超过10MB的大文件"
+          exit 1
+        fi
+    
+    - name: Check for sensitive data
+      run: |
+        echo "检查敏感数据..."
+        # 检查可能的API密钥、密码等
+        PATTERNS="password|secret|key|token|credential|auth"
+        FILES=$(find . -type f \( -name "*.java" -o -name "*.properties" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" \) ! -path "./.git/*")
+        
+        for file in $FILES; do
+          if grep -E -i "$PATTERNS" "$file" | grep -v "//.*$PATTERNS" | grep -v "#.*$PATTERNS" | grep -v "example" | grep -v "test"; then
+            echo "警告：$file 中可能包含敏感数据"
+          fi
+        done
+    
+    - name: Check file permissions
+      run: |
+        echo "检查文件权限..."
+        # 检查可执行文件
+        find . -type f -executable ! -path "./.git/*" ! -name "*.sh" ! -name "*.py" | head -10
+    
+    - name: Check README quality
+      run: |
+        echo "检查README质量..."
+        if [ -f README.md ]; then
+          echo "README文件存在"
+          # 检查基本要素
+          HAS_TITLE=$(grep -c "^# " README.md || true)
+          HAS_DESCRIPTION=$(grep -c "##.*简介\|##.*Description" README.md || true)
+          HAS_INSTALL=$(grep -c "##.*安装\|##.*Install" README.md || true)
+          HAS_USAGE=$(grep -c "##.*使用\|##.*Usage" README.md || true)
+          
+          echo "标题: $HAS_TITLE, 描述: $HAS_DESCRIPTION, 安装: $HAS_INSTALL, 使用: $HAS_USAGE"
+          
+          if [ $HAS_TITLE -eq 0 ] || [ $HAS_DESCRIPTION -eq 0 ]; then
+            echo "警告：README缺少基本要素"
+          fi
+        else
+          echo "错误：缺少README.md文件"
+          exit 1
+        fi
+    
+    - name: Check license file
+      run: |
+        echo "检查许可证文件..."
+        if [ -f LICENSE ] || [ -f LICENSE.txt ] || [ -f LICENSE.md ]; then
+          echo "许可证文件存在"
+        else
+          echo "警告：缺少许可证文件"
+        fi
+    
+    - name: Generate quality report
+      run: |
+        echo "生成质量报告..."
+        echo "# 代码质量报告" > quality_report.md
+        echo "生成时间: $(date)" >> quality_report.md
+        echo "" >> quality_report.md
+        
+        # 文件统计
+        echo "## 文件统计" >> quality_report.md
+        echo "- 总文件数: $(find . -type f ! -path "./.git/*" | wc -l)" >> quality_report.md
+        echo "- Java文件数: $(find . -name "*.java" ! -path "./.git/*" | wc -l)" >> quality_report.md
+        echo "- Markdown文件数: $(find . -name "*.md" ! -path "./.git/*" | wc -l)" >> quality_report.md
+        echo "" >> quality_report.md
+        
+        # 目录结构
+        echo "## 目录结构" >> quality_report.md
+        echo '```' >> quality_report.md
+        find . -maxdepth 3 -type d ! -path "./.git/*" | sort >> quality_report.md
+        echo '```' >> quality_report.md
+        
+        # 保存报告
+        echo "质量报告已生成"
+    
+    - name: Upload quality report
+      uses: actions/upload-artifact@v4
+      with:
+        name: quality-report
+        path: quality_report.md
+    
+    - name: Send notification (optional)
+      if: failure()
+      run: |
+        echo "质量检查失败，请查看详细报告"
+        # 这里可以添加Slack、Email等通知
