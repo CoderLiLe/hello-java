@@ -177,8 +177,10 @@
 
 ### Spring
 * [spring基础](docs/spring/spring基础.md)
-* [springboot基础](docs/spring/springboot基础.md)
-* [springboot高级](docs/spring/springboot高级.md)
+
+### Spring Boot
+* [springboot基础](docs/springboot/springboot基础.md)
+* [springboot高级](docs/springboot/springboot高级.md)
 
 ### MyBatis
 * [mybatis基础](docs/mybatis/mybatis基础.md)
