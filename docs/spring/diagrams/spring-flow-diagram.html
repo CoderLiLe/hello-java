@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spring Framework 核心流程图</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; }
+    .diagram-section {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+    .section-title {
+      font-size: 1rem; font-weight: 600; color: #22d3ee;
+      margin-bottom: 1rem;
+    }
+    svg { display: block; min-width: 1100px; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+
+    /* Nav */
+    .nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+    .nav a { color: #94a3b8; font-size: 0.8rem; text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 0.5rem; border: 1px solid #1e293b; transition: all 0.2s; }
+    .nav a:hover { color: #22d3ee; border-color: #22d3ee; background: rgba(34, 211, 238, 0.08); }
+
+    @media print {
+      body { background: #020617; padding: 1rem; }
+      .nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Spring Framework 核心流程</h1>
+      </div>
+      <p class="subtitle">IoC 容器初始化 · Bean 生命周期 · 循环依赖 · AOP · 事务 · MVC · WebFlux · 事件机制</p>
+    </div>
+
+    <nav class="nav">
+      <a href="#ioc">1. IoC 容器初始化</a>
+      <a href="#bean-lifecycle">2. Bean 生命周期</a>
+      <a href="#circular-dep">3. 循环依赖解决</a>
+      <a href="#aop">4. AOP 代理流程</a>
+      <a href="#tx">5. 事务拦截流程</a>
+      <a href="#mvc">6. MVC 请求处理</a>
+      <a href="#webflux">7. WebFlux 响应式处理</a>
+      <a href="#event">8. 事件机制</a>
+    </nav>
+
+    <!-- ===== 1. IoC 容器初始化流程图 ===== -->
+    <div class="diagram-section" id="ioc">
+      <div class="section-title">1. IoC 容器初始化流程</div>
+      <svg viewBox="0 0 1300 620">
+        <defs>
+          <marker id="a1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="a2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" /></marker>
+          <marker id="a3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+          <marker id="a4" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb923c" /></marker>
+          <pattern id="g1" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g1)" />
+
+        <!-- Phase 1: Config -->
+        <rect x="30" y="30" width="1240" height="110" rx="10" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="50" y="52" fill="#475569" font-size="10" font-weight="600">Phase 1: 配置加载</text>
+
+        <rect x="60" y="70" width="150" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+        <text x="135" y="99" fill="#94a3b8" font-size="11" font-weight="500" text-anchor="middle">XML 配置</text>
+        <text x="135" y="113" fill="#475569" font-size="8" text-anchor="middle">ClassPathXmlAppCtx</text>
+
+        <rect x="270" y="70" width="150" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+        <text x="345" y="99" fill="#94a3b8" font-size="11" font-weight="500" text-anchor="middle">注解配置</text>
+        <text x="345" y="113" fill="#475569" font-size="8" text-anchor="middle">AnnotationConfigAppCtx</text>
+
+        <rect x="480" y="70" width="150" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+        <text x="555" y="99" fill="#94a3b8" font-size="11" font-weight="500" text-anchor="middle">包扫描</text>
+        <text x="555" y="113" fill="#475569" font-size="8" text-anchor="middle">@ComponentScan</text>
+
+        <!-- Groovy / other -->
+        <rect x="690" y="70" width="90" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+        <text x="735" y="99" fill="#475569" font-size="10" font-weight="500" text-anchor="middle">Groovy</text>
+
+        <line x1="210" y1="95" x2="700" y2="175" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)" stroke-dasharray="4,3"/>
+        <line x1="420" y1="95" x2="730" y2="175" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)" stroke-dasharray="4,3"/>
+        <line x1="630" y1="95" x2="760" y2="175" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)" stroke-dasharray="4,3"/>
+        <line x1="735" y1="120" x2="800" y2="175" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+        <rect x="700" y="175" width="200" height="45" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="800" y="195" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">BeanDefinitionReader</text>
+        <text x="800" y="211" fill="#94a3b8" font-size="8" text-anchor="middle">解析 → BeanDefinition 对象</text>
+
+        <!-- Phase 2: Register -->
+        <rect x="30" y="250" width="1240" height="105" rx="10" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="50" y="272" fill="#475569" font-size="10" font-weight="600">Phase 2: 注册 BeanDefinition</text>
+
+        <line x1="800" y1="220" x2="800" y2="242" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+
+        <rect x="500" y="285" width="250" height="50" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="625" y="307" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">DefaultListableBeanFactory</text>
+        <text x="625" y="324" fill="#94a3b8" font-size="8" text-anchor="middle">beanDefinitionMap (ConcurrentHashMap)</text>
+
+        <rect x="820" y="285" width="230" height="50" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="935" y="307" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">BeanFactoryPostProcessor</text>
+        <text x="935" y="324" fill="#94a3b8" font-size="8" text-anchor="middle">修改 BeanDefinition (占位符等)</text>
+
+        <line x1="750" y1="310" x2="820" y2="310" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#a2)"/>
+        <text x="785" y="303" fill="#a78bfa" font-size="8" text-anchor="middle">调用</text>
+
+        <!-- Phase 3: Instantiation -->
+        <rect x="30" y="385" width="1240" height="105" rx="10" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="50" y="407" fill="#475569" font-size="10" font-weight="600">Phase 3: 单例 Bean 实例化 (AbstractAutowireCapableBeanFactory)</text>
+
+        <line x1="800" y1="335" x2="800" y2="345" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+
+        <rect x="60" y="420" width="210" height="50" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="165" y="442" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">① createBeanInstance()</text>
+        <text x="165" y="459" fill="#94a3b8" font-size="8" text-anchor="middle">确定构造器 → 反射 / CGLIB</text>
+
+        <rect x="330" y="420" width="200" height="50" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="430" y="442" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">② populateBean()</text>
+        <text x="430" y="459" fill="#94a3b8" font-size="8" text-anchor="middle">@Autowired / @Value 注入</text>
+
+        <rect x="590" y="420" width="230" height="50" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="705" y="442" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">③ initializeBean()</text>
+        <text x="705" y="459" fill="#94a3b8" font-size="8" text-anchor="middle">Aware → PostProc#before → init</text>
+
+        <rect x="880" y="420" width="220" height="50" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="990" y="442" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">④ PostProc#after()</text>
+        <text x="990" y="459" fill="#94a3b8" font-size="8" text-anchor="middle">AOP 代理生成在此</text>
+
+        <line x1="270" y1="445" x2="330" y2="445" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+        <line x1="530" y1="445" x2="590" y2="445" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+        <line x1="820" y1="445" x2="880" y2="445" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+
+        <!-- Phase 4: Ready -->
+        <rect x="30" y="520" width="1240" height="80" rx="10" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="50" y="542" fill="#475569" font-size="10" font-weight="600">Phase 4: 容器就绪</text>
+
+        <line x1="990" y1="470" x2="990" y2="550" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+        <line x1="705" y1="470" x2="705" y2="550" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#a1)"/>
+
+        <rect x="500" y="555" width="280" height="35" rx="8" fill="rgba(6, 78, 59, 0.5)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="640" y="577" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">singletonObjects (一级缓存) — 容器就绪</text>
+
+        <rect x="870" y="555" width="250" height="35" rx="8" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="995" y="577" fill="#fb923c" font-size="11" font-weight="600" text-anchor="middle">发布 ContextRefreshedEvent</text>
+
+        <text x="650" y="598" fill="#475569" font-size="9" text-anchor="middle">完成 → ApplicationContext 就绪，可 getBean()，SmartLifecycle.start() 回调</text>
+      </svg>
+    </div>
+
+    <!-- ===== 2. Bean 生命周期流程图 ===== -->
+    <div class="diagram-section" id="bean-lifecycle">
+      <div class="section-title">2. Bean 完整生命周期</div>
+      <svg viewBox="0 0 1200 650">
+        <defs>
+          <marker id="b1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="b2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+          <marker id="b3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" /></marker>
+          <pattern id="g2" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g2)" />
+
+        <!-- Left: Creation -->
+        <text x="50" y="35" fill="#22d3ee" font-size="12" font-weight="700">创建阶段 (Creation)</text>
+
+        <rect x="50" y="55" width="250" height="36" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+        <text x="175" y="77" fill="#94a3b8" font-size="10" font-weight="500" text-anchor="middle">1. 加载 BeanDefinition</text>
+        <line x1="175" y1="91" x2="175" y2="109" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#b1)"/>
+
+        <rect x="50" y="110" width="250" height="36" rx="6" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="175" y="132" fill="#22d3ee" font-size="10" font-weight="500" text-anchor="middle">2. 构造器 / 工厂方法实例化</text>
+        <line x1="175" y1="146" x2="175" y2="164" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#b1)"/>
+
+        <rect x="50" y="165" width="250" height="36" rx="6" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="175" y="187" fill="#22d3ee" font-size="10" font-weight="500" text-anchor="middle">3. populateBean() 依赖注入</text>
+        <line x1="175" y1="201" x2="175" y2="219" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#b1)"/>
+
+        <rect x="50" y="220" width="250" height="36" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="175" y="242" fill="#c4b5fd" font-size="10" font-weight="500" text-anchor="middle">4. Aware 系列回调</text>
+        <line x1="175" y1="256" x2="175" y2="274" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#b1)"/>
+
+        <rect x="50" y="275" width="250" height="36" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="175" y="297" fill="#c4b5fd" font-size="10" font-weight="500" text-anchor="middle">5. BeanPostProcessor#before()</text>
+        <line x1="175" y1="311" x2="175" y2="329" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#b1)"/>
+
+        <rect x="50" y="330" width="250" height="36" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="175" y="352" fill="#34d399" font-size="10" font-weight="500" text-anchor="middle">6. @PostConstruct / afterPropertiesSet()</text>
+        <line x1="175" y1="366" x2="175" y2="384" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#b1)"/>
+
+        <rect x="50" y="385" width="250" height="36" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="175" y="407" fill="#c4b5fd" font-size="10" font-weight="500" text-anchor="middle">7. BeanPostProcessor#after() ← AOP</text>
+        <line x1="175" y1="421" x2="175" y2="444" stroke="#34d399" stroke-width="2" marker-end="url(#b2)"/>
+
+        <rect x="50" y="448" width="250" height="42" rx="8" fill="rgba(6, 78, 59, 0.5)" stroke="#34d399" stroke-width="2"/>
+        <text x="175" y="467" fill="#34d399" font-size="12" font-weight="700" text-anchor="middle">Bean 就绪</text>
+        <text x="175" y="483" fill="#94a3b8" font-size="8" text-anchor="middle">存入 singletonObjects</text>
+
+        <line x1="330" y1="45" x2="330" y2="540" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+
+        <!-- Middle: Runtime -->
+        <text x="380" y="35" fill="#22d3ee" font-size="12" font-weight="700">运行与销毁 (Runtime & Destroy)</text>
+
+        <rect x="380" y="60" width="260" height="150" rx="10" fill="rgba(8, 51, 68, 0.1)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="510" y="83" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">Bean 运行</text>
+        <rect x="400" y="96" width="220" height="36" rx="5" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+        <text x="510" y="118" fill="#94a3b8" font-size="10" font-weight="500" text-anchor="middle">getBean() → 返回实例</text>
+        <rect x="400" y="142" width="220" height="36" rx="5" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+        <text x="510" y="164" fill="#94a3b8" font-size="10" font-weight="500" text-anchor="middle">业务方法调用</text>
+
+        <line x1="510" y1="210" x2="510" y2="238" stroke="#fb7185" stroke-width="1.5" marker-end="url(#b3)"/>
+        <text x="660" y="232" fill="#fb7185" font-size="9">容器关闭 Context.close()</text>
+
+        <rect x="380" y="243" width="260" height="36" rx="6" fill="rgba(136, 19, 55, 0.3)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="510" y="265" fill="#fb7185" font-size="10" font-weight="500" text-anchor="middle">@PreDestroy / DisposableBean.destroy()</text>
+        <line x1="510" y1="279" x2="510" y2="300" stroke="#fb7185" stroke-width="2" marker-end="url(#b3)"/>
+
+        <rect x="380" y="304" width="260" height="42" rx="8" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="2"/>
+        <text x="510" y="323" fill="#fb7185" font-size="12" font-weight="700" text-anchor="middle">Bean 销毁 → GC 回收</text>
+        <text x="510" y="339" fill="#94a3b8" font-size="8" text-anchor="middle">prototype 不受容器管理销毁</text>
+
+        <line x1="680" y1="45" x2="680" y2="540" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+
+        <!-- Right: Extension Points -->
+        <text x="730" y="35" fill="#fbbf24" font-size="12" font-weight="700">扩展点 (Extension Points)</text>
+
+        <!-- BFPP -->
+        <rect x="730" y="55" width="440" height="82" rx="10" fill="rgba(251, 191, 36, 0.06)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="950" y="75" fill="#fbbf24" font-size="10" font-weight="600" text-anchor="middle">BeanFactoryPostProcessor — 修改 BeanDefinition 元数据</text>
+        <rect x="745" y="86" width="135" height="38" rx="5" fill="rgba(251, 191, 36, 0.12)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="812" y="103" fill="#fde68a" font-size="8" font-weight="500" text-anchor="middle">PropertySources</text>
+        <text x="812" y="116" fill="#fde68a" font-size="8" font-weight="500" text-anchor="middle">PlaceholderConfigurer</text>
+        <rect x="890" y="86" width="135" height="38" rx="5" fill="rgba(251, 191, 36, 0.12)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="957" y="103" fill="#fde68a" font-size="8" font-weight="500" text-anchor="middle">Configuration</text>
+        <text x="957" y="116" fill="#fde68a" font-size="8" font-weight="500" text-anchor="middle">ClassPostProcessor</text>
+        <rect x="1035" y="86" width="120" height="38" rx="5" fill="rgba(251, 191, 36, 0.12)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="1095" y="103" fill="#fde68a" font-size="8" font-weight="500" text-anchor="middle">EventListener</text>
+        <text x="1095" y="116" fill="#fde68a" font-size="8" font-weight="500" text-anchor="middle">MethodProcessor</text>
+
+        <!-- BPP -->
+        <rect x="730" y="148" width="440" height="80" rx="10" fill="rgba(167, 139, 250, 0.06)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="950" y="168" fill="#a78bfa" font-size="10" font-weight="600" text-anchor="middle">BeanPostProcessor — 干预 Bean 初始化过程</text>
+        <rect x="745" y="178" width="105" height="38" rx="5" fill="rgba(167, 139, 250, 0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="797" y="194" fill="#c4b5fd" font-size="8" font-weight="500" text-anchor="middle">Autowired</text>
+        <text x="797" y="208" fill="#c4b5fd" font-size="8" font-weight="500" text-anchor="middle">AnnotationBPP</text>
+        <rect x="860" y="178" width="105" height="38" rx="5" fill="rgba(167, 139, 250, 0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="912" y="194" fill="#c4b5fd" font-size="8" font-weight="500" text-anchor="middle">Common</text>
+        <text x="912" y="208" fill="#c4b5fd" font-size="8" font-weight="500" text-anchor="middle">AnnotationBPP</text>
+        <rect x="975" y="178" width="105" height="38" rx="5" fill="rgba(167, 139, 250, 0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="1027" y="194" fill="#c4b5fd" font-size="8" font-weight="500" text-anchor="middle">Async</text>
+        <text x="1027" y="208" fill="#c4b5fd" font-size="8" font-weight="500" text-anchor="middle">AnnotationBPP</text>
+        <rect x="1090" y="178" width="65" height="38" rx="5" fill="rgba(167, 139, 250, 0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="1122" y="194" fill="#c4b5fd" font-size="7" font-weight="500" text-anchor="middle">Scheduled</text>
+        <text x="1122" y="208" fill="#c4b5fd" font-size="7" font-weight="500" text-anchor="middle">BPP</text>
+
+        <!-- Aware -->
+        <rect x="730" y="240" width="440" height="68" rx="10" fill="rgba(34, 211, 238, 0.06)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="950" y="260" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">Aware 回调接口 (11 个)</text>
+        <rect x="745" y="270" width="90" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="790" y="287" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">BeanName</text>
+        <rect x="843" y="270" width="90" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="888" y="287" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">BeanClassLoader</text>
+        <rect x="941" y="270" width="90" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="986" y="287" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">BeanFactory</text>
+        <rect x="1039" y="270" width="116" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="1097" y="287" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">Environment</text>
+
+        <!-- Lifecycle -->
+        <rect x="730" y="320" width="440" height="52" rx="10" fill="rgba(251, 146, 60, 0.06)" stroke="#fb923c" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="950" y="340" fill="#fb923c" font-size="10" font-weight="600" text-anchor="middle">Lifecycle 接口</text>
+        <rect x="745" y="348" width="200" height="18" rx="4" fill="rgba(251, 146, 60, 0.1)" stroke="#fb923c" stroke-width="1"/>
+        <text x="845" y="361" fill="#fdba74" font-size="8" font-weight="500" text-anchor="middle">SmartLifecycle.start() — 容器启动完成回调</text>
+
+        <!-- FactoryHook -->
+        <rect x="730" y="385" width="440" height="65" rx="10" fill="rgba(34, 211, 238, 0.06)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="950" y="405" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">Factory Hook 接口</text>
+        <rect x="745" y="414" width="135" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="812" y="431" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">FactoryBean</text>
+        <rect x="890" y="414" width="135" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="957" y="431" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">InitializingBean</text>
+        <rect x="1035" y="414" width="120" height="26" rx="4" fill="rgba(34, 211, 238, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="1095" y="431" fill="#67e8f9" font-size="7" font-weight="500" text-anchor="middle">DisposableBean</text>
+
+        <!-- Key Points -->
+        <rect x="730" y="462" width="440" height="65" rx="10" fill="rgba(6, 78, 59, 0.06)" stroke="#34d399" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="950" y="482" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">关键机制</text>
+        <text x="748" y="500" fill="#94a3b8" font-size="8">• AOP 代理在 BPP#after() 阶段通过 AbstractAutoProxyCreator 创建</text>
+        <text x="748" y="516" fill="#94a3b8" font-size="8">• @Async / @Transactional 通过各自的 AnnotationBPP 包装为代理实现</text>
+
+        <text x="50" y="545" fill="#475569" font-size="9">※ 调用顺序: 构造器 → 注入 → Aware → PostProc#before → init → PostProc#after → 就绪</text>
+        <text x="50" y="562" fill="#475569" font-size="9">※ Scope: singleton (默认, 容器管理全生命周期), prototype (每次获取创建, 容器不管理销毁), request / session / application (Web)</text>
+      </svg>
+    </div>
+
+    <!-- ===== 3. 循环依赖解决流程图 ===== -->
+    <div class="diagram-section" id="circular-dep">
+      <div class="section-title">3. Spring 三级缓存解决循环依赖 (A &#x2194; B)</div>
+      <svg viewBox="0 0 1200 600">
+        <defs>
+          <marker id="c1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="c2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" /></marker>
+          <marker id="c3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" /></marker>
+          <pattern id="g3" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g3)" />
+
+        <!-- Three level cache introduction -->
+        <rect x="40" y="30" width="1120" height="105" rx="10" fill="rgba(251, 191, 36, 0.06)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="60" y="55" fill="#fbbf24" font-size="11" font-weight="700">三级缓存结构 (DefaultSingletonBeanRegistry)</text>
+
+        <!-- Cache 1 -->
+        <rect x="60" y="70" width="330" height="50" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="225" y="92" fill="#34d399" font-size="11" font-weight="700" text-anchor="middle">一级: singletonObjects</text>
+        <text x="225" y="109" fill="#94a3b8" font-size="8" text-anchor="middle">ConcurrentHashMap — 完全就绪的 Bean</text>
+
+        <!-- Cache 2 -->
+        <rect x="420" y="70" width="330" height="50" rx="8" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="2"/>
+        <text x="585" y="92" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">二级: earlySingletonObjects</text>
+        <text x="585" y="109" fill="#94a3b8" font-size="8" text-anchor="middle">HashMap — 早期引用 (已实例化未注入)</text>
+
+        <!-- Cache 3 -->
+        <rect x="780" y="70" width="360" height="50" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="960" y="92" fill="#a78bfa" font-size="11" font-weight="700" text-anchor="middle">三级: singletonFactories</text>
+        <text x="960" y="109" fill="#94a3b8" font-size="8" text-anchor="middle">HashMap&lt;String, ObjectFactory&lt;?&gt;&gt;</text>
+
+        <!-- Step 1 -->
+        <text x="50" y="170" fill="#22d3ee" font-size="11" font-weight="700">Step 1: 创建 A</text>
+
+        <rect x="50" y="185" width="480" height="55" rx="8" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="290" y="208" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">A 实例化 → createBeanInstance()</text>
+        <text x="290" y="228" fill="#94a3b8" font-size="9" text-anchor="middle">A 原始对象 (未注入) → 三级缓存: singletonFactories.put("a", () → getEarlyBeanRef("a"))</text>
+
+        <line x1="290" y1="240" x2="290" y2="260" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#c2)"/>
+        <text x="340" y="256" fill="#fbbf24" font-size="9">A 存入 singletonFactories</text>
+
+        <!-- Step 2 -->
+        <text x="50" y="285" fill="#22d3ee" font-size="11" font-weight="700">Step 2: A 依赖注入 → 发现需要 B</text>
+
+        <rect x="50" y="300" width="480" height="40" rx="8" fill="rgba(251, 146, 60, 0.2)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="290" y="325" fill="#fb923c" font-size="11" font-weight="600" text-anchor="middle">populateBean(A) → @Autowired B → getBean("b")</text>
+
+        <line x1="290" y1="340" x2="290" y2="365" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#c2)"/>
+        <text x="380" y="360" fill="#fbbf24" font-size="9">B 不在任何缓存中, 创建 B</text>
+
+        <!-- Step 3 -->
+        <text x="50" y="395" fill="#a78bfa" font-size="11" font-weight="700">Step 3: 创建 B (A 等待)</text>
+
+        <rect x="50" y="410" width="480" height="55" rx="8" fill="rgba(76, 29, 149, 0.2)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="290" y="433" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">B 实例化 → 存入三级缓存</text>
+        <text x="290" y="453" fill="#94a3b8" font-size="9" text-anchor="middle">populateBean(B) → @Autowired A → getBean("a")</text>
+
+        <line x1="290" y1="465" x2="290" y2="490" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#c2)"/>
+
+        <!-- Key resolution! -->
+        <!-- Arrow from right column showing the cascade -->
+        <rect x="600" y="395" width="560" height="150" rx="10" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="2"/>
+        <text x="880" y="420" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">三级缓存升级链路</text>
+
+        <rect x="620" y="435" width="250" height="40" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="745" y="453" fill="#a78bfa" font-size="10" font-weight="600" text-anchor="middle">① getBean("a") 从三级缓存查找</text>
+        <text x="745" y="468" fill="#94a3b8" font-size="8" text-anchor="middle">singletonFactories.get("a") → getEarlyBeanRef()</text>
+
+        <line x1="745" y1="475" x2="745" y2="490" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#c1)"/>
+
+        <rect x="620" y="490" width="250" height="40" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="745" y="508" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">② 拿到 A 的早期引用 (可能已 AOP)</text>
+        <text x="745" y="523" fill="#94a3b8" font-size="8" text-anchor="middle">从三级移到二级: earlySingletonObjects.put("a", obj)</text>
+
+        <line x1="620" y1="510" x2="290" y2="510" stroke="#34d399" stroke-width="2" marker-end="url(#c1)"/>
+
+        <rect x="890" y="435" width="250" height="100" rx="8" fill="rgba(6, 78, 59, 0.3)" stroke="#34d399" stroke-width="2"/>
+        <text x="1015" y="460" fill="#34d399" font-size="10" font-weight="700" text-anchor="middle">③ B 注入 A 的早期引用</text>
+        <text x="1015" y="480" fill="#94a3b8" font-size="8" text-anchor="middle">B 完成初始化</text>
+        <text x="1015" y="496" fill="#94a3b8" font-size="8" text-anchor="middle">B → 一级缓存</text>
+        <text x="1015" y="516" fill="#94a3b8" font-size="8" text-anchor="middle">singletonObjects.put("b", B)</text>
+
+        <!-- Step 4 -->
+        <text x="50" y="530" fill="#34d399" font-size="11" font-weight="700">Step 4: 完成 A</text>
+
+        <rect x="50" y="545" width="480" height="40" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="290" y="570" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">A 拿到 B (已就绪) → A 完成初始化 → 一级缓存</text>
+
+        <text x="600" y="580" fill="#475569" font-size="9">※ 前提条件: 构造器注入无法解决循环依赖 (因为在实例化之前就需要依赖); 仅单例 Bean 支持</text>
+      </svg>
+    </div>
+
+    <!-- ===== 4. AOP 代理创建流程 ===== -->
+    <div class="diagram-section" id="aop">
+      <div class="section-title">4. Spring AOP 代理创建流程</div>
+      <svg viewBox="0 0 1200 500">
+        <defs>
+          <marker id="d1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="d2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" /></marker>
+          <marker id="d3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+          <pattern id="g4" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g4)" />
+
+        <!-- Step 1: BeanPostProcessor#after -->
+        <rect x="40" y="30" width="280" height="55" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="180" y="53" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">① BeanPostProcessor#after()</text>
+        <text x="180" y="72" fill="#94a3b8" font-size="9" text-anchor="middle">AbstractAutoProxyCreator.wrapIfNecessary()</text>
+
+        <line x1="320" y1="57" x2="370" y2="57" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#d1)"/>
+
+        <!-- Step 2: Get Advices -->
+        <rect x="380" y="30" width="280" height="55" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="520" y="53" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">② getAdvicesAndAdvisors()</text>
+        <text x="520" y="72" fill="#94a3b8" font-size="9" text-anchor="middle">匹配所有 Advisor (Pointcut + Advice)</text>
+
+        <line x1="660" y1="57" x2="710" y2="57" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#d1)"/>
+
+        <!-- Step 3: Create Proxy -->
+        <rect x="720" y="30" width="440" height="55" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="940" y="53" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">③ createProxy() — 创建代理对象</text>
+        <text x="940" y="72" fill="#94a3b8" font-size="9" text-anchor="middle">ProxyFactory → AopProxy → getProxy()</text>
+
+        <!-- Branch: JDK vs CGLIB -->
+        <line x1="940" y1="85" x2="940" y2="115" stroke="#a78bfa" stroke-width="1.5"/>
+        <line x1="940" y1="115" x2="700" y2="115" stroke="#a78bfa" stroke-width="1.5"/>
+        <line x1="940" y1="115" x2="1180" y2="115" stroke="#a78bfa" stroke-width="1.5"/>
+
+        <line x1="700" y1="115" x2="700" y2="140" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#d1)"/>
+        <line x1="1180" y1="115" x2="1180" y2="140" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#d1)"/>
+
+        <!-- JDK -->
+        <rect x="540" y="145" width="320" height="70" rx="8" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="700" y="168" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">JdkDynamicAopProxy</text>
+        <text x="700" y="186" fill="#94a3b8" font-size="9" text-anchor="middle">基于接口 → Proxy.newProxyInstance()</text>
+        <text x="700" y="204" fill="#475569" font-size="8" text-anchor="middle">条件: 类实现了接口 &amp;&amp; !proxyTargetClass</text>
+
+        <!-- CGLIB -->
+        <rect x="1020" y="145" width="320" height="70" rx="8" fill="rgba(76, 29, 149, 0.2)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1180" y="168" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">CglibAopProxy (Objenesis)</text>
+        <text x="1180" y="186" fill="#94a3b8" font-size="9" text-anchor="middle">基于子类 → Enhancer.create()</text>
+        <text x="1180" y="204" fill="#475569" font-size="8" text-anchor="middle">条件: 无接口 或 proxyTargetClass=true</text>
+
+        <!-- Merge -->
+        <line x1="700" y1="215" x2="700" y2="250" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="1180" y1="215" x2="1180" y2="250" stroke="#a78bfa" stroke-width="1.5"/>
+        <line x1="700" y1="250" x2="940" y2="250" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="1180" y1="250" x2="940" y2="250" stroke="#a78bfa" stroke-width="1.5"/>
+        <line x1="940" y1="250" x2="940" y2="275" stroke="#34d399" stroke-width="2" marker-end="url(#d3)"/>
+
+        <!-- Proxy returned -->
+        <rect x="680" y="280" width="520" height="55" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="940" y="303" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">④ 返回代理对象 → 替换原始 Bean → 存入 singletonObjects</text>
+        <text x="940" y="322" fill="#94a3b8" font-size="9" text-anchor="middle">后续 getBean() 拿到的都是代理对象</text>
+
+        <line x1="940" y1="335" x2="940" y2="365" stroke="#34d399" stroke-width="1.5" marker-end="url(#d3)"/>
+
+        <!-- Invoke -->
+        <rect x="700" y="370" width="480" height="110" rx="10" fill="rgba(251, 191, 36, 0.06)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="940" y="395" fill="#fbbf24" font-size="11" font-weight="600" text-anchor="middle">⑤ 方法调用时的拦截链</text>
+
+        <rect x="720" y="408" width="440" height="55" rx="6" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="940" y="428" fill="#fde68a" font-size="10" font-weight="500" text-anchor="middle">ReflectiveMethodInvocation.proceed()</text>
+        <text x="940" y="446" fill="#94a3b8" font-size="9" text-anchor="middle">Before Advice → 目标方法 → AfterReturning → After (finally) → Around</text>
+        <text x="940" y="460" fill="#475569" font-size="8" text-anchor="middle">异常时: AfterThrowing → After</text>
+      </svg>
+    </div>
+
+    <!-- ===== 5. 事务拦截流程 ===== -->
+    <div class="diagram-section" id="tx">
+      <div class="section-title">5. @Transactional 事务拦截流程</div>
+      <svg viewBox="0 0 1200 520">
+        <defs>
+          <marker id="e1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="e2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" /></marker>
+          <marker id="e3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+          <marker id="e4" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" /></marker>
+          <pattern id="g5" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g5)" />
+
+        <!-- Call starts -->
+        <rect x="40" y="30" width="220" height="50" rx="8" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+        <text x="150" y="52" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">① 调用 @Transactional 方法</text>
+        <text x="150" y="70" fill="#94a3b8" font-size="8" text-anchor="middle">(AOP 代理拦截)</text>
+
+        <line x1="260" y1="55" x2="320" y2="55" stroke="#22d3ee" stroke-width="2" marker-end="url(#e1)"/>
+
+        <!-- TransactionInterceptor -->
+        <rect x="330" y="22" width="260" height="65" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="460" y="45" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">② TransactionInterceptor</text>
+        <text x="460" y="63" fill="#94a3b8" font-size="9" text-anchor="middle">invoke(MethodInvocation)</text>
+        <text x="460" y="78" fill="#475569" font-size="8" text-anchor="middle">读取 @Transactional 属性</text>
+
+        <line x1="590" y1="55" x2="650" y2="55" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#e2)"/>
+
+        <!-- PlatformTransactionManager -->
+        <rect x="660" y="22" width="260" height="65" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="2"/>
+        <text x="790" y="45" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">③ PlatformTransactionManager</text>
+        <text x="790" y="63" fill="#94a3b8" font-size="9" text-anchor="middle">getTransaction(definition)</text>
+        <text x="790" y="78" fill="#475569" font-size="8" text-anchor="middle">DataSourceTransactionManager / JtaTxMgr</text>
+
+        <line x1="920" y1="55" x2="970" y2="55" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#e1)"/>
+
+        <!-- Begin transaction -->
+        <rect x="980" y="22" width="190" height="65" rx="8" fill="rgba(6, 78, 59, 0.3)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="1075" y="45" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">④ 开启事务</text>
+        <text x="1075" y="63" fill="#94a3b8" font-size="8" text-anchor="middle">doBegin()</text>
+        <text x="1075" y="78" fill="#94a3b8" font-size="8" text-anchor="middle">conn.setAutoCommit(false)</text>
+
+        <!-- Execute business -->
+        <line x1="1075" y1="87" x2="1075" y2="120" stroke="#34d399" stroke-width="1.5" marker-end="url(#e3)"/>
+
+        <rect x="880" y="125" width="390" height="55" rx="8" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="1075" y="148" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">⑤ 执行业务方法</text>
+        <text x="1075" y="166" fill="#94a3b8" font-size="9" text-anchor="middle">invocation.proceed() → 实际 Service 方法</text>
+
+        <!-- Branch: success / exception -->
+        <line x1="1075" y1="180" x2="1075" y2="210" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="1075" y1="210" x2="900" y2="210" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="1075" y1="210" x2="1200" y2="210" stroke="#22d3ee" stroke-width="1.5"/>
+
+        <line x1="900" y1="210" x2="900" y2="240" stroke="#34d399" stroke-width="2" marker-end="url(#e3)"/>
+        <line x1="1200" y1="210" x2="1190" y2="240" stroke="#fb7185" stroke-width="2" marker-end="url(#e4)"/>
+
+        <!-- Commit -->
+        <rect x="740" y="245" width="320" height="65" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="900" y="268" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">⑥ 正常返回 → commit()</text>
+        <text x="900" y="286" fill="#94a3b8" font-size="9" text-anchor="middle">doCommit() → conn.commit()</text>
+        <text x="900" y="301" fill="#475569" font-size="8" text-anchor="middle">清除 TransactionSynchronization</text>
+
+        <!-- Rollback -->
+        <rect x="1040" y="245" width="300" height="65" rx="8" fill="rgba(136, 19, 55, 0.3)" stroke="#fb7185" stroke-width="2"/>
+        <text x="1190" y="268" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">⑥ 异常 → rollback()</text>
+        <text x="1190" y="286" fill="#94a3b8" font-size="9" text-anchor="middle">回滚条件: RuntimeException / Error</text>
+        <text x="1190" y="301" fill="#475569" font-size="8" text-anchor="middle">rollbackFor / noRollbackFor 可定制</text>
+
+        <!-- Propagation + Isolation -->
+        <rect x="40" y="120" width="280" height="195" rx="10" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="60" y="142" fill="#fbbf24" font-size="10" font-weight="600">传播行为 (Propagation)</text>
+        <text x="58" y="165" fill="#94a3b8" font-size="8">• REQUIRED (默认): 有则加入, 无则新建</text>
+        <text x="58" y="183" fill="#94a3b8" font-size="8">• REQUIRES_NEW: 挂起当前, 新建</text>
+        <text x="58" y="201" fill="#94a3b8" font-size="8">• NESTED: 嵌套事务 (Savepoint)</text>
+        <text x="58" y="219" fill="#94a3b8" font-size="8">• SUPPORTS / NOT_SUPPORTED</text>
+        <text x="58" y="237" fill="#94a3b8" font-size="8">• MANDATORY / NEVER</text>
+        <text x="60" y="262" fill="#fbbf24" font-size="10" font-weight="600">隔离级别 (Isolation)</text>
+        <text x="58" y="285" fill="#94a3b8" font-size="8">• DEFAULT / READ_UNCOMMITTED</text>
+        <text x="58" y="303" fill="#94a3b8" font-size="8">• READ_COMMITTED / REPEATABLE_READ</text>
+        <text x="58" y="321" fill="#94a3b8" font-size="8">• SERIALIZABLE</text>
+
+        <rect x="40" y="330" width="1120" height="85" rx="10" fill="rgba(34, 211, 238, 0.04)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="60" y="352" fill="#22d3ee" font-size="10" font-weight="600">事务同步 (TransactionSynchronization)</text>
+        <rect x="60" y="365" width="170" height="38" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="145" y="382" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">beforeCommit()</text>
+        <text x="145" y="396" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">commit 前回调</text>
+        <rect x="250" y="365" width="170" height="38" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="335" y="382" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">beforeCompletion()</text>
+        <text x="335" y="396" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">完成前回调</text>
+        <rect x="440" y="365" width="170" height="38" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="525" y="382" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">afterCommit()</text>
+        <text x="525" y="396" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">commit 后回调</text>
+        <rect x="630" y="365" width="170" height="38" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="715" y="382" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">afterCompletion()</text>
+        <text x="715" y="396" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">完成后回调 (finally)</text>
+
+        <rect x="820" y="365" width="170" height="38" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="905" y="382" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">@TransactionalEventListener</text>
+        <text x="905" y="396" fill="#67e8f9" font-size="8" font-weight="500" text-anchor="middle">事务事件监听</text>
+
+        <!-- Key points -->
+        <text x="40" y="445" fill="#475569" font-size="8">※ 事务 AOP 拦截链: 代理 → TransactionInterceptor → PlatfromTxMgr → DataSource → conn.setAutoCommit(false) → 业务方法 → commit/rollback</text>
+        <text x="40" y="465" fill="#475569" font-size="8">※ @Transactional 实现: InfrastructureAdvisorAutoProxyCreator → BeanFactoryTransactionAttributeSourceAdvisor → TransactionInterceptor</text>
+        <text x="40" y="485" fill="#475569" font-size="8">※ 注意: 同类自调用 (this.method()) 不经过 AOP 代理, 事务不生效; 需要 self-injection 或 @EnableAspectJAutoProxy(exposeProxy=true) + AopContext.currentProxy()</text>
+      </svg>
+    </div>
+
+    <!-- ===== 6. MVC 请求处理流程图 ===== -->
+    <div class="diagram-section" id="mvc">
+      <div class="section-title">6. Spring MVC 请求处理流程</div>
+      <svg viewBox="0 0 1300 580">
+        <defs>
+          <marker id="f1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="f2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" /></marker>
+          <marker id="f3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+          <marker id="f4" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb923c" /></marker>
+          <marker id="f5" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" /></marker>
+          <pattern id="g6" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g6)" />
+
+        <!-- Key components bar -->
+        <rect x="40" y="20" width="1220" height="85" rx="10" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="60" y="42" fill="#fbbf24" font-size="10" font-weight="600">核心组件</text>
+        <rect x="60" y="54" width="150" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="135" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">DispatcherServlet</text>
+        <text x="135" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">前端控制器</text>
+        <rect x="225" y="54" width="150" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="300" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">HandlerMapping</text>
+        <text x="300" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">请求 → Handler</text>
+        <rect x="390" y="54" width="150" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="465" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">HandlerAdapter</text>
+        <text x="465" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">调用 Handler</text>
+        <rect x="555" y="54" width="150" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="630" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">HandlerInterceptor</text>
+        <text x="630" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">三阶段拦截</text>
+        <rect x="720" y="54" width="150" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="795" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">ViewResolver</text>
+        <text x="795" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">视图解析</text>
+        <rect x="885" y="54" width="160" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="965" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">HttpMessageConverter</text>
+        <text x="965" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">请求/响应体转换</text>
+        <rect x="1060" y="54" width="185" height="38" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="1152" y="70" fill="#fde68a" font-size="8" font-weight="600" text-anchor="middle">HandlerExceptionResolver</text>
+        <text x="1152" y="84" fill="#94a3b8" font-size="7" text-anchor="middle">异常解析</text>
+
+        <!-- HTTP Request -->
+        <rect x="40" y="270" width="160" height="45" rx="8" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+        <text x="120" y="290" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">HTTP Request</text>
+        <text x="120" y="306" fill="#94a3b8" font-size="8" text-anchor="middle">GET /api/users</text>
+        <line x1="200" y1="292" x2="250" y2="292" stroke="#22d3ee" stroke-width="2" marker-end="url(#f1)"/>
+
+        <!-- Filter Chain -->
+        <rect x="260" y="265" width="180" height="55" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="350" y="286" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">① Filter Chain</text>
+        <text x="350" y="303" fill="#94a3b8" font-size="8" text-anchor="middle">Encoding, CORS, Security ...</text>
+        <line x1="440" y1="292" x2="490" y2="292" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#f2)"/>
+
+        <!-- DispatcherServlet -->
+        <rect x="500" y="255" width="200" height="70" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="2"/>
+        <text x="600" y="278" fill="#22d3ee" font-size="12" font-weight="700" text-anchor="middle">② DispatcherServlet</text>
+        <text x="600" y="296" fill="#94a3b8" font-size="8" text-anchor="middle">doService() → doDispatch()</text>
+        <text x="600" y="312" fill="#475569" font-size="8" text-anchor="middle">MultipartResolver → LocaleResolver</text>
+
+        <!-- Branch to HandlerMapping -->
+        <line x1="600" y1="255" x2="600" y2="165" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="600" y1="165" x2="850" y2="165" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#f1)"/>
+
+        <rect x="860" y="140" width="220" height="45" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="970" y="160" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">③ HandlerMapping</text>
+        <text x="970" y="176" fill="#94a3b8" font-size="8" text-anchor="middle">返回 HandlerExecutionChain</text>
+
+        <!-- Branch to HandlerAdapter -->
+        <line x1="700" y1="292" x2="860" y2="292" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#f1)"/>
+
+        <rect x="870" y="265" width="220" height="45" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="980" y="285" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">④ HandlerAdapter.handle()</text>
+        <text x="980" y="301" fill="#94a3b8" font-size="8" text-anchor="middle">参数解析 → 类型转换 → 校验</text>
+
+        <!-- Branch to Interceptor -->
+        <line x1="700" y1="292" x2="700" y2="400" stroke="#fb923c" stroke-width="1.5"/>
+        <line x1="700" y1="400" x2="590" y2="400" stroke="#fb923c" stroke-width="1.5" marker-end="url(#f4)"/>
+
+        <rect x="590" y="415" width="230" height="40" rx="8" fill="rgba(251, 146, 60, 0.2)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="705" y="432" fill="#fb923c" font-size="10" font-weight="600" text-anchor="middle">⑤ Interceptor#preHandle()</text>
+        <text x="705" y="448" fill="#94a3b8" font-size="8" text-anchor="middle">false → 中断请求</text>
+
+        <!-- Controller -->
+        <line x1="980" y1="292" x2="1050" y2="292" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#f1)"/>
+
+        <rect x="1060" y="265" width="190" height="50" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="1155" y="286" fill="#34d399" font-size="11" font-weight="700" text-anchor="middle">⑥ Controller</text>
+        <text x="1155" y="304" fill="#94a3b8" font-size="8" text-anchor="middle">@RestController → JSON</text>
+
+        <!-- Return -->
+        <line x1="1155" y1="315" x2="1155" y2="440" stroke="#34d399" stroke-width="1.5" marker-end="url(#f3)"/>
+
+        <rect x="1035" y="445" width="240" height="45" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="1155" y="464" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">⑦ 响应处理</text>
+        <text x="1155" y="482" fill="#94a3b8" font-size="8" text-anchor="middle">@ResponseBody → MessageConverter</text>
+
+        <!-- postHandle -->
+        <line x1="1035" y1="467" x2="840" y2="467" stroke="#fb923c" stroke-width="1.5" marker-end="url(#f4)"/>
+        <text x="930" y="460" fill="#fb923c" font-size="8" text-anchor="middle">Interceptor#postHandle()</text>
+
+        <!-- ViewResolver -->
+        <rect x="590" y="485" width="230" height="40" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="705" y="502" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">⑧ ViewResolver (视图模式)</text>
+        <text x="705" y="518" fill="#94a3b8" font-size="8" text-anchor="middle">ModelAndView → 渲染</text>
+
+        <!-- afterCompletion -->
+        <line x1="590" y1="505" x2="350" y2="505" stroke="#fb7185" stroke-width="1.5" marker-end="url(#f5)"/>
+        <text x="470" y="498" fill="#fb7185" font-size="8" text-anchor="middle">afterCompletion() (always)</text>
+
+        <!-- Exception -->
+        <line x1="600" y1="325" x2="600" y2="360" stroke="#fb7185" stroke-width="1.5" marker-end="url(#f5)"/>
+
+        <rect x="440" y="365" width="320" height="32" rx="8" fill="rgba(136, 19, 55, 0.3)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="600" y="386" fill="#fb7185" font-size="10" font-weight="600" text-anchor="middle">⑨ 异常 → @ExceptionHandler → ExceptionHandlerExceptionResolver</text>
+
+        <!-- HTTP Response -->
+        <line x1="350" y1="505" x2="120" y2="505" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="120" y1="505" x2="120" y2="350" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#f1)"/>
+
+        <rect x="10" y="350" width="160" height="45" rx="8" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+        <text x="90" y="370" fill="#34d399" font-size="11" font-weight="700" text-anchor="middle">HTTP Response</text>
+        <text x="90" y="386" fill="#94a3b8" font-size="8" text-anchor="middle">JSON / HTML / XML</text>
+      </svg>
+    </div>
+
+    <!-- ===== 7. WebFlux 响应式流程图 ===== -->
+    <div class="diagram-section" id="webflux">
+      <div class="section-title">7. Spring WebFlux 响应式处理流程</div>
+      <svg viewBox="0 0 1200 480">
+        <defs>
+          <marker id="g1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="g2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" /></marker>
+          <marker id="g3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+          <pattern id="g7" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g7)" />
+
+        <!-- Request -->
+        <rect x="40" y="220" width="150" height="45" rx="8" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+        <text x="115" y="240" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">Reactive Request</text>
+        <text x="115" y="256" fill="#94a3b8" font-size="8" text-anchor="middle">Mono/Flux</text>
+
+        <line x1="190" y1="242" x2="240" y2="242" stroke="#22d3ee" stroke-width="2" marker-end="url(#g1)"/>
+
+        <!-- Netty / Tomcat -->
+        <rect x="250" y="215" width="180" height="55" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="340" y="236" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">① Netty / Servlet 3.1+</text>
+        <text x="340" y="254" fill="#94a3b8" font-size="8" text-anchor="middle">Reactor Netty / Tomcat</text>
+        <text x="340" y="267" fill="#475569" font-size="7" text-anchor="middle">(event-loop, non-blocking)</text>
+
+        <line x1="430" y1="242" x2="480" y2="242" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#g2)"/>
+
+        <!-- WebFilter -->
+        <rect x="490" y="215" width="170" height="55" rx="8" fill="rgba(76, 29, 149, 0.2)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="575" y="236" fill="#c4b5fd" font-size="10" font-weight="600" text-anchor="middle">② WebFilter Chain</text>
+        <text x="575" y="254" fill="#94a3b8" font-size="8" text-anchor="middle">Reactive Filter</text>
+
+        <line x1="660" y1="242" x2="710" y2="242" stroke="#22d3ee" stroke-width="2" marker-end="url(#g1)"/>
+
+        <!-- DispatcherHandler -->
+        <rect x="720" y="210" width="200" height="65" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="2"/>
+        <text x="820" y="233" fill="#22d3ee" font-size="11" font-weight="700" text-anchor="middle">③ DispatcherHandler</text>
+        <text x="820" y="251" fill="#94a3b8" font-size="8" text-anchor="middle">handle(ServerWebExchange)</text>
+        <text x="820" y="267" fill="#475569" font-size="8" text-anchor="middle">(替代 DispatcherServlet)</text>
+
+        <!-- Branches -->
+        <line x1="820" y1="210" x2="820" y2="155" stroke="#22d3ee" stroke-width="1.5"/>
+        <line x1="820" y1="155" x2="910" y2="155" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#g1)"/>
+
+        <rect x="920" y="130" width="220" height="45" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="1030" y="150" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">④ HandlerMapping</text>
+        <text x="1030" y="166" fill="#94a3b8" font-size="8" text-anchor="middle">RouterFunction / @RequestMapping</text>
+
+        <line x1="920" y1="242" x2="1010" y2="242" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#g1)"/>
+
+        <rect x="1020" y="220" width="140" height="45" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="1090" y="240" fill="#22d3ee" font-size="9" font-weight="600" text-anchor="middle">⑤ HandlerAdapter</text>
+        <text x="1090" y="256" fill="#94a3b8" font-size="8" text-anchor="middle">HandlerResult</text>
+
+        <!-- Handler -->
+        <line x1="820" y1="275" x2="820" y2="310" stroke="#34d399" stroke-width="1.5" marker-end="url(#g3)"/>
+
+        <rect x="680" y="315" width="280" height="55" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="820" y="338" fill="#34d399" font-size="11" font-weight="700" text-anchor="middle">⑥ Handler (@RestController / RouterFunction)</text>
+        <text x="820" y="356" fill="#94a3b8" font-size="9" text-anchor="middle">返回 Mono&lt;ServerResponse&gt; / Flux&lt;T&gt;</text>
+
+        <!-- Response -->
+        <line x1="820" y1="370" x2="820" y2="400" stroke="#34d399" stroke-width="1.5" marker-end="url(#g3)"/>
+
+        <rect x="680" y="405" width="280" height="40" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="820" y="424" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">⑦ HandlerResultHandler → 写入响应</text>
+        <text x="820" y="438" fill="#94a3b8" font-size="8" text-anchor="middle">ServerResponseBodyHandler / ViewResolutionResultHandler</text>
+
+        <!-- Comparison box -->
+        <rect x="40" y="30" width="1120" height="160" rx="10" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="60" y="55" fill="#fbbf24" font-size="11" font-weight="700">Servlet (WebMvc) vs Reactive (WebFlux) 对比</text>
+
+        <line x1="580" y1="70" x2="580" y2="175" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,3"/>
+
+        <text x="300" y="78" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">Spring WebMvc (Servlet)</text>
+        <text x="60" y="100" fill="#94a3b8" font-size="9">• 基于 Servlet API, 每个请求一个线程 (Thread-per-Request)</text>
+        <text x="60" y="120" fill="#94a3b8" font-size="9">• 前端控制器: DispatcherServlet</text>
+        <text x="60" y="140" fill="#94a3b8" font-size="9">• 过滤器/拦截器: Filter / HandlerInterceptor (阻塞)</text>
+        <text x="60" y="160" fill="#94a3b8" font-size="9">• 返回值: ModelAndView / @ResponseBody (同步)</text>
+        <text x="60" y="180" fill="#94a3b8" font-size="9">• 容器: Tomcat / Jetty / Undertow (Servlet 容器)</text>
+
+        <text x="880" y="78" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Spring WebFlux (Reactive)</text>
+        <text x="600" y="100" fill="#94a3b8" font-size="9">• 基于 Reactive Streams, 事件循环 + 少量线程</text>
+        <text x="600" y="120" fill="#94a3b8" font-size="9">• 前端控制器: DispatcherHandler</text>
+        <text x="600" y="140" fill="#94a3b8" font-size="9">• 过滤器: WebFilter (非阻塞)</text>
+        <text x="600" y="160" fill="#94a3b8" font-size="9">• 返回值: Mono / Flux (异步非阻塞)</text>
+        <text x="600" y="180" fill="#94a3b8" font-size="9">• 运行时: Reactor Netty / Tomcat / Undertow / Jetty</text>
+      </svg>
+    </div>
+
+    <!-- ===== 8. Spring 事件机制 ===== -->
+    <div class="diagram-section" id="event">
+      <div class="section-title">8. Spring 事件机制 (Event / Listener)</div>
+      <svg viewBox="0 0 1200 420">
+        <defs>
+          <marker id="h1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+          <marker id="h2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb923c" /></marker>
+          <marker id="h3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" /></marker>
+          <pattern id="g8" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#g8)" />
+
+        <!-- Publisher -->
+        <rect x="40" y="40" width="220" height="60" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="2"/>
+        <text x="150" y="63" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">① 发布事件</text>
+        <text x="150" y="82" fill="#94a3b8" font-size="9" text-anchor="middle">ApplicationEventPublisher</text>
+        <text x="150" y="97" fill="#475569" font-size="8" text-anchor="middle">publishEvent(event)</text>
+
+        <line x1="260" y1="70" x2="320" y2="70" stroke="#22d3ee" stroke-width="2" marker-end="url(#h1)"/>
+
+        <!-- ApplicationEventMulticaster -->
+        <rect x="330" y="33" width="250" height="75" rx="8" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="455" y="56" fill="#c4b5fd" font-size="11" font-weight="600" text-anchor="middle">② ApplicationEventMulticaster</text>
+        <text x="455" y="76" fill="#94a3b8" font-size="9" text-anchor="middle">SimpleApplicationEventMulticaster</text>
+        <text x="455" y="94" fill="#475569" font-size="8" text-anchor="middle">multicastEvent(event)</text>
+
+        <line x1="580" y1="70" x2="640" y2="70" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#h3)"/>
+
+        <!-- Resolve Listeners -->
+        <rect x="650" y="33" width="250" height="75" rx="8" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="775" y="56" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">③ getApplicationListeners()</text>
+        <text x="775" y="76" fill="#94a3b8" font-size="9" text-anchor="middle">根据事件类型 (泛型) 匹配</text>
+        <text x="775" y="94" fill="#475569" font-size="8" text-anchor="middle">ResolvableType 泛型解析</text>
+
+        <line x1="900" y1="70" x2="950" y2="70" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#h1)"/>
+
+        <!-- Invoke Listener -->
+        <rect x="960" y="33" width="210" height="75" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="1065" y="56" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">④ invokeListener()</text>
+        <text x="1065" y="76" fill="#94a3b8" font-size="9" text-anchor="middle">@EventListener 方法</text>
+        <text x="1065" y="94" fill="#94a3b8" font-size="9" text-anchor="middle">或 ApplicationListener 接口</text>
+
+        <!-- Sync / Async -->
+        <rect x="330" y="140" width="840" height="70" rx="10" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="750" y="162" fill="#fbbf24" font-size="10" font-weight="600" text-anchor="middle">执行模式</text>
+
+        <rect x="350" y="173" width="270" height="28" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="485" y="192" fill="#fde68a" font-size="10" font-weight="500" text-anchor="middle">同步 (默认): 发布线程直接调用 Listener</text>
+
+        <rect x="670" y="173" width="360" height="28" rx="5" fill="rgba(251, 191, 36, 0.08)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="850" y="192" fill="#fde68a" font-size="10" font-weight="500" text-anchor="middle">异步: @Async + @EventListener → 独立线程池</text>
+
+        <!-- Built-in Events -->
+        <rect x="330" y="240" width="840" height="80" rx="10" fill="rgba(34, 211, 238, 0.04)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="350" y="262" fill="#22d3ee" font-size="10" font-weight="600">Spring 内置事件 (ApplicationEvent) 发布时机:</text>
+        <rect x="350" y="273" width="170" height="35" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="435" y="288" fill="#67e8f9" font-size="8" font-weight="600" text-anchor="middle">ContextRefreshedEvent</text>
+        <text x="435" y="302" fill="#94a3b8" font-size="7" text-anchor="middle">容器 refresh 完成后</text>
+        <rect x="535" y="273" width="170" height="35" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="620" y="288" fill="#67e8f9" font-size="8" font-weight="600" text-anchor="middle">ContextStartedEvent</text>
+        <text x="620" y="302" fill="#94a3b8" font-size="7" text-anchor="middle">start() 后</text>
+        <rect x="720" y="273" width="170" height="35" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="805" y="288" fill="#67e8f9" font-size="8" font-weight="600" text-anchor="middle">ContextStoppedEvent</text>
+        <text x="805" y="302" fill="#94a3b8" font-size="7" text-anchor="middle">stop() 后</text>
+        <rect x="905" y="273" width="170" height="35" rx="5" fill="rgba(34, 211, 238, 0.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="990" y="288" fill="#67e8f9" font-size="8" font-weight="600" text-anchor="middle">ContextClosedEvent</text>
+        <text x="990" y="302" fill="#94a3b8" font-size="7" text-anchor="middle">close() 后</text>
+
+        <!-- TransactionalEventListener -->
+        <rect x="330" y="340" width="840" height="60" rx="10" fill="rgba(251, 146, 60, 0.05)" stroke="#fb923c" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="350" y="362" fill="#fb923c" font-size="10" font-weight="600">@TransactionalEventListener (事务事件监听)</text>
+        <text x="350" y="382" fill="#94a3b8" font-size="9">
+          • TransactionPhase: BEFORE_COMMIT (默认) | AFTER_COMMIT | AFTER_ROLLBACK | AFTER_COMPLETION
+        </text>
+      </svg>
+    </div>
+
+    <p class="footer">
+      Spring Framework · IoC · Bean Lifecycle · Circular Dependency · AOP · Transaction · MVC · WebFlux · Event · Apache 2.0
+    </p>
+  </div>
+</body>
+</html>

@@ -176,7 +176,10 @@
 * [ConcurrentHashMap](docs/jdk/ConcurrentHashMap.md)
 
 ### Spring
-* [spring基础](docs/spring/spring基础.md)
+* [Spring Framework 文档索引](docs/spring/INDEX.md)
+* [模块文档 (23个)](docs/spring/modules/)
+* [源码深度解析 (15篇)](docs/spring/deep-dive/)
+* [扩展点实战指南](docs/spring/guides/extension-points-guide.md)
 
 ### Spring Boot
 * [springboot基础](docs/springboot/springboot基础.md)
