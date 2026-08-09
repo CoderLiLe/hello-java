@@ -94,6 +94,12 @@
 * [分库分表与分布式主键生成策略](docs/database/mysql/sharding/分库分表与分布式主键生成策略.md)
 * [ShardingProxy分库分表](docs/database/mysql/sharding/ShardingProxy分库分表.md)
 
+#### SQL 练习
+* [排序和分组](docs/database/mysql/sql/sort_group.md)
+* [聚合函数](docs/database/mysql/sql/aggregate_function.md)
+* [高级查询和连接](docs/database/mysql/sql/query_join.md)
+* [子查询-餐馆营业额](docs/database/mysql/sql/sub_query/1321restaurant_growth.md)
+
 ### PostgreSQL
 * [postgresql基础](docs/database/postgresql/postgresql基础.md)
 
