@@ -107,6 +107,7 @@
 * [redis基础](docs/database/redis/redis基础.md)
 * [redis使用场景](docs/database/redis/redis使用场景.md)
 * [redis线程模型](docs/database/redis/redis_thread_model.md)
+* [redis原理](docs/database/redis/redis原理.md)
 * [redis数据安全分析](docs/database/redis/data_security_analysis.md)
 
 ### MongoDB

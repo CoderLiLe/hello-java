@@ -15,9 +15,9 @@
 - 解决方案二：布隆过滤器
   - 布隆过滤器主要用于检索一个数据是否在一个集合中，我们当时使用的是Redisson实现的布隆过滤器。
   - 它的底层主要是先去初始化一个比较大的数组，里面存放的二进制0和1。一开始都是0，当一个key来了之后，经过三次hash计算，模数组长度找到找到对应下标，然后将该位置改为1，这三个位置的1表明key存在。
-  ![](assets/01/redis使用场景/2.2布隆过滤器.png)
-  ![](assets/01/redis使用场景/2.3布隆过滤器.png)
-  ![](assets/01/redis使用场景/2.4布隆过滤器.png)
+  ![](assets/redis使用场景/2.2布隆过滤器.png)
+  ![](assets/redis使用场景/2.3布隆过滤器.png)
+  ![](assets/redis使用场景/2.4布隆过滤器.png)
   - 优点：内存占用较少，没有多余key
   - 缺点：实现复杂，存在误判
     - 会产生误判，设置一个误判率，比如%5。
@@ -25,10 +25,10 @@
 
 ## 3. 什么是缓存击穿？怎么解决？
 - 缓存击穿：给某一个key设置了过期时间，当key过期的时候，恰好这时间点对这个key有大量的并发请求过来，这些并发的请求可能会瞬间把DB压垮
-![缓存击穿图例](assets/01/redis使用场景/3.1缓存击穿.png)
+![缓存击穿图例](assets/redis使用场景/3.1缓存击穿.png)
 - 解决方案一：互斥锁
 - 解决方案二：逻辑过期
-![](assets/01/redis使用场景/3.2缓存击穿方案.png)
+![](assets/redis使用场景/3.2缓存击穿方案.png)
 > Tips：回答示例
 > 1. 缓存击穿的意思是对于设置了过期时间的key，缓存在某个时间点过期的时候，恰好这个时间点对这个key有大量的并发请求过来，这些请求发现这个key的缓存已经过期，就都会从数据库查询数据并同时缓存到Redis中，这个时候大并发请求可能会瞬间把DB压垮。
 > 2. 解决方案有两种方式：
@@ -38,7 +38,7 @@
 
 ## 4. 什么是缓存雪崩？怎么解决？
 - 缓存雪崩：在同一时段大量的缓存key同时失效或者Redis服务宕机，导致大量请求到达数据库，带来巨大压力
-![](assets/01/redis使用场景/4.1缓存雪崩.png)
+![](assets/redis使用场景/4.1缓存雪崩.png)
 - 解决方案：
   - 给不同的key的TTL添加随机值
   - 利用Redis集群提高服务的可用性（哨兵模式、集群模式）
@@ -63,15 +63,15 @@
 ### 5.1 分布式锁保证数据一致性
 - 双写一致性：当修改了数据库的数据也要同时更新缓存的数据，缓存和数据库的数据要保持一致
 - 读操作：缓存命中，直接返回；缓存未命中查询数据库，写入缓存设置超时时间，然后返回结果
-![](assets/01/redis使用场景/5.1读操作.png)
+![](assets/redis使用场景/5.1读操作.png)
 - 写操作：延迟双删
-![](assets/01/redis使用场景/5.2写操作.png)
+![](assets/redis使用场景/5.2写操作.png)
 - 双写一致分布式锁
-![](assets/01/redis使用场景/5.3双写一致分布式锁.png)
+![](assets/redis使用场景/5.3双写一致分布式锁.png)
 - 读多写少
   - 共享锁：读锁readLock，加锁之后，其它线程可以共享读操作
   - 排他锁：独占锁writeLock，加锁之后，阻塞其它线程读写操作
-![](assets/01/redis使用场景/5.4分布式锁特点.png)
+![](assets/redis使用场景/5.4分布式锁特点.png)
 ```java
 public Item getById(Integer id) {
     RReadWriteLock readWriteLock = redissonClient.getReadWriteLock("ITEM_READ_WRITE_LOCK");
@@ -122,15 +122,15 @@ public void updateById(Integer id) {
 }
 ```
 ### 5.2 异步通知保证数据的最终一致性
-![](assets/01/redis使用场景/5.5异步通知保证数据的最终一致性.png)
+![](assets/redis使用场景/5.5异步通知保证数据的最终一致性.png)
 - 基于Canal的异步通知
-![](assets/01/redis使用场景/5.6基于cancal的异步通知.png)
+![](assets/redis使用场景/5.6基于cancal的异步通知.png)
 > Tip：二进制日志（BINLOG）记录了所有的 DDL（数据定义语言）语句和 DML（数据操纵语言）语句，但不包括数据查询（SELECT、SHOW）语句。
 
 ## 6. 能聊一聊Redis的持久化机制吗？
 ### 6.1 RDB
 - RDB持久化：Redis默认的持久化方式，就是将内存中的数据保存到磁盘上，以二进制文件的形式保存，这种持久化方式比较简单，但是效率低，而且磁盘空间占用大。当Redis实例故障重启后，从磁盘读取快照文件，恢复数据。
-![](assets/01/redis使用场景/6.1RDB持久化命令.png)
+![](assets/redis使用场景/6.1RDB持久化命令.png)
 - Redis内部有触发RDB的机制，可以在redis.conf文件中找到，格式如下：
 ```text
 # 900秒内，如果至少有1个key被修改，则执行bgsave 
@@ -143,10 +143,10 @@ save 60 10000
     - 当主进程执行读操作时，访问的是共享内存
     - 当主进程执行写操作时，会拷贝一份数据，执行写操作
 
-![](assets/01/redis使用场景/6.2RDB执行原理.png)
+![](assets/redis使用场景/6.2RDB执行原理.png)
 ### 6.2 AOF
 - AOF全称为Append Only File（追加文件）。Redis处理的每一个写命令都会记录在AOF文件，可以看做是命令日志文件。
-![](assets/01/redis使用场景/6.3AOF.png)
+![](assets/redis使用场景/6.3AOF.png)
 - AOF默认是关闭的，需要修改redis.conf配置文件来开启AOF：
 ```text
 # 是否开启AOF功能，默认是no
@@ -169,7 +169,7 @@ appendfsync no
 | everysec | 每秒刷盘   | 性能适中 | 最多丢失1秒数据|
 | no       | 操作系统控制 | 性能最好 | 可靠性较差，可能丢失大量数据 |
 - 因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但只有最后一次写操作才有意义。通过执行bgrewriteaof命令，可以让AOF文件执行重写功能，用最少的命令达到相同效果。
-![](assets/01/redis使用场景/6.4aofrewrite.png)
+![](assets/redis使用场景/6.4aofrewrite.png)
 - Redis也会在触发阈值时自动去重写AOF文件。阈值也可以在redis.conf中配置：
 ```text
 # AOF文件比上次文件 增长超过多少百分比则触发重写
@@ -239,7 +239,7 @@ DEL key
 redis的SETNX指令不好控制这个问题。我们当时采用的是redis的一个框架Redisson实现的。在Redisson中需要手动加锁，并且可以控制锁的失效时间和等待时间。当锁住的一个业务还没有执行完成的时候，Redisson会引入一个看门狗机制。就是说，每隔一段时间就检查当前业务是否还持有锁。如果持有，就增加加锁的持有时间。当业务执行完成之后，需要使用释放锁就可以了。还有一个好处就是，在高并发下，一个业务有可能会执行很快。客户1持有锁的时候，客户2来了以后并不会马上被拒绝。它会自旋不断尝试获取锁。如果客户1释放之后，客户2就可以马上持有锁，性能也得到了提升。
 
 Redisson实现的分布式锁-执行流程：
-![](assets/01/redis使用场景/10.1Redisson实现的分布式锁.png)
+![](assets/redis使用场景/10.1Redisson实现的分布式锁.png)
 
 Redisson实现的分布式锁-代码实现：
 ```java
@@ -273,30 +273,30 @@ public void redisLock() throws InterruptedException {
 ## 13. Redis的集群方案有哪些？
 ### 13.1 主从复制
 单节点Redis的并发能力是有上限的，要进一步提高Redis的并发能力，就需要搭建主从集群，实现读写分离
-![](assets/01/redis使用场景/13.1主从复制.png)
+![](assets/redis使用场景/13.1主从复制.png)
 
 主从<font color=color>全量复制</font>： 
 > <font color=red>Replication Id</font>：简称replid，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid，slave则会继承master节点的replid
 
 > <font color=red>offset</font>：偏移量，随着记录在repl_baklog中的数据增多而逐渐增大。slave完成同步时也会记录当前同步的offset。如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。
 
-![](assets/01/redis使用场景/13.2主从全量复制.png)
+![](assets/redis使用场景/13.2主从全量复制.png)
 
 主从<font color=red>增量同步</font>(slave重启或后期数据变化)：
 
-![](assets/01/redis使用场景/13.3主从增量复制.png)
+![](assets/redis使用场景/13.3主从增量复制.png)
 
 ### 13.2 哨兵模式
 Redis提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复
 - **监控**：Sentinel 会不断检查您的master和slave是否按预期工作
 - **自动故障恢复**：如果master故障，Sentinel会将一个slave提升为master。当故障实例恢复后也以新的master为主
 - **通知**：Sentinel充当Redis客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给Redis的客户端
-![](assets/01/redis使用场景/13.4哨兵模式.png)
+![](assets/redis使用场景/13.4哨兵模式.png)
 
 Sentinel基于心跳机制监测服务状态，<font color=red>每隔1秒</font>向集群的每个实例发送ping命令：
 - 主观下线：如果某sentinel节点发现某实例未在规定时间响应，则认为该实例**主观下线**。
 - 客观下线：若超过指定数量（quorum）的sentinel都认为该实例主观下线，则该实例**客观下线**。quorum值最好超过Sentinel实例数量的一半。
-![](assets/01/redis使用场景/13.5服务状态监控.png)
+![](assets/redis使用场景/13.5服务状态监控.png)
 
 **哨兵选主规则**
 - 首先判断主与从节点断开时间长短，如超过指定值就排除该从节点
@@ -310,9 +310,9 @@ redis中有两个配置参数：
 min-replicas-to-write 1   表示最少的salve节点为1个
 min-replicas-max-lag 5  表示数据复制和同步的延迟不能超过5秒
 ```
-![](assets/01/redis使用场景/13.6哨兵模式脑裂.png)
-![](assets/01/redis使用场景/13.7哨兵模式脑裂.png)
-![](assets/01/redis使用场景/13.8哨兵模式脑裂.png)
+![](assets/redis使用场景/13.6哨兵模式脑裂.png)
+![](assets/redis使用场景/13.7哨兵模式脑裂.png)
+![](assets/redis使用场景/13.8哨兵模式脑裂.png)
 
 ### 13.3 分片集群
 主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决：
@@ -324,12 +324,12 @@ min-replicas-max-lag 5  表示数据复制和同步的延迟不能超过5秒
 - 每个master都可以有多个slave节点
 - master之间通过ping监测彼此健康状态
 - 客户端请求可以访问集群任意节点，最终都会被转发到正确节点
-![](assets/01/redis使用场景/13.9分片集群.png)
+![](assets/redis使用场景/13.9分片集群.png)
 
 **分片集群结构-数据读写**
 
 Redis 分片集群引入了哈希槽的概念，Redis 集群有 16384 个哈希槽，每个 key通过 CRC16 校验后对 16384 取模来决定放置哪个槽，集群的每个节点负责一部分 hash 槽。
-![](assets/01/redis使用场景/13.10分片集群结构-数据读写.png)
+![](assets/redis使用场景/13.10分片集群结构-数据读写.png)
 
 ## 14. Redis是单线程，为什么还那么快？
 - Redis是纯内存操作，执行速度非常快
@@ -348,18 +348,183 @@ Linux系统为了提高IO效率，会在用户空间和内核空间都加入缓�
 - 写数据时，要把用户缓冲数据拷贝到内核缓冲区，然后写入设备
 - 读数据时，要从设备读取数据到内核缓冲区，然后拷贝到用户缓冲区
 
-![](assets/01/redis使用场景/15.1用户空间和内核空间.png)
+![](assets/redis使用场景/15.1用户空间和内核空间.png)
 
 <font color=red>**Redis网络模型：**</font>
 
 Redis通过IO多路复用来提高网络性能，并且支持各种不同的多路复用实现，并且将这些实现进行封装， 提供了统一的高性能事件库
-![](assets/01/redis使用场景/15.2Redis网络模型.png)
+![](assets/redis使用场景/15.2Redis网络模型.png)
 
 > I/O多路复用是指利用单个线程来同时监听多个Socket，并且在某个Socket可读、可写时得到通知，从而避免无效的等待，充分利用CPU资源。目前的I/O多路复用都是采用的epoll模式实现，它会在通知用户进程Socket就绪的同时，把已就绪的Socket写入用户空间，不需要挨个遍历Socket来判断是否就绪，提升了性能。
 >
 > 其中Redis的网络模型就是使用I/O多路复用结合事件的处理器来应对多个Socket请求，比如，提供了连接应答处理器、命令回复处理器，命令请求处理器；
 > 
 > 在Redis6.0之后，为了提升更好的性能，在命令回复处理器使用了多线程来处理回复事件，在命令请求处理器中，将命令的转换使用了多线程，增加命令转换速度，在命令执行的时候，依然是单线程
+
+## 16. Redis还有哪些特殊的数据类型？（GEO、BitMap、HyperLogLog）
+
+除了 String、List、Set、ZSet、Hash 五种基础类型，Redis 还提供了几种特殊的数据类型：
+
+### 16.1 GEO（地理坐标）
+GEO 是 Geolocation 的简写，Redis 3.2 加入，用于存储地理坐标信息，根据经纬度检索数据。常见命令：
+- `GEOADD`：添加地理空间信息（经度、纬度、member）
+- `GEODIST`：计算两个点之间的距离
+- `GEOHASH`：将 member 坐标转为 hash 字符串
+- `GEOPOS`：返回 member 的坐标
+- `GEOSEARCH`（6.2 新增）：在指定范围内搜索 member，并按距离排序
+- `GEOSEARCHSTORE`：同 GEOSEARCH，结果可存到指定 key
+
+典型场景：附近商户（按类型分组存入 GEO，以 typeId 为 key，以当前坐标做圆心按距离搜索）。
+
+### 16.2 BitMap（位图）
+BitMap 用 String 类型实现，最大 512MB（对应 2^32 个 bit 位）。把每个 bit 位对应业务状态，用 0/1 表示，用极小空间表示大量数据。常见命令：
+- `SETBIT` / `GETBIT`：设置 / 获取指定位置的 bit 值
+- `BITCOUNT`：统计值为 1 的 bit 位数量
+- `BITFIELD`：操作指定位置的 bit 值
+- `BITOP`：多个 BitMap 的位运算（与、或、异或）
+
+典型场景：用户签到（按月统计，key 为 `sign:userId:yyyyMM`，第 N 天对应第 N 个 bit 位）、统计连续签到天数、用 bitmap 缓解缓存穿透。
+
+### 16.3 HyperLogLog（HLL）
+HyperLogLog 是从 Loglog 算法派生的概率算法，用于确定非常大的集合的基数，无需存储所有值。
+
+- 基于 String 实现，单个 HLL 内存永远小于 16kb，内存占用极低。
+- 代价是测量结果是概率性的，误差小于 0.81%，对于 UV 统计可忽略。
+
+典型场景：UV（独立访客量）统计。UV 与 PV 的区别：UV 是独立访客（同一用户多次访问只记一次），PV 是页面访问量（多次打开记多次）。
+
+## 17. 如何生成全局唯一 ID？
+
+每个店铺发布优惠券，用户抢购时生成订单。如果使用数据库自增 ID，存在两个问题：
+- id 规律性太明显，容易被猜出敏感信息（如一天卖出多少单）
+- 受单表数据量限制，拆库拆表后 id 不能重复
+
+**全局 ID 生成器**：分布式系统下生成全局唯一 ID 的工具。可以利用 Redis 的自增特性实现，ID 组成：
+- 符号位：1bit，永远为 0
+- 时间戳：31bit，以秒为单位，可用 69 年
+- 序列号：32bit，秒内计数器，每秒支持产生 2^32 个不同 ID
+
+```java
+public long nextId(String keyPrefix) {
+    // 1.生成时间戳
+    LocalDateTime now = LocalDateTime.now();
+    long nowSecond = now.toEpochSecond(ZoneOffset.UTC);
+    long timestamp = nowSecond - BEGIN_TIMESTAMP;
+    // 2.生成序列号（按天分 key，Redis 自增）
+    String date = now.format(DateTimeFormatter.ofPattern("yyyy:MM:dd"));
+    long count = stringRedisTemplate.opsForValue().increment("icr:" + keyPrefix + ":" + date);
+    // 3.拼接并返回
+    return timestamp << COUNT_BITS | count;
+}
+```
+
+## 18. 秒杀场景如何解决库存超卖问题？
+
+超卖问题：线程 1 查询库存判断充足，还没扣减时线程 2 也查到充足，两个线程都去扣减，导致超卖。这是典型的多线程安全问题，解决方案是加锁。
+
+加锁两种方案：
+
+**悲观锁**：对数据串行化执行，如 synchronized、Lock，可细分为公平锁、非公平锁、可重入锁等。
+
+**乐观锁**：通过版本号控制，每次操作版本号 +1，提交时校验版本号是否比之前大 1。典型代表是 CAS（无锁化，失败则自旋重试）。
+
+秒杀场景常用乐观锁实现，两种写法：
+- 方案一：`where stock = 查询时的stock`（要求前后一致，成功率低）
+- 方案二（推荐）：`where stock > 0`（只要求库存大于 0 即可）
+
+```java
+// 乐观锁扣减库存：stock > 0
+boolean success = seckillVoucherService.update()
+        .setSql("stock = stock - 1")
+        .eq("voucher_id", voucherId)
+        .gt("stock", 0).update();
+```
+
+针对 CAS 自旋压力过大，可用 Java8 的 `LongAdder`（对 AtomicLong 的改进）优化。
+
+## 19. Redis 的 key 如何设计？什么是 BigKey？
+
+### 19.1 优雅的 key 结构
+- 遵循基本格式：`[业务名称]:[数据名]:[id]`，如 `login:user:10`
+- 长度不超过 44 字节（超过 44 字节底层由 embstr 转为 raw 编码，空间不连续，访问性能下降）
+- 不包含特殊字符
+
+### 19.2 拒绝 BigKey
+BigKey 指占用空间过大的 key，例如：
+- 一个 String key 的 value 达 5MB
+- 一个 ZSET key 的成员数达 10000 个
+- 一个 Hash key 的成员 value 总大小达 100MB
+
+**BigKey 的危害**：网络阻塞（少量 QPS 占满带宽）、数据倾斜、Redis 阻塞、CPU 压力。
+
+**如何发现 BigKey**：
+- `redis-cli --bigkeys`：遍历分析所有 key，返回统计信息和每类 Top1 的 big key
+- `scan` 扫描 + `strlen`/`hlen` 等命令判断
+- 第三方工具（Redis-Rdb-Tools）分析 RDB 快照
+- 网络监控告警
+
+**如何删除 BigKey**：Redis 4.0 后提供异步删除命令 `unlink`；4.0 前需遍历逐个删除子元素。
+
+推荐值：单个 key 的 value 小于 10KB；集合类型元素数量小于 1000。
+
+### 19.3 恰当的数据类型
+存储一个 User 对象有三种方式：
+- **JSON 字符串**：实现简单，但数据耦合、不够灵活
+- **字段打散**：可灵活访问任意字段，但占用空间大
+- **Hash（推荐）**：底层用 ziplist，空间占用小，可灵活访问任意字段
+
+## 20. 如何优化 Redis 的批处理？
+
+Redis 处理指令很快，主要耗时在网络传输，因此可将多条指令批量传输。
+
+- **MSet/HMSet**：原生批量插入命令，但只能操作部分数据类型。
+- **Pipeline**：适合复杂数据类型的批处理，将多条命令打包发送，优化 RTT。
+
+```java
+Pipeline pipeline = jedis.pipelined();
+for (int i = 1; i <= 100000; i++) {
+    pipeline.set("test:key_" + i, "value_" + i);
+    if (i % 1000 == 0) {
+        pipeline.sync(); // 每 1000 条批量执行
+    }
+}
+```
+
+**集群下的批处理**：MSet/Pipeline 的多个 key 必须落在同一 slot，否则执行失败。解决方案：
+- 串行执行（简单但慢）
+- 串行 slot（按 slot 分组后逐组 pipeline）
+- 并行 slot（按 slot 分组后并行执行，推荐）
+- hash_tag（让 key 落在同一节点，但易数据倾斜）
+
+## 21. 什么是慢查询？如何排查？
+
+慢查询：在 Redis 执行时耗时超过某个阈值的命令。由于 Redis 是单线程，慢查询会导致大量请求阻塞，引发报错。
+
+相关配置：
+- `slowlog-log-slower-than`：慢查询阈值（微秒），默认 10000，建议 1000
+- `slowlog-max-len`：慢查询日志长度，默认 128，建议 1000
+
+排查命令：
+- `slowlog len`：查询慢查询日志长度
+- `slowlog get [n]`：读取 n 条慢查询日志
+- `slowlog reset`：清空慢查询列表
+
+## 22. 什么是多级缓存？
+
+多级缓存是充分利用请求处理的每个环节，分别添加缓存，减轻 Tomcat 压力、提升服务性能。
+
+典型多级缓存架构（自上而下）：
+1. **Nginx 本地缓存**：第一层，命中直接返回，不命中再向后端请求。
+2. **Redis 缓存**：第二层，全局共享缓存。
+3. **JVM 进程缓存（Caffeine）**：第三层，应用内本地缓存。
+
+配合的技术组件：
+- **OpenResty**：基于 Nginx + Lua 的 Web 平台，用 Lua 脚本在 Nginx 层处理请求、查询缓存。
+- **Caffeine**：JVM 本地缓存库。
+- **Canal**：监听 MySQL binlog，实现缓存与数据库的异步数据同步，保证最终一致性。
+
+多级缓存的意义：缓存雪崩解决方案中提到的"给业务添加多级缓存"，可有效减轻数据库和远端缓存的压力。
+
 
 
 
